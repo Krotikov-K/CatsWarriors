@@ -171,11 +171,21 @@
   }
 
   .game-button-primary {
-    @apply game-button bg-forest text-white hover:bg-forest/80;
+    @apply game-button text-white;
+    background-color: var(--forest);
+  }
+  
+  .game-button-primary:hover {
+    background-color: hsl(120, 25%, 20%);
   }
 
   .game-button-combat {
-    @apply game-button bg-combat text-white hover:bg-combat/80;
+    @apply game-button text-white;
+    background-color: var(--combat);
+  }
+  
+  .game-button-combat:hover {
+    background-color: hsl(15, 85%, 50%);
   }
 
   .game-card {

@@ -105,8 +105,10 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const user: User = {
-      ...insertUser,
       id,
+      username: insertUser.username,
+      password: insertUser.password,
+      telegramId: insertUser.telegramId || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -206,8 +208,13 @@ export class MemStorage implements IStorage {
   async createLocation(insertLocation: InsertLocation): Promise<Location> {
     const id = this.currentLocationId++;
     const location: Location = {
-      ...insertLocation,
       id,
+      name: insertLocation.name,
+      description: insertLocation.description,
+      type: insertLocation.type,
+      clan: insertLocation.clan || null,
+      maxPlayers: insertLocation.maxPlayers || 50,
+      dangerLevel: insertLocation.dangerLevel || 1,
       createdAt: new Date(),
     };
     this.locations.set(id, location);
@@ -288,7 +295,7 @@ export class MemStorage implements IStorage {
 
   async getRecentEvents(limit: number): Promise<GameEvent[]> {
     return Array.from(this.gameEvents.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
       .slice(0, limit);
   }
 
