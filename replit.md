@@ -8,19 +8,23 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript using Vite as the build tool
-- **UI Library**: Radix UI components with shadcn/ui styling
-- **Styling**: Tailwind CSS with custom game-themed colors and fonts (Exo 2, Orbitron)
+- **Platform**: Telegram Web App (TWA) integrated into Telegram bot
+- **UI Library**: Radix UI components with shadcn/ui styling optimized for mobile
+- **Styling**: Tailwind CSS with Telegram-native colors and responsive design
 - **State Management**: TanStack React Query for server state and React hooks for local state
-- **Routing**: Wouter for lightweight client-side routing
+- **Routing**: Wouter for lightweight client-side routing within TWA
 - **Real-time**: WebSocket client for live game updates
+- **Telegram Integration**: @twa-dev/sdk for native Telegram features
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ES modules
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: In-memory storage with optional PostgreSQL migration path
 - **Real-time**: WebSocket server for bidirectional communication
-- **Session Management**: Connect-pg-simple for PostgreSQL-backed sessions
-- **External Integration**: Optional Telegram bot using node-telegram-bot-api
+- **Telegram Integration**: 
+  - Bot commands for basic interaction
+  - Web App serving for full game interface
+  - Telegram authentication and user management
 
 ### Database Architecture
 - **ORM**: Drizzle with PostgreSQL dialect
