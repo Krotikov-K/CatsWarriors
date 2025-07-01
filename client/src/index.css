@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Game-specific colors */
+  --forest: hsl(120, 25%, 25%);
+  --earth: hsl(25, 50%, 30%);
+  --combat: hsl(15, 85%, 60%);
+  --dark-bg: hsl(0, 0%, 10%);
+  --card-bg: hsl(0, 0%, 16%);
+  --border-dark: hsl(0, 0%, 25%);
+}
+
+.dark {
+  --background: hsl(0, 0%, 10%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(0, 0%, 16%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(0, 0%, 16%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(0, 0%, 16%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(0, 0%, 25%);
+  --input: hsl(0, 0%, 25%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(0, 0%, 16%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(0, 0%, 16%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background-color: var(--dark-bg);
+    color: hsl(0, 0%, 90%);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-gaming {
+    font-family: 'Exo 2', sans-serif;
+  }
+
+  .font-stats {
+    font-family: 'Orbitron', monospace;
+  }
+
+  .bg-forest {
+    background-color: var(--forest);
+  }
+
+  .text-forest {
+    color: var(--forest);
+  }
+
+  .bg-combat {
+    background-color: var(--combat);
+  }
+
+  .text-combat {
+    color: var(--combat);
+  }
+
+  .bg-card-bg {
+    background-color: var(--card-bg);
+  }
+
+  .bg-dark-bg {
+    background-color: var(--dark-bg);
+  }
+
+  .border-border-dark {
+    border-color: var(--border-dark);
+  }
+
+  .territory-card {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .territory-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .combat-indicator {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+
+  .clan-thunder {
+    --clan-color: hsl(120, 60%, 50%);
+  }
+
+  .clan-shadow {
+    --clan-color: hsl(270, 60%, 50%);
+  }
+
+  .clan-wind {
+    --clan-color: hsl(200, 60%, 50%);
+  }
+
+  .clan-river {
+    --clan-color: hsl(180, 60%, 50%);
+  }
+
+  .clan-neutral {
+    --clan-color: hsl(45, 60%, 50%);
+  }
+
+  .clan-sacred {
+    --clan-color: hsl(260, 60%, 60%);
+  }
+
+  .clan-danger {
+    --clan-color: hsl(0, 60%, 50%);
+  }
+}
+
+@layer components {
+  .game-button {
+    @apply px-4 py-2 rounded-lg font-gaming font-semibold transition-all duration-200;
+    @apply hover:transform hover:scale-105 active:scale-95;
+  }
+
+  .game-button-primary {
+    @apply game-button bg-forest text-white hover:bg-forest/80;
+  }
+
+  .game-button-combat {
+    @apply game-button bg-combat text-white hover:bg-combat/80;
+  }
+
+  .game-card {
+    @apply bg-card-bg border border-border-dark rounded-xl p-4;
+  }
+
+  .stat-card {
+    @apply bg-gray-800 rounded-lg p-3 text-center transition-all duration-200;
+    @apply hover:bg-gray-700 hover:scale-105;
+  }
+
+  .health-bar {
+    @apply w-full bg-gray-700 rounded-full h-2 overflow-hidden;
+  }
+
+  .health-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  .combat-log {
+    @apply bg-gray-800 rounded-lg p-4 h-32 overflow-y-auto;
+    @apply scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800;
+  }
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 0.375rem;
+}
+
+.scrollbar-track-gray-800::-webkit-scrollbar-track {
+  background-color: #1f2937;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
