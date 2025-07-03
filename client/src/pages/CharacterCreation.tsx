@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CLANS } from "@shared/schema";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
@@ -18,10 +18,10 @@ import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
 const characterSchema = z.object({
   name: z.string().min(2, "Имя должно содержать минимум 2 символа").max(20, "Имя не должно превышать 20 символов"),
   clan: z.enum(["thunder", "shadow", "wind", "river"]),
-  strength: z.number().min(10).max(25),
-  agility: z.number().min(10).max(25),
-  intelligence: z.number().min(10).max(25),
-  endurance: z.number().min(10).max(25),
+  strength: z.number().min(10).max(20),
+  agility: z.number().min(10).max(20),
+  intelligence: z.number().min(10).max(20),
+  endurance: z.number().min(10).max(20),
 });
 
 type CharacterFormData = z.infer<typeof characterSchema>;
@@ -30,7 +30,7 @@ export default function CharacterCreation() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { hapticFeedback, user } = useTelegramWebApp();
-  const [availablePoints, setAvailablePoints] = useState(20);
+  const [availablePoints, setAvailablePoints] = useState(10);
 
   const form = useForm<CharacterFormData>({
     resolver: zodResolver(characterSchema),
@@ -57,6 +57,8 @@ export default function CharacterCreation() {
         title: "Персонаж создан!",
         description: "Ваш кот-воитель готов к приключениям.",
       });
+      // Invalidate characters cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
       navigate("/");
     },
     onError: (error: any) => {
@@ -70,18 +72,18 @@ export default function CharacterCreation() {
 
   const watchedStats = form.watch(["strength", "agility", "intelligence", "endurance"]);
   const totalStatsUsed = watchedStats.reduce((sum, stat) => sum + stat, 0) - 40; // Subtract base points (10 each)
-  const remainingPoints = 20 - totalStatsUsed;
+  const remainingPoints = 10 - totalStatsUsed;
 
   const updateAvailablePoints = () => {
     setAvailablePoints(remainingPoints);
   };
 
   const onSubmit = (data: CharacterFormData) => {
-    if (totalStatsUsed > 20) {
+    if (totalStatsUsed > 10) {
       hapticFeedback('heavy');
       toast({
         title: "Превышен лимит очков",
-        description: "Вы не можете потратить больше 20 очков характеристик.",
+        description: "Вы не можете потратить больше 10 очков характеристик.",
         variant: "destructive",
       });
       return;
@@ -97,7 +99,7 @@ export default function CharacterCreation() {
       .filter(([key]) => key !== field && ["strength", "agility", "intelligence", "endurance"].includes(key))
       .reduce((sum, [, val]) => sum + (val as number), 0);
     
-    if (otherStats + newValue - 40 <= 20) {
+    if (otherStats + newValue - 40 <= 10) {
       form.setValue(field as any, newValue);
       updateAvailablePoints();
     }
@@ -201,7 +203,7 @@ export default function CharacterCreation() {
                         <FormControl>
                           <Slider
                             min={10}
-                            max={25}
+                            max={20}
                             step={1}
                             value={[field.value]}
                             onValueChange={(value) => handleStatChange("strength", value)}
@@ -226,7 +228,7 @@ export default function CharacterCreation() {
                         <FormControl>
                           <Slider
                             min={10}
-                            max={25}
+                            max={20}
                             step={1}
                             value={[field.value]}
                             onValueChange={(value) => handleStatChange("agility", value)}
@@ -251,7 +253,7 @@ export default function CharacterCreation() {
                         <FormControl>
                           <Slider
                             min={10}
-                            max={25}
+                            max={20}
                             step={1}
                             value={[field.value]}
                             onValueChange={(value) => handleStatChange("intelligence", value)}
@@ -276,7 +278,7 @@ export default function CharacterCreation() {
                         <FormControl>
                           <Slider
                             min={10}
-                            max={25}
+                            max={20}
                             step={1}
                             value={[field.value]}
                             onValueChange={(value) => handleStatChange("endurance", value)}
