@@ -161,16 +161,16 @@ export const CLANS = {
 
 export const LOCATIONS_DATA = [
   // Племенные лагеря
-  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1 },
-  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1 },
+  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 15, y: 20, connectedTo: [3], emoji: "🏠" },
+  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 85, y: 80, connectedTo: [6], emoji: "🏕️" },
   
   // Нейтральные локации для охоты и сражений
-  { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2 },
-  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2 },
-  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3 },
-  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3 },
-  { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4 },
-  { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5 },
-  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4 },
-  { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1 },
+  { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2, x: 50, y: 50, connectedTo: [1, 4, 5], emoji: "🌳" },
+  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 30, y: 70, connectedTo: [3, 7], emoji: "🌻" },
+  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3, x: 70, y: 30, connectedTo: [3, 6, 8], emoji: "🌲" },
+  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3, x: 85, y: 50, connectedTo: [2, 5, 9], emoji: "🕳️" },
+  { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4, x: 20, y: 85, connectedTo: [4, 10], emoji: "🛤️" },
+  { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 75, y: 15, connectedTo: [5, 9], emoji: "⚔️" },
+  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4, x: 90, y: 25, connectedTo: [6, 8, 10], emoji: "⛰️" },
+  { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1, x: 50, y: 85, connectedTo: [7, 9], emoji: "🌙" },
 ] as const;

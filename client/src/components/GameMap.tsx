@@ -1,4 +1,4 @@
-import { type Location, type Character, type Combat } from "@shared/schema";
+import { type Location, type Character, type Combat, LOCATIONS_DATA } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,112 +12,85 @@ interface GameMapProps {
   onLocationChange: (locationId: number) => void;
 }
 
-interface LocationCardProps {
+interface MapLocationProps {
   id: number;
   name: string;
   type: string;
   clan?: string | null;
-  playerCount: number;
-  combatCount: number;
+  x: number;
+  y: number;
+  emoji: string;
+  connectedTo: number[];
   isCurrentLocation: boolean;
+  canMoveTo: boolean;
+  playerCount: number;
   onClick: () => void;
 }
 
-function LocationCard({ 
+function MapLocation({ 
   name, 
   type, 
   clan, 
-  playerCount, 
-  combatCount, 
+  x, 
+  y, 
+  emoji,
   isCurrentLocation, 
+  canMoveTo,
+  playerCount,
   onClick 
-}: LocationCardProps) {
-  const getLocationIcon = () => {
-    switch (type) {
-      case "camp": return "fas fa-home";
-      case "hunting": return "fas fa-leaf";
-      case "combat": return "fas fa-sword";
-      case "sacred": return "fas fa-gem";
-      case "neutral": return "fas fa-tree";
-      default: return "fas fa-map-marker";
-    }
-  };
-
+}: MapLocationProps) {
   const getLocationColor = () => {
     if (clan) {
       switch (clan) {
-        case "thunder": return "border-green-500 bg-green-900";
-        case "river": return "border-cyan-500 bg-cyan-900";
+        case "thunder": return "bg-gradient-to-br from-green-400 to-green-600";
+        case "river": return "bg-gradient-to-br from-cyan-400 to-cyan-600";
       }
     }
     
     switch (type) {
-      case "hunting": return "border-emerald-500 bg-emerald-900";
-      case "combat": return "border-red-500 bg-red-900";
-      case "sacred": return "border-indigo-500 bg-indigo-900";
-      case "neutral": return "border-yellow-500 bg-yellow-900";
-      default: return "border-gray-500 bg-gray-800";
+      case "hunting": return "bg-gradient-to-br from-emerald-400 to-emerald-600";
+      case "combat": return "bg-gradient-to-br from-red-400 to-red-600";
+      case "sacred": return "bg-gradient-to-br from-indigo-400 to-indigo-600";
+      case "neutral": return "bg-gradient-to-br from-yellow-400 to-yellow-600";
+      default: return "bg-gradient-to-br from-gray-400 to-gray-600";
     }
   };
 
-  const getIconColor = () => {
-    if (clan) {
-      switch (clan) {
-        case "thunder": return "text-green-400";
-        case "river": return "text-cyan-400";
-      }
-    }
-    
-    switch (type) {
-      case "hunting": return "text-emerald-400";
-      case "combat": return "text-red-400";
-      case "sacred": return "text-indigo-400";
-      case "neutral": return "text-yellow-400";
-      default: return "text-gray-400";
-    }
+  const getBorderColor = () => {
+    if (isCurrentLocation) return "border-white shadow-lg shadow-white/50";
+    if (canMoveTo) return "border-green-300 hover:border-green-200";
+    return "border-gray-500";
   };
 
   return (
     <div 
-      className={`territory-card ${getLocationColor()} bg-opacity-60 border-2 rounded-lg p-4 cursor-pointer transition-all ${
-        isCurrentLocation ? 'ring-2 ring-white ring-opacity-50' : 'hover:bg-opacity-80'
-      }`}
-      onClick={onClick}
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300"
+      style={{ left: `${x}%`, top: `${y}%` }}
+      onClick={canMoveTo ? onClick : undefined}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center mb-3">
-          <i className={`${getLocationIcon()} ${getIconColor()} text-2xl mr-3`}></i>
-          <div>
-            <h4 className="font-gaming font-bold text-white">{name}</h4>
-            {isCurrentLocation && (
-              <p className="text-xs text-green-300">Ваша текущая локация</p>
-            )}
-          </div>
+      {/* Location Circle */}
+      <div 
+        className={`
+          w-16 h-16 rounded-full border-3 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-2xl
+          ${canMoveTo ? 'hover:scale-110 hover:shadow-xl' : ''}
+          ${isCurrentLocation ? 'scale-125 animate-pulse' : ''}
+          ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
+        `}
+      >
+        {emoji}
+      </div>
+      
+      {/* Location Name */}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-center">
+        <div className="bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+          {name}
         </div>
-        
-        <div className="flex-1 flex items-end">
-          <div className="w-full">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-300">Игроки:</span>
-              <span className="font-stats text-white">{playerCount}</span>
-            </div>
-            
-            {/* Player indicators */}
-            <div className="flex space-x-1 flex-wrap">
-              {Array.from({ length: Math.min(playerCount, 8) }).map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3 h-3 rounded-full ${
-                    i < combatCount ? 'bg-combat animate-pulse' : 'bg-blue-400'
-                  }`}
-                ></div>
-              ))}
-              {playerCount > 8 && (
-                <span className="text-xs text-gray-400 ml-1">+{playerCount - 8}</span>
-              )}
-            </div>
+        {playerCount > 0 && (
+          <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
+            {playerCount} 🐱
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

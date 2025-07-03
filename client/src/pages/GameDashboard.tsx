@@ -6,7 +6,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useUser } from "@/hooks/useUser";
 import CharacterPanel from "@/components/CharacterPanel";
 import StatsPanel from "@/components/StatsPanel";
-import GameMap from "@/components/GameMap";
+import MapView from "@/components/MapView";
 import CombatModal from "@/components/CombatModal";
 import NavigationMenu from "@/components/NavigationMenu";
 import TopBar from "@/components/TopBar";
@@ -177,7 +177,7 @@ export default function GameDashboard() {
       case 'map':
         return (
           <div className="h-full p-4 md:p-6 overflow-auto">
-            <GameMap 
+            <MapView 
               location={gameState.location}
               character={gameState.character!}
               playersInLocation={gameState.playersInLocation || []}
