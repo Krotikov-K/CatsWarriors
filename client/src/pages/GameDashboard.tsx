@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useGameState } from "@/hooks/useGameState";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { useUser } from "@/hooks/useUser";
 import CharacterPanel from "@/components/CharacterPanel";
 import StatsPanel from "@/components/StatsPanel";
 import GameMap from "@/components/GameMap";
@@ -13,26 +15,64 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function GameDashboard() {
   const [, navigate] = useLocation();
   const [currentCharacterId, setCurrentCharacterId] = useState<number | null>(null);
+  const { user } = useUser();
   
-  // For demo purposes, we'll use character ID 1. In a real app, this would come from authentication
+  // Get user's characters
+  const { data: characters = [], isLoading: charactersLoading } = useQuery({
+    queryKey: ['/api/characters', user?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/characters?userId=${user?.id}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch characters');
+      }
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
-    // Check if we have a character, if not redirect to character creation
-    const demoCharacterId = 1;
-    setCurrentCharacterId(demoCharacterId);
-  }, []);
+    if (characters.length > 0 && !currentCharacterId) {
+      // Use the first character by default
+      setCurrentCharacterId(characters[0].id);
+    } else if (characters.length === 0 && !charactersLoading && user) {
+      // No characters found, redirect to character creation
+      navigate("/create-character");
+    }
+  }, [characters, currentCharacterId, charactersLoading, user, navigate]);
 
   const { gameState, isLoading, error } = useGameState(currentCharacterId);
   const { isConnected, sendMessage } = useWebSocket(currentCharacterId);
 
+  // Show loading while checking characters
+  if (charactersLoading || !user) {
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-foreground text-xl">Загрузка...</div>
+      </div>
+    );
+  }
+
+  // If no characters, redirect is handled by useEffect above
+  if (characters.length === 0) {
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-foreground text-xl">Перенаправление...</div>
+      </div>
+    );
+  }
+
   if (!currentCharacterId) {
-    navigate("/create-character");
-    return null;
+    return (
+      <div className="flex h-screen bg-background items-center justify-center">
+        <div className="text-foreground text-xl">Загрузка персонажа...</div>
+      </div>
+    );
   }
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-dark-bg">
-        <div className="w-80 bg-card-bg border-r border-border-dark p-6">
+      <div className="flex h-screen bg-background">
+        <div className="w-80 bg-card border-r border-border p-6">
           <Skeleton className="h-8 w-32 mb-4" />
           <Skeleton className="h-16 w-16 rounded-full mb-4" />
           <Skeleton className="h-4 w-24 mb-2" />
@@ -57,19 +97,18 @@ export default function GameDashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-dark-bg">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-80 bg-card-bg border-r border-border-dark flex flex-col">
+      <div className="w-80 bg-card border-r border-border flex flex-col">
         {/* Game Header */}
-        <div className="p-6 border-b border-border-dark">
-          <h1 className="text-2xl font-gaming font-bold text-forest mb-2">
-            <i className="fas fa-cat mr-2"></i>
-            Cats War
+        <div className="p-6 border-b border-border">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
+            🐱 Cats War
           </h1>
-          <p className="text-sm text-gray-400">Мир Котов Воителей</p>
+          <p className="text-sm text-muted-foreground">Мир Котов Воителей</p>
           <div className="flex items-center mt-2 text-xs">
             <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-            <span className="text-gray-400">
+            <span className="text-muted-foreground">
               {isConnected ? 'Подключен' : 'Отключен'}
             </span>
           </div>

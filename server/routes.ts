@@ -258,6 +258,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Game state route
+  app.get("/api/game-state/:characterId", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.characterId);
+      const character = await storage.getCharacter(characterId);
+      
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const location = await storage.getLocation(character.currentLocationId);
+      const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
+      const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
+      const currentCombat = await storage.getCharacterActiveCombat(characterId);
+
+      const gameState = {
+        character,
+        location,
+        playersInLocation,
+        activeCombats,
+        isInCombat: !!currentCombat,
+        currentCombat
+      };
+
+      res.json(gameState);
+    } catch (error) {
+      console.error("Get game state error:", error);
+      res.status(500).json({ message: "Failed to get game state" });
+    }
+  });
+
   // Location routes
   app.get("/api/locations", async (req, res) => {
     try {
