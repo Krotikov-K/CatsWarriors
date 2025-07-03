@@ -16,65 +16,56 @@
   --tg-header-bg: 239 239 244;
   
   /* Game-specific colors for clans */
-  --thunderclan: hsl(45, 100%, 50%);
-  --riverclan: hsl(210, 100%, 56%);
-  --windclan: hsl(82, 56%, 55%);
-  --shadowclan: hsl(270, 100%, 25%);
-  --neutral: hsl(0, 0%, 50%);
+  --thunderclan: hsl(45, 100%, 65%);
+  --riverclan: hsl(210, 85%, 65%);
+  --windclan: hsl(82, 60%, 65%);
+  --shadowclan: hsl(270, 80%, 70%);
+  --neutral: hsl(0, 0%, 70%);
   
-  /* Adapted shadcn colors for mobile */
-  --background: hsl(var(--tg-bg));
-  --foreground: hsl(var(--tg-text));
-  --card: hsl(var(--tg-bg));
-  --card-foreground: hsl(var(--tg-text));
-  --popover: hsl(var(--tg-bg));
-  --popover-foreground: hsl(var(--tg-text));
-  --primary: hsl(var(--tg-button));
-  --primary-foreground: hsl(var(--tg-button-text));
-  --secondary: hsl(var(--tg-secondary-bg));
-  --secondary-foreground: hsl(var(--tg-text));
-  --muted: hsl(var(--tg-secondary-bg));
-  --muted-foreground: hsl(var(--tg-hint));
-  --accent: hsl(var(--tg-secondary-bg));
-  --accent-foreground: hsl(var(--tg-text));
+  /* Dark theme colors for better readability */
+  --background: hsl(0, 0%, 8%);
+  --foreground: hsl(0, 0%, 95%);
+  --card: hsl(0, 0%, 12%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --popover: hsl(0, 0%, 12%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --primary: hsl(210, 100%, 60%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(0, 0%, 18%);
+  --secondary-foreground: hsl(0, 0%, 95%);
+  --muted: hsl(0, 0%, 18%);
+  --muted-foreground: hsl(0, 0%, 65%);
+  --accent: hsl(0, 0%, 18%);
+  --accent-foreground: hsl(0, 0%, 95%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(0, 0%, 89.8%);
-  --input: hsl(0, 0%, 89.8%);
-  --ring: hsl(var(--tg-link));
+  --border: hsl(0, 0%, 25%);
+  --input: hsl(0, 0%, 20%);
+  --ring: hsl(210, 100%, 60%);
   --radius: 0.75rem;
 }
 
 .dark {
-  /* Telegram Web App Dark Theme Colors */
-  --tg-bg: 24 24 27;
-  --tg-text: 255 255 255;
-  --tg-hint: 113 113 122;
-  --tg-link: 129 140 248;
-  --tg-button: 129 140 248;
-  --tg-button-text: 255 255 255;
-  --tg-secondary-bg: 39 39 42;
-  --tg-header-bg: 39 39 42;
-  
-  --background: hsl(var(--tg-bg));
-  --foreground: hsl(var(--tg-text));
-  --card: hsl(var(--tg-bg));
-  --card-foreground: hsl(var(--tg-text));
-  --popover: hsl(var(--tg-bg));
-  --popover-foreground: hsl(var(--tg-text));
-  --primary: hsl(var(--tg-button));
-  --primary-foreground: hsl(var(--tg-button-text));
-  --secondary: hsl(var(--tg-secondary-bg));
-  --secondary-foreground: hsl(var(--tg-text));
-  --muted: hsl(var(--tg-secondary-bg));
-  --muted-foreground: hsl(var(--tg-hint));
-  --accent: hsl(var(--tg-secondary-bg));
-  --accent-foreground: hsl(var(--tg-text));
-  --destructive: hsl(0, 62.8%, 30.6%);
+  /* Enhanced dark theme for better readability */
+  --background: hsl(0, 0%, 6%);
+  --foreground: hsl(0, 0%, 98%);
+  --card: hsl(0, 0%, 10%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --popover: hsl(0, 0%, 10%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --primary: hsl(210, 100%, 65%);
+  --primary-foreground: hsl(0, 0%, 6%);
+  --secondary: hsl(0, 0%, 16%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --muted: hsl(0, 0%, 16%);
+  --muted-foreground: hsl(0, 0%, 70%);
+  --accent: hsl(0, 0%, 16%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 50%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(39, 39, 42);
-  --input: hsl(39, 39, 42);
-  --ring: hsl(var(--tg-link));
+  --border: hsl(0, 0%, 22%);
+  --input: hsl(0, 0%, 18%);
+  --ring: hsl(210, 100%, 65%);
 }
 
 @layer base {

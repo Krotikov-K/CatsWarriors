@@ -8,11 +8,9 @@ if (WebApp.initDataUnsafe?.user) {
   WebApp.ready();
   WebApp.expand();
   WebApp.enableClosingConfirmation();
-  
-  // Apply Telegram theme
-  if (WebApp.colorScheme === 'dark') {
-    document.documentElement.classList.add('dark');
-  }
 }
+
+// Apply dark theme by default for better readability
+document.documentElement.classList.add('dark');
 
 createRoot(document.getElementById("root")!).render(<App />);

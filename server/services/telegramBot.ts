@@ -20,11 +20,25 @@ export class TelegramBotService {
     try {
       this.bot = new TelegramBot(token, { polling: true });
       this.setupCommands();
+      this.setupBotCommands().catch(console.error);
       this.isInitialized = true;
       console.log("Telegram bot initialized successfully");
     } catch (error) {
       console.error("Failed to initialize Telegram bot:", error);
     }
+  }
+
+  private async setupBotCommands() {
+    if (!this.bot) return;
+
+    // Set bot commands for better UX
+    await this.bot.setMyCommands([
+      { command: 'start', description: '🎮 Начать игру' },
+      { command: 'help', description: 'ℹ️ Помощь и команды' },
+      { command: 'play', description: '🐱 Открыть игру' },
+      { command: 'status', description: '📊 Статус персонажа' }
+    ]);
+    console.log("Telegram bot commands set up");
   }
 
   private setupCommands() {
@@ -90,20 +104,63 @@ export class TelegramBotService {
       }
     });
 
+    // Play command
+    this.bot.onText(/\/play/, async (msg) => {
+      const chatId = msg.chat.id;
+      const webAppUrl = process.env.WEB_APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
+      
+      const options = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🎮 Играть в Cats War",
+                web_app: { url: webAppUrl }
+              }
+            ]
+          ]
+        }
+      };
+
+      await this.bot?.sendMessage(chatId,
+        "🐱 Добро пожаловать в Cats War!\n\nНажмите кнопку ниже, чтобы начать игру:",
+        options
+      );
+    });
+
     // Help command
     this.bot.onText(/\/help/, async (msg) => {
       const chatId = msg.chat.id;
       await this.bot?.sendMessage(chatId,
         "🎮 Команды Cats War:\n\n" +
-        "/start - начать работу с ботом\n" +
-        "/link <username> - привязать аккаунт игры\n" +
+        "/start - начать игру\n" +
+        "/play - открыть веб-интерфейс игры\n" +
         "/status - показать статус персонажа\n" +
-        "/location - информация о текущей локации\n" +
-        "/move <location> - переместиться в локацию\n" +
-        "/combat - информация о текущем бое\n" +
         "/help - эта справка\n\n" +
-        "🌐 Откройте веб-интерфейс для полного игрового опыта!"
+        "Cats War - это ММО РПГ по вселенной 'Коты Воители'. Создайте своего кота-воителя и присоединитесь к одному из четырех племен!"
       );
+    });
+
+    // Callback query handler
+    this.bot.on('callback_query', async (query) => {
+      const chatId = query.message?.chat.id;
+      const data = query.data;
+
+      if (!chatId) return;
+
+      if (data === 'help') {
+        await this.bot?.sendMessage(chatId,
+          "🎮 Как играть в Cats War:\n\n" +
+          "1. Создайте своего кота-воителя\n" +
+          "2. Выберите племя (Грозовое, Речное, Ветра или Тени)\n" +
+          "3. Распределите очки характеристик\n" +
+          "4. Исследуйте территории и сражайтесь с другими котами\n" +
+          "5. Повышайте уровень и становитесь сильнее!\n\n" +
+          "Используйте /play для входа в игру."
+        );
+      }
+
+      await this.bot?.answerCallbackQuery(query.id);
     });
 
     // Link account command
