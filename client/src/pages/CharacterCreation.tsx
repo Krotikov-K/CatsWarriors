@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CLANS } from "@shared/schema";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
+import { useUser } from "@/hooks/useUser";
 
 const characterSchema = z.object({
   name: z.string().min(2, "Имя должно содержать минимум 2 символа").max(20, "Имя не должно превышать 20 символов"),
@@ -29,7 +30,8 @@ type CharacterFormData = z.infer<typeof characterSchema>;
 export default function CharacterCreation() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { hapticFeedback, user } = useTelegramWebApp();
+  const { hapticFeedback } = useTelegramWebApp();
+  const { user } = useUser();
   const [availablePoints, setAvailablePoints] = useState(10);
 
   const form = useForm<CharacterFormData>({
@@ -48,7 +50,7 @@ export default function CharacterCreation() {
     mutationFn: async (data: CharacterFormData) => {
       const response = await apiRequest("POST", "/api/characters", {
         ...data,
-        userId: 1, // Demo user ID
+        userId: user?.id || 1,
       });
       return response.json();
     },
@@ -58,7 +60,7 @@ export default function CharacterCreation() {
         description: "Ваш кот-воитель готов к приключениям.",
       });
       // Invalidate characters cache to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/characters', user?.id] });
       navigate("/");
     },
     onError: (error: any) => {

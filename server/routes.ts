@@ -121,6 +121,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Telegram authentication route
+  app.post("/api/auth/telegram", async (req, res) => {
+    try {
+      const { telegramUser } = req.body;
+      
+      if (!telegramUser || !telegramUser.id) {
+        return res.status(400).json({ message: "Invalid Telegram user data" });
+      }
+
+      // Check if user exists by Telegram ID
+      let user = await storage.getUserByTelegramId(telegramUser.id.toString());
+      
+      if (!user) {
+        // Create new user from Telegram data
+        const userData = {
+          username: telegramUser.username || `user_${telegramUser.id}`,
+          telegramId: telegramUser.id.toString(),
+          firstName: telegramUser.first_name || "",
+          lastName: telegramUser.last_name || "",
+          password: "telegram_auth" // Placeholder for Telegram users
+        };
+        
+        user = await storage.createUser(userData);
+      }
+
+      res.json({ user: { id: user.id, username: user.username, telegramId: user.telegramId } });
+    } catch (error) {
+      console.error("Telegram auth error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
+  });
+
   // User routes
   app.post("/api/register", async (req, res) => {
     try {
@@ -184,6 +216,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Character creation error:", error);
       res.status(400).json({ message: "Character creation failed" });
+    }
+  });
+
+  app.get("/api/characters", async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : 1;
+      const characters = await storage.getCharactersByUserId(userId);
+      res.json(characters);
+    } catch (error) {
+      console.error("Get characters error:", error);
+      res.status(500).json({ message: "Failed to get characters" });
     }
   });
 
