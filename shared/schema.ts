@@ -156,18 +156,21 @@ export interface WebSocketMessage {
 // Game constants
 export const CLANS = {
   thunder: { name: "Грозовое Племя", color: "green" },
-  shadow: { name: "Теневое Племя", color: "purple" },
-  wind: { name: "Ветряное Племя", color: "blue" },
   river: { name: "Речное Племя", color: "cyan" },
 } as const;
 
 export const LOCATIONS_DATA = [
+  // Племенные лагеря
   { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1 },
-  { id: 2, name: "Лагерь Теневого Племени", type: "camp", clan: "shadow", dangerLevel: 1 },
-  { id: 3, name: "Лагерь Ветряного Племени", type: "camp", clan: "wind", dangerLevel: 1 },
-  { id: 4, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1 },
-  { id: 5, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2 },
-  { id: 6, name: "Тренировочная Поляна", type: "training", clan: null, dangerLevel: 3 },
-  { id: 7, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1 },
-  { id: 8, name: "Место Двуногих", type: "neutral", clan: null, dangerLevel: 4 },
+  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1 },
+  
+  // Нейтральные локации для охоты и сражений
+  { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2 },
+  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2 },
+  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3 },
+  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3 },
+  { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4 },
+  { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5 },
+  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4 },
+  { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1 },
 ] as const;

@@ -11,10 +11,13 @@ import CombatModal from "@/components/CombatModal";
 import NavigationMenu from "@/components/NavigationMenu";
 import TopBar from "@/components/TopBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Map, User, Sword, Home } from "lucide-react";
 
 export default function GameDashboard() {
   const [, navigate] = useLocation();
   const [currentCharacterId, setCurrentCharacterId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'map' | 'combat' | 'profile'>('overview');
   const { user } = useUser();
   
   // Get user's characters
@@ -96,79 +99,177 @@ export default function GameDashboard() {
     return null;
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="flex flex-col md:flex-row h-full">
+            {/* Character Info */}
+            <div className="md:w-80 bg-card border-b md:border-r border-border flex md:flex-col overflow-x-auto md:overflow-y-auto flex-shrink-0">
+              <div className="flex md:flex-col w-full">
+                <div className="flex-shrink-0 w-80 md:w-full">
+                  <CharacterPanel character={gameState.character!} />
+                </div>
+                <div className="flex-shrink-0 w-80 md:w-full">
+                  <StatsPanel character={gameState.character!} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Main Content */}
+            <div className="flex-1 p-4 md:p-6 overflow-auto">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-foreground mb-4">Обзор</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-card p-4 rounded-lg border border-border">
+                    <h3 className="font-semibold text-foreground mb-2">Текущая локация</h3>
+                    <p className="text-muted-foreground">{gameState.location?.name || 'Неизвестно'}</p>
+                  </div>
+                  <div className="bg-card p-4 rounded-lg border border-border">
+                    <h3 className="font-semibold text-foreground mb-2">Игроки рядом</h3>
+                    <p className="text-muted-foreground">{gameState.playersInLocation?.length || 0}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Quick Actions */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Быстрые действия</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex flex-col items-center justify-center"
+                    onClick={() => setActiveTab('map')}
+                  >
+                    <Map className="w-6 h-6 mb-1" />
+                    <span className="text-xs">Карта</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex flex-col items-center justify-center"
+                    onClick={() => setActiveTab('combat')}
+                  >
+                    <Sword className="w-6 h-6 mb-1" />
+                    <span className="text-xs">Бой</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex flex-col items-center justify-center"
+                    onClick={() => setActiveTab('profile')}
+                  >
+                    <User className="w-6 h-6 mb-1" />
+                    <span className="text-xs">Профиль</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex flex-col items-center justify-center"
+                    onClick={() => setActiveTab('overview')}
+                  >
+                    <Home className="w-6 h-6 mb-1" />
+                    <span className="text-xs">Лагерь</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'map':
+        return (
+          <div className="h-full p-4 md:p-6 overflow-auto">
+            <GameMap 
+              location={gameState.location}
+              character={gameState.character!}
+              playersInLocation={gameState.playersInLocation || []}
+              activeCombats={gameState.activeCombats || []}
+              onLocationChange={(locationId) => {
+                sendMessage({
+                  type: 'move_character',
+                  data: { characterId: gameState.character!.id, locationId },
+                  timestamp: new Date().toISOString()
+                });
+              }}
+            />
+          </div>
+        );
+        
+      case 'combat':
+        return (
+          <div className="h-full p-4 md:p-6 overflow-auto">
+            <h2 className="text-xl font-bold text-foreground mb-4">Боевая система</h2>
+            <p className="text-muted-foreground">Функционал боя будет добавлен позже</p>
+          </div>
+        );
+        
+      case 'profile':
+        return (
+          <div className="h-full p-4 md:p-6 overflow-auto">
+            <h2 className="text-xl font-bold text-foreground mb-4">Профиль персонажа</h2>
+            <CharacterPanel character={gameState.character!} />
+            <StatsPanel character={gameState.character!} />
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-background">
-      {/* Mobile Top Bar */}
-      <div className="md:hidden">
+    <div className="flex flex-col h-screen bg-background">
+      {/* Top Bar with Tabs */}
+      <div className="bg-card border-b border-border">
         <TopBar 
           location={gameState.location} 
           playersOnline={gameState.playersInLocation?.length || 0}
         />
-      </div>
-
-      {/* Sidebar - Mobile: Horizontal scroll, Desktop: Fixed sidebar */}
-      <div className="md:w-80 bg-card border-b md:border-r border-border flex md:flex-col overflow-x-auto md:overflow-y-auto flex-shrink-0">
-        {/* Game Header - Desktop only */}
-        <div className="hidden md:block p-6 border-b border-border">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            🐱 Cats War
-          </h1>
-          <p className="text-sm text-muted-foreground">Мир Котов Воителей</p>
-          <div className="flex items-center mt-2 text-xs">
-            <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-            <span className="text-muted-foreground">
-              {isConnected ? 'Подключен' : 'Отключен'}
-            </span>
-          </div>
-        </div>
-
-        {/* Mobile: Horizontal panels, Desktop: Vertical panels */}
-        <div className="flex md:flex-col w-full">
-          <div className="flex-shrink-0 w-80 md:w-full">
-            <CharacterPanel character={gameState.character} />
-          </div>
-          <div className="flex-shrink-0 w-80 md:w-full">
-            <StatsPanel character={gameState.character} />
-          </div>
-          <div className="flex-shrink-0 w-80 md:w-full">
-            <NavigationMenu />
-          </div>
-        </div>
-
-        {/* Telegram Bot Status - Desktop only */}
-        <div className="hidden md:block p-4 border-t border-border">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <span>🤖 Telegram Bot</span>
-            <div className="w-2 h-2 bg-green-400 rounded-full ml-auto"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop Top Bar */}
-        <div className="hidden md:block">
-          <TopBar 
-            location={gameState.location} 
-            playersOnline={gameState.playersInLocation?.length || 0}
-          />
-        </div>
         
-        <div className="flex-1 overflow-auto p-4 md:p-6">
-          <GameMap
-            location={gameState.location}
-            character={gameState.character}
-            playersInLocation={gameState.playersInLocation || []}
-            activeCombats={gameState.activeCombats || []}
-            onLocationChange={(locationId) => {
-              sendMessage({
-                type: 'move_character',
-                data: { characterId: gameState.character!.id, locationId },
-                timestamp: new Date().toISOString()
-              });
-            }}
-          />
+        {/* Tab Navigation */}
+        <div className="flex px-4 pb-3">
+          <div className="flex space-x-1 bg-secondary rounded-lg p-1">
+            <Button
+              variant={activeTab === 'overview' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('overview')}
+              className="px-3 py-1.5"
+            >
+              <Home className="w-4 h-4 mr-1" />
+              Обзор
+            </Button>
+            <Button
+              variant={activeTab === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('map')}
+              className="px-3 py-1.5"
+            >
+              <Map className="w-4 h-4 mr-1" />
+              Карта
+            </Button>
+            <Button
+              variant={activeTab === 'combat' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('combat')}
+              className="px-3 py-1.5"
+            >
+              <Sword className="w-4 h-4 mr-1" />
+              Бой
+            </Button>
+            <Button
+              variant={activeTab === 'profile' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('profile')}
+              className="px-3 py-1.5"
+            >
+              <User className="w-4 h-4 mr-1" />
+              Профиль
+            </Button>
+          </div>
         </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {renderTabContent()}
       </div>
 
       {/* Combat Modal */}

@@ -35,9 +35,10 @@ function LocationCard({
   const getLocationIcon = () => {
     switch (type) {
       case "camp": return "fas fa-home";
-      case "training": return "fas fa-sword";
+      case "hunting": return "fas fa-leaf";
+      case "combat": return "fas fa-sword";
       case "sacred": return "fas fa-gem";
-      case "neutral": return clan ? "fas fa-tree" : "fas fa-map-marker";
+      case "neutral": return "fas fa-tree";
       default: return "fas fa-map-marker";
     }
   };
@@ -46,14 +47,13 @@ function LocationCard({
     if (clan) {
       switch (clan) {
         case "thunder": return "border-green-500 bg-green-900";
-        case "shadow": return "border-purple-500 bg-purple-900";
-        case "wind": return "border-blue-500 bg-blue-900";
         case "river": return "border-cyan-500 bg-cyan-900";
       }
     }
     
     switch (type) {
-      case "training": return "border-orange-500 bg-orange-900";
+      case "hunting": return "border-emerald-500 bg-emerald-900";
+      case "combat": return "border-red-500 bg-red-900";
       case "sacred": return "border-indigo-500 bg-indigo-900";
       case "neutral": return "border-yellow-500 bg-yellow-900";
       default: return "border-gray-500 bg-gray-800";
@@ -64,14 +64,13 @@ function LocationCard({
     if (clan) {
       switch (clan) {
         case "thunder": return "text-green-400";
-        case "shadow": return "text-purple-400";
-        case "wind": return "text-blue-400";
         case "river": return "text-cyan-400";
       }
     }
     
     switch (type) {
-      case "training": return "text-orange-400";
+      case "hunting": return "text-emerald-400";
+      case "combat": return "text-red-400";
       case "sacred": return "text-indigo-400";
       case "neutral": return "text-yellow-400";
       default: return "text-gray-400";
