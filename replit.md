@@ -109,6 +109,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
 
 ## Changelog
 - July 01, 2025. Initial setup
+- July 03, 2025. Mobile interface optimization:
+  * Removed duplicate content between Profile and Overview tabs
+  * Eliminated duplicate navigation buttons at bottom
+  * Optimized map interface for mobile devices with smaller touch targets
+  * Added mobile-specific CSS optimizations for better touch interactions
+  * Simplified navigation to single top tab bar with responsive design
 
 ## User Preferences
 
