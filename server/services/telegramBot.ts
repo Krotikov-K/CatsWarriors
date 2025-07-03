@@ -30,35 +30,63 @@ export class TelegramBotService {
   private setupCommands() {
     if (!this.bot) return;
 
-    // Start command
+    // Start command with Web App button
     this.bot.onText(/\/start/, async (msg) => {
       const chatId = msg.chat.id;
       const telegramId = msg.from?.id.toString();
+      const userName = msg.from?.first_name || msg.from?.username || 'Котёнок';
       
       if (!telegramId) return;
 
       // Check if user already exists
       const existingUser = await storage.getUserByTelegramId(telegramId);
       
+      const webAppUrl = process.env.WEB_APP_URL || `https://${process.env.REPLIT_DEV_DOMAIN}`;
+      
+      const options = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🎮 Играть в Cats War",
+                web_app: { url: webAppUrl }
+              }
+            ],
+            [
+              {
+                text: "ℹ️ Как играть",
+                callback_data: "help"
+              }
+            ]
+          ]
+        }
+      };
+
       if (existingUser) {
         await this.bot?.sendMessage(chatId, 
-          `Добро пожаловать обратно в Cats War, ${existingUser.username}!\n\n` +
-          "Ваш аккаунт уже привязан к игре. Откройте веб-интерфейс для игры."
+          `🐱 Добро пожаловать обратно в Cats War, ${existingUser.username}!\n\n` +
+          "Ваш аккаунт привязан к игре. Нажмите кнопку ниже, чтобы играть:",
+          options
         );
       } else {
-        await this.bot?.sendMessage(chatId,
-          "🐱 Добро пожаловать в Cats War!\n\n" +
-          "Это ММО РПГ по вселенной 'Коты Воители'.\n\n" +
-          "Для начала игры:\n" +
-          "1. Зарегистрируйтесь на сайте\n" +
-          "2. Используйте команду /link для привязки аккаунта\n" +
-          "3. Создайте своего кота-воителя\n\n" +
-          "Команды:\n" +
-          "/help - помощь\n" +
-          "/link <username> - привязать аккаунт\n" +
-          "/status - статус персонажа\n" +
-          "/location - текущая локация"
-        );
+        // Create new user
+        try {
+          const newUser = await storage.createUser({
+            username: userName,
+            password: '', // Not used for Telegram auth
+            telegramId: telegramId
+          });
+          
+          await this.bot?.sendMessage(chatId,
+            `🐱 Добро пожаловать в Cats War, ${userName}!\n\n` +
+            "Это ММО РПГ по вселенной 'Коты Воители'.\n\n" +
+            "Ваш аккаунт создан! Нажмите кнопку ниже, чтобы играть:",
+            options
+          );
+        } catch (error) {
+          console.error('Error creating user:', error);
+          await this.bot?.sendMessage(chatId, "Произошла ошибка при создании аккаунта. Попробуйте позже.");
+        }
       }
     });
 

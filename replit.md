@@ -113,3 +113,10 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+### Target Audience & Requirements
+- **Platform**: Mobile devices only (Telegram Web App)
+- **Age group**: 8-16 years old
+- **Monetization**: Telegram Stars for in-game purchases
+- **Social features**: Friend invitation system needed
+- **Development approach**: Start simple, optimize and expand with future-proofing

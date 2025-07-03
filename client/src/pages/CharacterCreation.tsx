@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CLANS } from "@shared/schema";
+import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
 
 const characterSchema = z.object({
   name: z.string().min(2, "Имя должно содержать минимум 2 символа").max(20, "Имя не должно превышать 20 символов"),
@@ -28,6 +29,7 @@ type CharacterFormData = z.infer<typeof characterSchema>;
 export default function CharacterCreation() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { hapticFeedback, user } = useTelegramWebApp();
   const [availablePoints, setAvailablePoints] = useState(20);
 
   const form = useForm<CharacterFormData>({
@@ -76,6 +78,7 @@ export default function CharacterCreation() {
 
   const onSubmit = (data: CharacterFormData) => {
     if (totalStatsUsed > 20) {
+      hapticFeedback('heavy');
       toast({
         title: "Превышен лимит очков",
         description: "Вы не можете потратить больше 20 очков характеристик.",
@@ -83,6 +86,7 @@ export default function CharacterCreation() {
       });
       return;
     }
+    hapticFeedback('medium');
     createCharacterMutation.mutate(data);
   };
 
@@ -110,14 +114,13 @@ export default function CharacterCreation() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg flex items-center justify-center p-6">
-      <Card className="w-full max-w-2xl bg-card-bg border-border-dark">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-gaming text-forest">
-            <i className="fas fa-cat mr-3"></i>
-            Создание кота-воителя
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-inset">
+      <Card className="w-full max-w-md bg-card border-border">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-2xl font-gaming text-foreground">
+            🐱 Создание кота-воителя
           </CardTitle>
-          <p className="text-gray-400">Создайте своего персонажа для мира Котов Воителей</p>
+          <p className="text-muted-foreground text-sm">Создайте своего персонажа для мира Котов Воителей</p>
         </CardHeader>
         
         <CardContent>
@@ -129,12 +132,13 @@ export default function CharacterCreation() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-300">Имя кота</FormLabel>
+                    <FormLabel className="text-foreground">Имя кота</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Например: Огнезвёзд, Серебрянка..."
-                        className="bg-gray-800 border-border-dark text-white"
+                        className="bg-input border-border text-foreground"
                         {...field}
+                        onFocus={() => hapticFeedback('light')}
                       />
                     </FormControl>
                     <FormMessage />
@@ -148,22 +152,25 @@ export default function CharacterCreation() {
                 name="clan"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-300">Племя</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <FormLabel className="text-foreground">Племя</FormLabel>
+                    <Select value={field.value} onValueChange={(value) => {
+                      hapticFeedback('light');
+                      field.onChange(value);
+                    }}>
                       <FormControl>
-                        <SelectTrigger className="bg-gray-800 border-border-dark text-white">
+                        <SelectTrigger className="bg-input border-border text-foreground">
                           <SelectValue placeholder="Выберите племя" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-gray-800 border-border-dark">
+                      <SelectContent className="bg-popover border-border">
                         {Object.entries(CLANS).map(([key, clan]) => (
-                          <SelectItem key={key} value={key} className="text-white hover:bg-gray-700">
-                            {clan.name}
+                          <SelectItem key={key} value={key} className="text-popover-foreground">
+                            <span className={`clan-${key} font-medium`}>⚡</span> {clan.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {getClanDescription(field.value)}
                     </p>
                     <FormMessage />
