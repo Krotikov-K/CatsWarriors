@@ -20,7 +20,7 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
   };
 
   return (
-    <div className="p-4 border-b border-border-dark">
+    <div className="p-4 border-b border-border">
       <div className="flex items-center mb-4">
         {/* Character Avatar */}
         <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getClanGradient(character.clan)} flex items-center justify-center mr-4`}>

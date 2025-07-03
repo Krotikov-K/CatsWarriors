@@ -81,12 +81,45 @@
     -moz-osx-font-smoothing: grayscale;
     touch-action: manipulation;
     overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
     /* Telegram Web App styles */
     margin: 0;
     padding: 0;
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
+  }
+
+  /* Mobile viewport height fix */
+  @supports (height: 100dvh) {
+    .h-screen {
+      height: 100dvh;
+    }
+  }
+
+  /* Mobile scrolling improvements */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile touch improvements */
+  @media (max-width: 768px) {
+    html, body {
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    /* Allow text selection in input areas */
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    
+    /* Prevent zoom on input focus */
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
 
   .font-gaming {

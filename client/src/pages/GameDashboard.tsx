@@ -97,11 +97,19 @@ export default function GameDashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <div className="w-80 bg-card border-r border-border flex flex-col">
-        {/* Game Header */}
-        <div className="p-6 border-b border-border">
+    <div className="flex flex-col md:flex-row h-screen bg-background">
+      {/* Mobile Top Bar */}
+      <div className="md:hidden">
+        <TopBar 
+          location={gameState.location} 
+          playersOnline={gameState.playersInLocation?.length || 0}
+        />
+      </div>
+
+      {/* Sidebar - Mobile: Horizontal scroll, Desktop: Fixed sidebar */}
+      <div className="md:w-80 bg-card border-b md:border-r border-border flex md:flex-col overflow-x-auto md:overflow-y-auto flex-shrink-0">
+        {/* Game Header - Desktop only */}
+        <div className="hidden md:block p-6 border-b border-border">
           <h1 className="text-2xl font-bold text-foreground mb-2">
             🐱 Cats War
           </h1>
@@ -114,15 +122,23 @@ export default function GameDashboard() {
           </div>
         </div>
 
-        <CharacterPanel character={gameState.character} />
-        <StatsPanel character={gameState.character} />
-        <NavigationMenu />
+        {/* Mobile: Horizontal panels, Desktop: Vertical panels */}
+        <div className="flex md:flex-col w-full">
+          <div className="flex-shrink-0 w-80 md:w-full">
+            <CharacterPanel character={gameState.character} />
+          </div>
+          <div className="flex-shrink-0 w-80 md:w-full">
+            <StatsPanel character={gameState.character} />
+          </div>
+          <div className="flex-shrink-0 w-80 md:w-full">
+            <NavigationMenu />
+          </div>
+        </div>
 
-        {/* Telegram Bot Status */}
-        <div className="p-4 border-t border-border-dark">
-          <div className="flex items-center text-sm text-gray-400">
-            <i className="fab fa-telegram text-blue-400 mr-2"></i>
-            <span>Бот Telegram</span>
+        {/* Telegram Bot Status - Desktop only */}
+        <div className="hidden md:block p-4 border-t border-border">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <span>🤖 Telegram Bot</span>
             <div className="w-2 h-2 bg-green-400 rounded-full ml-auto"></div>
           </div>
         </div>
@@ -130,24 +146,29 @@ export default function GameDashboard() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar 
-          location={gameState.location} 
-          playersOnline={gameState.playersInLocation?.length || 0}
-        />
+        {/* Desktop Top Bar */}
+        <div className="hidden md:block">
+          <TopBar 
+            location={gameState.location} 
+            playersOnline={gameState.playersInLocation?.length || 0}
+          />
+        </div>
         
-        <GameMap
-          location={gameState.location}
-          character={gameState.character}
-          playersInLocation={gameState.playersInLocation || []}
-          activeCombats={gameState.activeCombats || []}
-          onLocationChange={(locationId) => {
-            sendMessage({
-              type: 'move_character',
-              data: { characterId: gameState.character!.id, locationId },
-              timestamp: new Date().toISOString()
-            });
-          }}
-        />
+        <div className="flex-1 overflow-auto p-4 md:p-6">
+          <GameMap
+            location={gameState.location}
+            character={gameState.character}
+            playersInLocation={gameState.playersInLocation || []}
+            activeCombats={gameState.activeCombats || []}
+            onLocationChange={(locationId) => {
+              sendMessage({
+                type: 'move_character',
+                data: { characterId: gameState.character!.id, locationId },
+                timestamp: new Date().toISOString()
+              });
+            }}
+          />
+        </div>
       </div>
 
       {/* Combat Modal */}

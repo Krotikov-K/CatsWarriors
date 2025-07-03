@@ -178,8 +178,8 @@ export default function GameMap({
   };
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      <div className="h-full bg-card-bg rounded-xl p-6 relative overflow-hidden">
+    <div className="w-full">
+      <div className="bg-card rounded-xl p-4 md:p-6 relative overflow-hidden min-h-[500px]">
         {/* Background */}
         <div className="absolute inset-0 opacity-20">
           <div 
@@ -205,7 +205,7 @@ export default function GameMap({
           </div>
 
           {/* Territory Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 mb-6">
             {locations.map((loc) => (
               <LocationCard
                 key={loc.id}
@@ -222,9 +222,9 @@ export default function GameMap({
           </div>
 
           {/* Map Legend */}
-          <div className="bg-gray-800 bg-opacity-80 rounded-lg p-4">
-            <h4 className="font-gaming font-semibold mb-3 text-white">Легенда карты</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-secondary bg-opacity-80 rounded-lg p-4">
+            <h4 className="font-semibold mb-3 text-foreground">Легенда карты</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
                 <span className="text-gray-300">Мирные игроки</span>
@@ -246,8 +246,8 @@ export default function GameMap({
 
           {/* Active players in location */}
           {playersInLocation.length > 0 && (
-            <div className="mt-6 bg-gray-800 bg-opacity-80 rounded-lg p-4">
-              <h4 className="font-gaming font-semibold mb-3 text-white">
+            <div className="mt-4 bg-secondary bg-opacity-80 rounded-lg p-4">
+              <h4 className="font-semibold mb-3 text-foreground">
                 Игроки в локации ({playersInLocation.length})
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
