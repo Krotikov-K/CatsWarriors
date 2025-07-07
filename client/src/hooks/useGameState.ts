@@ -14,8 +14,10 @@ export function useGameState(userId: number | null) {
     },
     enabled: !!userId,
     refetchInterval: (data) => {
-      // Refresh every 1 second if in combat, otherwise disabled
-      return data?.isInCombat ? 1000 : false;
+      // Refresh every 500ms if in combat, otherwise disabled  
+      const inCombat = data?.isInCombat || data?.currentCombat;
+      console.log('Refetch interval check:', { inCombat, hasCurrentCombat: !!data?.currentCombat });
+      return inCombat ? 500 : false;
     },
     refetchOnWindowFocus: true,
     staleTime: 0, // Always fetch fresh data

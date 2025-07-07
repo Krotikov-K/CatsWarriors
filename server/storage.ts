@@ -381,9 +381,11 @@ export class MemStorage implements IStorage {
   }
 
   async getCharacterActiveCombat(characterId: number): Promise<Combat | undefined> {
-    return Array.from(this.combats.values()).find(
+    const activeCombat = Array.from(this.combats.values()).find(
       combat => combat.status === "active" && combat.participants.includes(characterId)
     );
+    console.log(`Getting active combat for character ${characterId}:`, activeCombat?.id);
+    return activeCombat;
   }
 
   async createCombat(locationId: number, participants: number[]): Promise<Combat> {

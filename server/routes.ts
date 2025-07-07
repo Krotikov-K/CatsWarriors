@@ -647,15 +647,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Character not found" });
       }
 
+      const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
       const location = await storage.getLocation(character.currentLocationId);
       const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
       const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
       const currentCombat = await storage.getCharacterActiveCombat(characterId);
 
+      console.log(`Game state for character ${characterId}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
+
       res.json({
         character,
         location,
         playersInLocation,
+        npcsInLocation,
         activeCombats,
         isInCombat: !!currentCombat,
         currentCombat
