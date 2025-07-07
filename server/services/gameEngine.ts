@@ -52,13 +52,23 @@ export class GameEngine {
 
     const allCombatants = [...aliveCharacters, ...aliveNPCs];
 
+    console.log(`Combat ${combatId} status:`, {
+      characters: aliveCharacters.length,
+      npcs: aliveNPCs.length,
+      npcParticipants: combat.npcParticipants,
+      combatType: combat.type,
+      turn: combat.currentTurn
+    });
+
     // Check if combat should end
     if (combat.type === "pve") {
       if (aliveCharacters.length === 0 || aliveNPCs.length === 0) {
+        console.log(`PvE combat ${combatId} ending: chars=${aliveCharacters.length}, npcs=${aliveNPCs.length}`);
         await this.endCombat(combatId);
         return;
       }
     } else if (allCombatants.length < 2) {
+      console.log(`Combat ${combatId} ending: not enough participants (${allCombatants.length})`);
       await this.endCombat(combatId);
       return;
     }
@@ -96,7 +106,10 @@ export class GameEngine {
 
     if (possibleTargets.length > 0) {
       const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+      console.log(`Combat ${combatId}: ${attacker.name} attacks ${target.name}`);
       await this.executeAttack(attacker, target, combatId);
+    } else {
+      console.log(`Combat ${combatId}: No valid targets for ${attacker.name}`);
     }
     
     // Update turn counter
@@ -186,6 +199,11 @@ export class GameEngine {
               await storage.addCombatLogEntry(combatId, expEntry);
             }
           }
+          
+          // Kill the NPC if it's an NPC that was defeated
+          if ('type' in target) {
+            await storage.killNPC(target.id);
+          }
         }
       }
     }
@@ -212,6 +230,7 @@ export class GameEngine {
   }
 
   private static async endCombat(combatId: number): Promise<void> {
+    console.log(`Ending combat ${combatId}`);
     await storage.finishCombat(combatId);
     
     const endEntry: CombatLogEntry = {

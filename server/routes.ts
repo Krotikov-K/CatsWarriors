@@ -485,8 +485,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           npcParticipants: npcParticipants
         });
         
-        // Start automated combat processing
-        GameEngine.startAutoCombat(combat.id);
+        // Start automated combat processing (avoid duplicate starts)
+        setTimeout(() => {
+          GameEngine.startAutoCombat(combat.id);
+        }, 100);
         
       } else if (targetId && !npcId) {
         // PVP combat with another character
