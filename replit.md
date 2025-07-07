@@ -124,6 +124,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Reorganized UI: moved character info to Profile tab, location info to Overview tab
   * Added automatic tab switching to Combat when battle starts
   * Fixed NPC spawning and combat system errors
+- July 07, 2025. Database integration and NPC fix:
+  * Added PostgreSQL database for persistent character storage
+  * Implemented DatabaseStorage class for character management
+  * Fixed NPC disappearing issue after database integration
+  * Characters now persist between sessions and are linked to Telegram accounts
+  * Combat system remains in-memory for fast real-time performance
 
 ## User Preferences
 

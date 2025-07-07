@@ -612,7 +612,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNPCsByLocation(locationId: number): Promise<NPC[]> {
-    return Array.from(this.npcsMap.values()).filter(npc => npc.locationId === locationId && !npc.isDead);
+    return Array.from(this.npcsMap.values()).filter(npc => 
+      npc.spawnsInLocation.includes(locationId) && !npc.isDead
+    );
   }
 
   async getAllNPCs(): Promise<NPC[]> {

@@ -29,15 +29,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server setup
   const wss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws' 
+    path: '/ws',
+    perMessageDeflate: false
   });
 
   wss.on('connection', (ws, req) => {
-    console.log('WebSocket connection established');
+    console.log('WebSocket connection established from:', req.socket.remoteAddress);
     
     ws.on('message', async (data) => {
       try {
         const message: WebSocketMessage = JSON.parse(data.toString());
+        console.log('Received WebSocket message:', message.type);
         await handleWebSocketMessage(ws, message);
       } catch (error) {
         console.error('WebSocket message error:', error);
@@ -45,14 +47,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     ws.on('close', () => {
+      console.log('WebSocket connection closed');
       // Remove client from connected clients
       const entries = Array.from(connectedClients.entries());
       for (const [characterId, client] of entries) {
         if (client === ws) {
           connectedClients.delete(characterId);
+          storage.setCharacterOnline(characterId, false);
           break;
         }
       }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
     });
   });
 
