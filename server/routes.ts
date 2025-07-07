@@ -437,7 +437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Combat routes
   app.post("/api/combat/start", async (req, res) => {
     try {
-      const { characterId, targetId, npcId, locationId } = startCombatSchema.parse(req.body);
+      const { characterId, targetId, locationId } = startCombatSchema.parse(req.body);
+      const npcId = req.body.npcId || req.body.targetId; // Support both npcId and targetId for NPC combat
       
       const character = await storage.getCharacter(characterId);
       if (!character) {
@@ -455,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let combat;
-      let combatType: "pvp" | "pve" = "pvp";
+      let combatType: "pvp" | "pve" = "pve"; // Default to PVE for NPC combat
       let participants: number[] = [characterId];
       let npcParticipants: number[] = [];
       let eventData: any = { combatId: 0, participants: [characterId] };
@@ -478,8 +479,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create PVE combat
         combat = await storage.createCombat(locationId, participants);
         
-      } else if (targetId) {
+        // Start automated combat processing
+        GameEngine.startAutoCombat(combat.id);
+        
+      } else if (targetId && !npcId) {
         // PVP combat with another character
+        combatType = "pvp";
         const target = await storage.getCharacter(targetId);
         if (!target) {
           return res.status(404).json({ message: "Target character not found" });

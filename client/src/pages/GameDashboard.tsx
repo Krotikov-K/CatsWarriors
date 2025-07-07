@@ -268,19 +268,42 @@ export default function GameDashboard() {
         return (
           <div className="p-4 space-y-6 pb-20">
             {gameState.isInCombat && gameState.currentCombat ? (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <h2 className="text-xl font-bold mb-4">Активный бой</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Бой #{gameState.currentCombat.id}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {gameState.currentCombat.participants.length} участников
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Локация: {location?.name}
+              <div className="space-y-4">
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <h2 className="text-xl font-bold mb-4">Активный бой</h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Бой #{gameState.currentCombat.id}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {gameState.currentCombat.participants.length} участников
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Локация: {location?.name}
+                    </div>
+                    <div className="text-sm">
+                      Статус: {gameState.currentCombat.isFinished ? 'Завершен' : 'Активен'}
+                    </div>
                   </div>
                 </div>
+                
+                {gameState.currentCombat.combatLog && gameState.currentCombat.combatLog.length > 0 && (
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <h3 className="font-semibold mb-3">Журнал боя</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {gameState.currentCombat.combatLog.map((entry, index) => (
+                        <div key={index} className="text-sm p-2 bg-muted rounded">
+                          <div className="flex justify-between items-start">
+                            <span className="flex-1">{entry.message}</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {new Date(entry.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-8">
