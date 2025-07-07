@@ -266,34 +266,13 @@ export class TelegramBotService {
   }
 
   async notifyCombatStart(participants: number[], locationName: string): Promise<void> {
-    for (const characterId of participants) {
-      const character = await storage.getCharacter(characterId);
-      if (!character) continue;
-
-      const user = await storage.getUser(character.userId);
-      if (!user?.telegramId) continue;
-
-      await this.sendNotification(
-        user.telegramId,
-        `⚔️ Бой начался!\n\n` +
-        `Ваш персонаж ${character.name} вступил в бой в локации "${locationName}".\n\n` +
-        `Откройте игру для наблюдения за боем!`
-      );
-    }
+    // Combat notifications disabled - all combat happens in-game
+    return;
   }
 
   async notifyCombatEnd(characterId: number, victory: boolean): Promise<void> {
-    const character = await storage.getCharacter(characterId);
-    if (!character) return;
-
-    const user = await storage.getUser(character.userId);
-    if (!user?.telegramId) return;
-
-    const message = victory 
-      ? `🏆 Победа!\n\nВаш персонаж ${character.name} одержал победу в бою!`
-      : `💀 Поражение\n\nВаш персонаж ${character.name} потерпел поражение в бою.`;
-
-    await this.sendNotification(user.telegramId, message);
+    // Combat notifications disabled - all combat happens in-game
+    return;
   }
 
   private getClanName(clan: string): string {

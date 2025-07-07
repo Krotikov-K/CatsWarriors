@@ -63,29 +63,46 @@ export class GameEngine {
       return;
     }
 
-    // Process combat turns
-    for (const attacker of allCombatants) {
-      let possibleTargets: (Character | NPC)[];
-      
-      if (combat.type === "pve") {
-        // In PVE, characters attack NPCs and NPCs attack characters
-        if ('userId' in attacker) { // Character
-          possibleTargets = aliveNPCs;
-        } else { // NPC
-          possibleTargets = aliveCharacters;
-        }
-      } else {
-        // In PVP/mixed, everyone can attack everyone else
-        possibleTargets = allCombatants.filter(target => 
-          target !== attacker && target.currentHp > 0
-        );
+    // Sort combatants by agility (higher agility goes first)
+    allCombatants.sort((a, b) => b.agility - a.agility);
+    
+    // Process one attack per turn, cycling through combatants
+    const currentTurnIndex = combat.currentTurn % allCombatants.length;
+    const attacker = allCombatants[currentTurnIndex];
+    
+    // Make sure attacker is still alive
+    if (attacker.currentHp <= 0) {
+      await storage.updateCombat(combatId, {
+        currentTurn: combat.currentTurn + 1
+      });
+      return;
+    }
+
+    // Find targets for this attacker
+    let possibleTargets: (Character | NPC)[];
+    if (combat.type === "pve") {
+      // In PVE, characters attack NPCs and NPCs attack characters
+      if ('userId' in attacker) { // Character
+        possibleTargets = aliveNPCs;
+      } else { // NPC
+        possibleTargets = aliveCharacters;
       }
+    } else {
+      // In PVP/mixed, everyone can attack everyone else
+      possibleTargets = allCombatants.filter(target => 
+        target !== attacker && target.currentHp > 0
+      );
+    }
 
-      if (possibleTargets.length === 0) continue;
-
+    if (possibleTargets.length > 0) {
       const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
       await this.executeAttack(attacker, target, combatId);
     }
+    
+    // Update turn counter
+    await storage.updateCombat(combatId, {
+      currentTurn: combat.currentTurn + 1
+    });
   }
 
   private static async executeAttack(attacker: Character | NPC, target: Character | NPC, combatId: number): Promise<void> {
