@@ -13,7 +13,10 @@ export function useGameState(userId: number | null) {
       return res.json();
     },
     enabled: !!userId,
-    refetchInterval: false, // Disable auto-refresh to avoid loops
+    refetchInterval: (data) => {
+      // Refresh every 1 second if in combat, otherwise disabled
+      return data?.isInCombat ? 1000 : false;
+    },
     refetchOnWindowFocus: true,
     staleTime: 0, // Always fetch fresh data
   });

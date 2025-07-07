@@ -242,7 +242,12 @@ export class GameEngine {
 
   private static async endCombat(combatId: number): Promise<void> {
     console.log(`Ending combat ${combatId}`);
-    await storage.finishCombat(combatId);
+    
+    // Update combat status to finished
+    await storage.updateCombat(combatId, { 
+      status: "finished",
+      finishedAt: new Date()
+    });
     
     const endEntry: CombatLogEntry = {
       timestamp: new Date().toISOString(),

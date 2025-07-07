@@ -433,6 +433,7 @@ export class MemStorage implements IStorage {
     if (!combat) return undefined;
 
     combat.status = "finished";
+    combat.isFinished = true;
     combat.finishedAt = new Date();
     this.combats.set(combatId, combat);
     return combat;
