@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTelegramWebApp } from './useTelegramWebApp';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -12,11 +12,13 @@ export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user: telegramUser, isInitialized } = useTelegramWebApp();
+  const hasAuthenticatedRef = useRef(false);
 
   useEffect(() => {
-    if (!isInitialized) return;
-
     const authenticateUser = async () => {
+      if (hasAuthenticatedRef.current) return;
+      hasAuthenticatedRef.current = true;
+      
       try {
         if (telegramUser) {
           // Authenticate via Telegram
@@ -38,8 +40,13 @@ export function useUser() {
       }
     };
 
-    authenticateUser();
-  }, [telegramUser, isInitialized]);
+    if (isInitialized) {
+      authenticateUser();
+    }
+  }, [isInitialized]);
 
-  return { user, isLoading };
+  return {
+    user,
+    isLoading
+  };
 }

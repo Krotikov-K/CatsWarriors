@@ -1,5 +1,30 @@
-import { useEffect, useState } from 'react';
-import WebApp from '@twa-dev/sdk';
+import { useState, useEffect } from 'react';
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: {
+        initDataUnsafe: {
+          user?: TelegramUser;
+        };
+        colorScheme: 'light' | 'dark';
+        themeParams: {
+          bg_color?: string;
+          text_color?: string;
+          hint_color?: string;
+          link_color?: string;
+          button_color?: string;
+          button_text_color?: string;
+          secondary_bg_color?: string;
+        };
+        HapticFeedback: {
+          impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
+        };
+        onEvent: (eventType: string, callback: () => void) => void;
+      };
+    };
+  }
+}
 
 export interface TelegramUser {
   id: number;
@@ -43,30 +68,17 @@ export function useTelegramWebApp() {
   });
 
   useEffect(() => {
-    // Initialize Web App data
-    const initData = WebApp.initDataUnsafe;
-    const user = initData?.user || null;
+    const WebApp = window.Telegram?.WebApp;
     
-    setWebAppData({
-      user,
-      isInitialized: !!user,
-      colorScheme: WebApp.colorScheme,
-      themeParams: {
-        bg_color: WebApp.themeParams.bg_color || '#ffffff',
-        text_color: WebApp.themeParams.text_color || '#000000',
-        hint_color: WebApp.themeParams.hint_color || '#999999',
-        link_color: WebApp.themeParams.link_color || '#0088cc',
-        button_color: WebApp.themeParams.button_color || '#0088cc',
-        button_text_color: WebApp.themeParams.button_text_color || '#ffffff',
-        secondary_bg_color: WebApp.themeParams.secondary_bg_color || '#efeff4',
-      },
-    });
-
-    // Listen for theme changes
-    WebApp.onEvent('themeChanged', () => {
-      setWebAppData(prev => ({
-        ...prev,
-        colorScheme: WebApp.colorScheme,
+    if (WebApp) {
+      // Initialize Web App data
+      const initData = WebApp.initDataUnsafe;
+      const user = initData?.user || null;
+      
+      setWebAppData({
+        user,
+        isInitialized: true,
+        colorScheme: WebApp.colorScheme || 'light',
         themeParams: {
           bg_color: WebApp.themeParams.bg_color || '#ffffff',
           text_color: WebApp.themeParams.text_color || '#000000',
@@ -76,59 +88,25 @@ export function useTelegramWebApp() {
           button_text_color: WebApp.themeParams.button_text_color || '#ffffff',
           secondary_bg_color: WebApp.themeParams.secondary_bg_color || '#efeff4',
         },
+      });
+    } else {
+      // For development/testing
+      setWebAppData(prev => ({
+        ...prev,
+        isInitialized: true
       }));
-    });
+    }
   }, []);
 
-  const showAlert = (message: string) => {
-    WebApp.showAlert(message);
-  };
-
-  const showConfirm = (message: string, callback: (confirmed: boolean) => void) => {
-    WebApp.showConfirm(message, callback);
-  };
-
-  const showPopup = (params: {
-    title?: string;
-    message: string;
-    buttons?: Array<{
-      id: string;
-      type: 'default' | 'ok' | 'close' | 'cancel' | 'destructive';
-      text: string;
-    }>;
-  }, callback?: (buttonId?: string) => void) => {
-    WebApp.showPopup(params, callback);
-  };
-
-  const hapticFeedback = (type: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => {
-    WebApp.HapticFeedback.impactOccurred(type);
-  };
-
-  const close = () => {
-    WebApp.close();
-  };
-
-  const sendData = (data: string) => {
-    WebApp.sendData(data);
-  };
-
-  const openTelegramLink = (url: string) => {
-    WebApp.openTelegramLink(url);
-  };
-
-  const openLink = (url: string) => {
-    WebApp.openLink(url);
+  const hapticFeedback = (style: 'light' | 'medium' | 'heavy') => {
+    const WebApp = window.Telegram?.WebApp;
+    if (WebApp?.HapticFeedback) {
+      WebApp.HapticFeedback.impactOccurred(style);
+    }
   };
 
   return {
     ...webAppData,
-    showAlert,
-    showConfirm,
-    showPopup,
     hapticFeedback,
-    close,
-    sendData,
-    openTelegramLink,
-    openLink,
   };
 }

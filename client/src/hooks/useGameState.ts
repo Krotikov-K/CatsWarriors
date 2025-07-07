@@ -13,8 +13,9 @@ export function useGameState(userId: number | null) {
       return res.json();
     },
     enabled: !!userId,
-    refetchInterval: 5000,
-    staleTime: 1000,
+    refetchInterval: 10000, // 10 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 5000, // 5 seconds
   });
 
   return {
