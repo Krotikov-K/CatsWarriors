@@ -133,25 +133,15 @@ export default function GameDashboard() {
 
   if (userLoading || gameLoading) {
     return (
-      <div className="flex flex-col h-screen bg-background">
-        <div className="bg-card border-b border-border p-4">
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <div className="flex-1 flex">
-          <div className="w-80 p-6">
-            <Skeleton className="h-16 w-16 rounded-full mb-4" />
-            <Skeleton className="h-4 w-24 mb-2" />
-            <Skeleton className="h-2 w-full mb-4" />
-            <div className="grid grid-cols-2 gap-3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-lg" />
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 p-6">
-            <Skeleton className="h-16 w-full mb-6" />
-            <Skeleton className="h-96 w-full" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4">Cats War</h1>
+          <p className="text-muted-foreground mb-6">
+            Загружаем игру...
+          </p>
+          <div className="animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-2"></div>
+            <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
           </div>
         </div>
       </div>
@@ -190,15 +180,9 @@ export default function GameDashboard() {
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="h-full p-4 md:p-6 overflow-auto">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-foreground mb-2">
-                Лагерь {character.clan === 'thunder' ? 'Грозового' : 'Речного'} племени
-              </h2>
-              <p className="text-muted-foreground">
-                Добро пожаловать в мир Котов-Воителей! Исследуйте территории, сражайтесь с врагами и развивайте своего персонажа.
-              </p>
-            </div>
+          <div className="p-4 space-y-6 pb-20">
+            <CharacterPanel character={character} />
+            <StatsPanel character={character} />
             
             {npcsInLocation.length > 0 && (
               <NPCPanel 
@@ -209,13 +193,13 @@ export default function GameDashboard() {
             )}
 
             {activeCombats.length > 0 && (
-              <div className="mb-6">
+              <div>
                 <h3 className="text-lg font-semibold mb-3">Активные бои</h3>
                 <div className="space-y-2">
                   {activeCombats.map((combat) => (
                     <div
                       key={combat.id}
-                      className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent transition-colors"
+                      className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:bg-accent transition-colors"
                       onClick={() => handleCombatClick(combat)}
                     >
                       <div className="flex justify-between items-center">
@@ -229,12 +213,31 @@ export default function GameDashboard() {
                 </div>
               </div>
             )}
+
+            {playersInLocation.length > 1 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Игроки в локации</h3>
+                <div className="space-y-2">
+                  {playersInLocation.filter(p => p.id !== character.id).map((player) => (
+                    <div key={player.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div>
+                        <div className="font-medium">{player.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {player.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
 
       case 'map':
         return (
-          <div className="h-full">
+          <div className="h-full pb-16">
             <MapView
               location={location}
               character={character}
@@ -247,7 +250,7 @@ export default function GameDashboard() {
 
       default:
         return (
-          <div className="h-full p-4 md:p-6 flex items-center justify-center">
+          <div className="h-full p-4 flex items-center justify-center pb-16">
             <p className="text-muted-foreground">Раздел в разработке</p>
           </div>
         );
@@ -255,67 +258,64 @@ export default function GameDashboard() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <TopBar location={location} playersOnline={playersOnline} />
       
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-80 border-r border-border bg-card/50 flex flex-col">
-          <div className="p-4 border-b border-border">
-            <CharacterPanel character={character} />
-          </div>
-          
-          <div className="p-4 border-b border-border">
-            <StatsPanel character={character} />
-          </div>
-          
-          <div className="flex-1 p-4">
-            <h3 className="font-semibold mb-3">Игроки в локации</h3>
-            <div className="space-y-2">
-              {playersInLocation.map((player) => (
-                <div key={player.id} className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>{player.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        {renderTabContent()}
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Mobile Tab Navigation */}
-          <div className="border-b border-border bg-card">
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'overview'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Home className="w-4 h-4" />
-                Обзор
-              </button>
-              <button
-                onClick={() => setActiveTab('map')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'map'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Map className="w-4 h-4" />
-                Карта
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
-            {renderTabContent()}
-          </div>
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'overview'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Home className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Обзор</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'map'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Map className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Карта</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('combat')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'combat'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Sword className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Бой</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'profile'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <User className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Профиль</span>
+          </button>
         </div>
       </div>
 
