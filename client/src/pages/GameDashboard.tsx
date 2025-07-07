@@ -74,6 +74,7 @@ export default function GameDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      setActiveTab('combat'); // Переключаемся на вкладку боя
       toast({
         title: "Бой начался!",
         description: "Вы вступили в бой с противником.",
@@ -182,8 +183,22 @@ export default function GameDashboard() {
       case 'overview':
         return (
           <div className="p-4 space-y-6 pb-20">
-            <CharacterPanel character={character} />
-            <StatsPanel character={character} />
+            <div className="bg-card border border-border rounded-lg p-4">
+              <h2 className="text-xl font-bold mb-2">
+                {location?.name || 'Неизвестная локация'}
+              </h2>
+              <p className="text-muted-foreground mb-3">
+                {location?.description || 'Описание локации отсутствует'}
+              </p>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="bg-accent px-2 py-1 rounded">
+                  Уровень опасности: {location?.dangerLevel || 1}
+                </span>
+                <span className="text-muted-foreground">
+                  Игроков онлайн: {playersOnline}
+                </span>
+              </div>
+            </div>
             
             {npcsInLocation.length > 0 && (
               <NPCPanel 
@@ -246,6 +261,43 @@ export default function GameDashboard() {
               activeCombats={activeCombats}
               onLocationChange={handleLocationChange}
             />
+          </div>
+        );
+
+      case 'combat':
+        return (
+          <div className="p-4 space-y-6 pb-20">
+            {gameState.isInCombat && gameState.currentCombat ? (
+              <div className="bg-card border border-border rounded-lg p-4">
+                <h2 className="text-xl font-bold mb-4">Активный бой</h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Бой #{gameState.currentCombat.id}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {gameState.currentCombat.participants.length} участников
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Локация: {location?.name}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">Вы не участвуете в бою</p>
+                <p className="text-sm text-muted-foreground">
+                  Найдите NPC противников в локациях для охоты или присоединитесь к активному бою
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'profile':
+        return (
+          <div className="p-4 space-y-6 pb-20">
+            <CharacterPanel character={character} />
+            <StatsPanel character={character} />
           </div>
         );
 
