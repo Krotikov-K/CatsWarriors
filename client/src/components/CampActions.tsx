@@ -35,14 +35,12 @@ export default function CampActions({ character, location }: CampActionsProps) {
     },
   });
 
-  // Check if character is in their clan's camp
-  const isInRightCamp = 
-    (character.clan === "Thunderclan" && location.name === "Лагерь Грозового племени") ||
-    (character.clan === "Riverclan" && location.name === "Лагерь Речного племени");
+  // Check if character is in any camp (for testing, show in all camps)
+  const isInCamp = location.type === "camp";
+  const canUsePoultice = isInCamp && character.currentHp < character.maxHp;
 
-  const canUsePoultice = isInRightCamp && location.type === "camp" && character.currentHp < character.maxHp;
-
-  if (!isInRightCamp || location.type !== "camp") {
+  // Show camp actions in any camp for now
+  if (!isInCamp) {
     return null;
   }
 
@@ -54,20 +52,20 @@ export default function CampActions({ character, location }: CampActionsProps) {
       </div>
       
       <div className="space-y-3">
-        <div className="text-sm text-muted-foreground">
-          <div className="flex justify-between items-center">
+        <div className="text-sm">
+          <div className="flex justify-between items-center mb-2">
             <span>Здоровье:</span>
-            <span className="font-medium">{character.currentHp}/{character.maxHp} HP</span>
+            <span className="font-medium text-foreground">{character.currentHp}/{character.maxHp} HP</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+          <div className="w-full bg-secondary rounded-full h-3">
             <div 
-              className="bg-red-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(character.currentHp / character.maxHp) * 100}%` }}
+              className="bg-red-500 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${Math.max(5, (character.currentHp / character.maxHp) * 100)}%` }}
             />
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground p-2 bg-accent rounded">
+        <div className="text-xs text-muted-foreground p-3 bg-accent/50 rounded border">
           💡 Здоровье восстанавливается автоматически по 1 HP в минуту
         </div>
 

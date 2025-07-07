@@ -154,29 +154,38 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                 </Button>
               </div>
 
-              {gameState.groupsInLocation && gameState.groupsInLocation.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Доступные группы:</h4>
-                  {gameState.groupsInLocation.map((group) => (
-                    <div key={group.id} className="flex items-center justify-between p-3 border rounded">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">
+                  Доступные группы в локации ({gameState.groupsInLocation?.length || 0}):
+                </h4>
+                {gameState.groupsInLocation && gameState.groupsInLocation.length > 0 ? (
+                  gameState.groupsInLocation.map((group) => (
+                    <div key={group.id} className="flex items-center justify-between p-3 border rounded bg-accent/30">
                       <div>
                         <div className="font-medium">{group.name}</div>
                         <div className="text-sm text-muted-foreground">
                           Макс. участников: {group.maxMembers}
+                          {group.leaderId === gameState.character?.id && " (Ваша группа)"}
                         </div>
                       </div>
-                      <Button 
-                        onClick={() => joinGroupMutation.mutate(group.id)}
-                        disabled={joinGroupMutation.isPending}
-                        size="sm"
-                      >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Вступить
-                      </Button>
+                      {group.leaderId !== gameState.character?.id && (
+                        <Button 
+                          onClick={() => joinGroupMutation.mutate(group.id)}
+                          disabled={joinGroupMutation.isPending}
+                          size="sm"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Вступить
+                        </Button>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground p-3 border rounded bg-muted/30">
+                    Нет групп в этой локации
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

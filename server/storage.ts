@@ -963,22 +963,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGroupsInLocation(locationId: number): Promise<Group[]> {
-    return await db
-      .select()
-      .from(groups)
-      .where(and(eq(groups.locationId, locationId), eq(groups.isActive, true)));
+    console.log(`Getting groups for location ${locationId}`);
+    try {
+      const result = await db
+        .select()
+        .from(groups)
+        .where(and(eq(groups.locationId, locationId), eq(groups.isActive, true)));
+      
+      console.log(`Found ${result.length} groups in location ${locationId}:`, result);
+      return result;
+    } catch (error) {
+      console.error(`Error getting groups for location ${locationId}:`, error);
+      return [];
+    }
   }
 
   async getCharacterGroup(characterId: number): Promise<Group | undefined> {
-    const [result] = await db
-      .select({ group: groups })
-      .from(groupMembers)
-      .leftJoin(groups, eq(groupMembers.groupId, groups.id))
-      .where(and(
-        eq(groupMembers.characterId, characterId),
-        eq(groups.isActive, true)
-      ));
-    return result?.group || undefined;
+    console.log(`Getting group for character ${characterId}`);
+    try {
+      const [result] = await db
+        .select({ group: groups })
+        .from(groupMembers)
+        .innerJoin(groups, and(
+          eq(groupMembers.groupId, groups.id),
+          eq(groups.isActive, true)
+        ))
+        .where(eq(groupMembers.characterId, characterId));
+      console.log(`Found group for character ${characterId}:`, result?.group);
+      return result?.group || undefined;
+    } catch (error) {
+      console.error(`Error getting group for character ${characterId}:`, error);
+      return undefined;
+    }
   }
 
   async joinGroup(groupId: number, characterId: number): Promise<GroupMember | undefined> {
