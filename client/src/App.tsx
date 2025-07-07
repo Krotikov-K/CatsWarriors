@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import GameDashboard from "@/pages/GameDashboard";
 import CharacterCreation from "@/pages/CharacterCreation";
+import AdminPanel from "@/pages/AdminPanel";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -12,6 +13,7 @@ function Router() {
     <Switch>
       <Route path="/" component={GameDashboard} />
       <Route path="/create-character" component={CharacterCreation} />
+      <Route path="/admin" component={AdminPanel} />
       <Route component={NotFound} />
     </Switch>
   );

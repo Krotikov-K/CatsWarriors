@@ -68,6 +68,10 @@ export interface IStorage {
   // Game Events
   createGameEvent(event: Omit<GameEvent, 'id' | 'createdAt'>): Promise<GameEvent>;
   getRecentEvents(limit: number): Promise<GameEvent[]>;
+
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -461,6 +465,19 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined> {
+    const location = this.locations.get(id);
+    if (!location) return undefined;
+
+    const updatedLocation = { ...location, ...updates };
+    this.locations.set(id, updatedLocation);
+    return updatedLocation;
+  }
+
   private calculateMaxHp(endurance: number): number {
     return 80 + (endurance * 2);
   }
@@ -773,6 +790,19 @@ export class DatabaseStorage implements IStorage {
       .from(gameEvents)
       .orderBy(gameEvents.createdAt)
       .limit(limit);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined> {
+    const [updatedLocation] = await db
+      .update(locations)
+      .set(updates)
+      .where(eq(locations.id, id))
+      .returning();
+    return updatedLocation || undefined;
   }
 
   private calculateMaxHp(endurance: number): number {

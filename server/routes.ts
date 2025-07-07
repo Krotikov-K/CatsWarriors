@@ -678,5 +678,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  app.get("/api/admin/characters", async (req, res) => {
+    try {
+      // Get all characters from all users
+      const users = await storage.getAllUsers();
+      const allCharacters = [];
+      
+      for (const user of users) {
+        const userCharacters = await storage.getCharactersByUserId(user.id);
+        allCharacters.push(...userCharacters);
+      }
+      
+      res.json(allCharacters);
+    } catch (error) {
+      console.error("Get all characters error:", error);
+      res.status(500).json({ message: "Failed to get characters" });
+    }
+  });
+
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Get all users error:", error);
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+
+  app.patch("/api/admin/characters/:id", async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedCharacter = await storage.updateCharacter(characterId, updates);
+      if (!updatedCharacter) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      res.json(updatedCharacter);
+    } catch (error) {
+      console.error("Update character error:", error);
+      res.status(500).json({ message: "Failed to update character" });
+    }
+  });
+
+  app.patch("/api/admin/locations/:id", async (req, res) => {
+    try {
+      const locationId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedLocation = await storage.updateLocation(locationId, updates);
+      if (!updatedLocation) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      res.json(updatedLocation);
+    } catch (error) {
+      console.error("Update location error:", error);
+      res.status(500).json({ message: "Failed to update location" });
+    }
+  });
+
+  app.patch("/api/admin/npcs/:id", async (req, res) => {
+    try {
+      const npcId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedNPC = await storage.updateNPC(npcId, updates);
+      if (!updatedNPC) {
+        return res.status(404).json({ message: "NPC not found" });
+      }
+      
+      res.json(updatedNPC);
+    } catch (error) {
+      console.error("Update NPC error:", error);
+      res.status(500).json({ message: "Failed to update NPC" });
+    }
+  });
+
+  app.post("/api/admin/npcs/:id/respawn", async (req, res) => {
+    try {
+      const npcId = parseInt(req.params.id);
+      
+      const respawnedNPC = await storage.respawnNPC(npcId);
+      if (!respawnedNPC) {
+        return res.status(404).json({ message: "NPC not found" });
+      }
+      
+      res.json(respawnedNPC);
+    } catch (error) {
+      console.error("Respawn NPC error:", error);
+      res.status(500).json({ message: "Failed to respawn NPC" });
+    }
+  });
+
   return httpServer;
 }
