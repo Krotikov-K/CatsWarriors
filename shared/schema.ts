@@ -125,6 +125,7 @@ export const insertNpcSchema = createInsertSchema(npcs).pick({
   name: true,
   type: true,
   level: true,
+  maxHp: true,
   strength: true,
   agility: true,
   intelligence: true,

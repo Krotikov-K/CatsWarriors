@@ -473,9 +473,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Add initial log entry
-      const startMessage = combatType === "pve" 
-        ? `${character.name} вступает в бой с ${await (await storage.getNPC(npcId!))?.name}!`
-        : `Начинается бой между игроками!`;
+      let startMessage = `Начинается бой между игроками!`;
+      if (combatType === "pve" && npcId) {
+        const npc = await storage.getNPC(npcId);
+        startMessage = `${character.name} вступает в бой с ${npc?.name || 'неизвестным существом'}!`;
+      }
         
       await storage.addCombatLogEntry(combat.id, {
         timestamp: new Date().toISOString(),

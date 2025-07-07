@@ -153,7 +153,7 @@ export class GameEngine {
             if (character && character.currentHp > 0) {
               const expGain = target.experienceReward;
               const newExp = character.experience + expGain;
-              const newLevel = Math.floor(newExp / this.calculateLevelUpRequirement(character.level)) + 1;
+              const newLevel = Math.floor(newExp / GameEngine.calculateLevelUpRequirement(character.level)) + 1;
               
               await storage.updateCharacter(characterId, { 
                 experience: newExp,
@@ -162,7 +162,7 @@ export class GameEngine {
 
               const expEntry: CombatLogEntry = {
                 timestamp: new Date().toISOString(),
-                type: "damage",
+                type: "join",
                 actorId: characterId,
                 message: `${character.name} получает ${expGain} опыта!`
               };
@@ -199,8 +199,8 @@ export class GameEngine {
     
     const endEntry: CombatLogEntry = {
       timestamp: new Date().toISOString(),
-      type: "damage",
-      actorId: 0,
+      type: "leave",
+      actorId: -1,
       message: "Бой завершен!"
     };
     await storage.addCombatLogEntry(combatId, endEntry);
