@@ -57,8 +57,8 @@ export const npcs = pgTable("npcs", {
   experienceReward: integer("experience_reward").notNull().default(50),
   spawnsInLocation: json("spawns_in_location").$type<number[]>().notNull().default([]),
   respawnTime: integer("respawn_time").notNull().default(300), // seconds
-  isAlive: boolean("is_alive").notNull().default(true),
-  lastKilled: timestamp("last_killed"),
+  isDead: boolean("is_dead").notNull().default(false),
+  lastDeathTime: timestamp("last_death_time"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -171,7 +171,9 @@ export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
 export type Location = typeof locations.$inferSelect;
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
 
-export type NPC = typeof npcs.$inferSelect;
+export type NPC = typeof npcs.$inferSelect & {
+  respawnTimeRemaining?: number; // Time in seconds until respawn (calculated client-side)
+};
 export type InsertNPC = z.infer<typeof insertNpcSchema>;
 
 export type Combat = typeof combats.$inferSelect;

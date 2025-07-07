@@ -1,6 +1,7 @@
 import { type NPC } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 
 interface NPCPanelProps {
   npcs: NPC[];
@@ -9,6 +10,22 @@ interface NPCPanelProps {
 }
 
 export default function NPCPanel({ npcs, onAttackNPC, canAttack }: NPCPanelProps) {
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Update timer every second for respawn countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getRespawnTimeRemaining = (npc: NPC): number => {
+    if (!npc.isDead || !npc.lastDeathTime || !npc.respawnTime) return 0;
+    const timeElapsed = Math.floor((currentTime - new Date(npc.lastDeathTime).getTime()) / 1000);
+    return Math.max(0, npc.respawnTime - timeElapsed);
+  };
   if (npcs.length === 0) {
     return (
       <div className="bg-card rounded-lg p-4 text-center">
@@ -120,12 +137,19 @@ export default function NPCPanel({ npcs, onAttackNPC, canAttack }: NPCPanelProps
           {npc.type === "enemy" || npc.type === "boss" ? (
             <Button 
               onClick={() => onAttackNPC(npc.id)}
-              disabled={!canAttack || !npc.isAlive}
+              disabled={!canAttack || npc.isDead}
               variant="destructive"
               size="sm"
               className="w-full"
             >
-              {!npc.isAlive ? "Побежден" : "⚔️ Атаковать"}
+              {npc.isDead ? (
+                (() => {
+                  const timeRemaining = getRespawnTimeRemaining(npc);
+                  return timeRemaining > 0 ? 
+                    `Возродится через ${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}` :
+                    "Побежден";
+                })()
+              ) : "⚔️ Атаковать"}
             </Button>
           ) : npc.type === "neutral" ? (
             <Button 

@@ -612,9 +612,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNPCsByLocation(locationId: number): Promise<NPC[]> {
-    return Array.from(this.npcsMap.values()).filter(npc => 
-      npc.spawnsInLocation.includes(locationId) && !npc.isDead
+    const allNPCs = Array.from(this.npcsMap.values()).filter(npc => 
+      npc.spawnsInLocation.includes(locationId)
     );
+
+    // Add respawn time remaining for dead NPCs
+    return allNPCs.map(npc => {
+      if (npc.isDead && npc.lastDeathTime && npc.respawnTime > 0) {
+        const timeElapsed = Math.floor((Date.now() - npc.lastDeathTime.getTime()) / 1000);
+        const timeRemaining = Math.max(0, npc.respawnTime - timeElapsed);
+        return { ...npc, respawnTimeRemaining: timeRemaining };
+      }
+      return npc;
+    });
   }
 
   async getAllNPCs(): Promise<NPC[]> {
@@ -661,6 +671,13 @@ export class DatabaseStorage implements IStorage {
       npc.currentHp = 0;
       npc.lastDeathTime = new Date();
       this.npcsMap.set(npcId, npc);
+
+      // Schedule respawn if respawnTime > 0
+      if (npc.respawnTime > 0) {
+        setTimeout(() => {
+          this.respawnNPC(npcId);
+        }, npc.respawnTime * 1000);
+      }
     }
   }
 
