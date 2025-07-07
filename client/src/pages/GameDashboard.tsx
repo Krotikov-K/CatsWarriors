@@ -74,8 +74,20 @@ export default function GameDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      // Immediately switch to combat tab and start aggressive polling
+      setActiveTab('combat');
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
-      setActiveTab('combat'); // Переключаемся на вкладку боя
+      
+      // Start aggressive polling for combat updates
+      const pollInterval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      }, 500); // Poll every 500ms during combat
+      
+      // Stop polling after 30 seconds (combat should be done by then)
+      setTimeout(() => {
+        clearInterval(pollInterval);
+      }, 30000);
+      
       toast({
         title: "Бой начался!",
         description: "Вы вступили в бой с противником.",

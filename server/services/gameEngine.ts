@@ -269,7 +269,7 @@ export class GameEngine {
   static async startAutoCombat(combatId: number): Promise<void> {
     console.log(`Starting auto combat for combat ID: ${combatId}`);
     
-    // Process combat turns every 2 seconds for more responsive combat
+    // Process combat turns every 3 seconds to give client time to see updates
     const interval = setInterval(async () => {
       try {
         const combat = await storage.getCombat(combatId);
@@ -284,7 +284,7 @@ export class GameEngine {
         console.error(`Error processing combat turn for ${combatId}:`, error);
         // Don't stop combat on single error, just log it
       }
-    }, 2000);
+    }, 3000);
   }
 
   static calculateExperienceGain(level: number, enemyLevel: number): number {
