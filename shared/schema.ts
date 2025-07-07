@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -152,6 +153,15 @@ export const joinCombatSchema = z.object({
 });
 
 // Types
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  characters: many(characters),
+}));
+
+export const charactersRelations = relations(characters, ({ one }) => ({
+  user: one(users, { fields: [characters.userId], references: [users.id] }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 

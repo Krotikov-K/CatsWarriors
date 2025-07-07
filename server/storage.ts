@@ -19,6 +19,8 @@ import {
   LOCATIONS_DATA,
   NPCS_DATA
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -464,4 +466,300 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByTelegramId(telegramId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.telegramId, telegramId));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  // Character methods
+  async getCharacter(id: number): Promise<Character | undefined> {
+    const [character] = await db.select().from(characters).where(eq(characters.id, id));
+    return character || undefined;
+  }
+
+  async getCharactersByUserId(userId: number): Promise<Character[]> {
+    return await db.select().from(characters).where(eq(characters.userId, userId));
+  }
+
+  async getCharactersByLocation(locationId: number): Promise<Character[]> {
+    return await db.select().from(characters).where(eq(characters.currentLocationId, locationId));
+  }
+
+  async getOnlineCharacters(): Promise<Character[]> {
+    return await db.select().from(characters).where(eq(characters.isOnline, true));
+  }
+
+  async createCharacter(insertCharacter: InsertCharacter): Promise<Character> {
+    const maxHp = this.calculateMaxHp(insertCharacter.endurance);
+    const [character] = await db
+      .insert(characters)
+      .values({
+        ...insertCharacter,
+        level: 1,
+        experience: 0,
+        maxHp,
+        currentHp: maxHp,
+        currentLocationId: insertCharacter.clan === 'thunder' ? 1 : 2, // Thunderclan or Riverclan territory
+        isOnline: false,
+      })
+      .returning();
+    return character;
+  }
+
+  async updateCharacter(id: number, updates: Partial<Character>): Promise<Character | undefined> {
+    const [character] = await db
+      .update(characters)
+      .set(updates)
+      .where(eq(characters.id, id))
+      .returning();
+    return character || undefined;
+  }
+
+  async updateCharacterStats(id: number, stats: { strength: number; agility: number; intelligence: number; endurance: number }): Promise<Character | undefined> {
+    const maxHp = this.calculateMaxHp(stats.endurance);
+    const [character] = await db
+      .update(characters)
+      .set({ ...stats, maxHp })
+      .where(eq(characters.id, id))
+      .returning();
+    return character || undefined;
+  }
+
+  async setCharacterOnline(id: number, online: boolean): Promise<void> {
+    await db
+      .update(characters)
+      .set({ isOnline: online })
+      .where(eq(characters.id, id));
+  }
+
+  async moveCharacter(id: number, locationId: number): Promise<Character | undefined> {
+    const [character] = await db
+      .update(characters)
+      .set({ currentLocationId: locationId })
+      .where(eq(characters.id, id))
+      .returning();
+    return character || undefined;
+  }
+
+  // Location methods - these will use in-memory data for now since locations are static
+  async getLocation(id: number): Promise<Location | undefined> {
+    // For now, use the static location data
+    return LOCATIONS_DATA.find(loc => loc.id === id);
+  }
+
+  async getAllLocations(): Promise<Location[]> {
+    return [...LOCATIONS_DATA];
+  }
+
+  async createLocation(insertLocation: InsertLocation): Promise<Location> {
+    // Not implemented for now as locations are static
+    throw new Error("Creating locations not supported in current implementation");
+  }
+
+  // NPC methods - these will use in-memory storage for now as they respawn
+  private npcsMap = new Map<number, NPC>();
+  private currentNpcId = 1;
+
+  constructor() {
+    this.initializeNPCs();
+  }
+
+  private initializeNPCs() {
+    NPCS_DATA.forEach(npcData => {
+      const npc: NPC = {
+        ...npcData,
+        id: this.currentNpcId++,
+        currentHp: npcData.maxHp,
+        isDead: false,
+        lastDeathTime: null,
+      };
+      this.npcsMap.set(npc.id, npc);
+    });
+  }
+
+  async getNPC(id: number): Promise<NPC | undefined> {
+    return this.npcsMap.get(id);
+  }
+
+  async getNPCsByLocation(locationId: number): Promise<NPC[]> {
+    return Array.from(this.npcsMap.values()).filter(npc => npc.locationId === locationId && !npc.isDead);
+  }
+
+  async getAllNPCs(): Promise<NPC[]> {
+    return Array.from(this.npcsMap.values());
+  }
+
+  async createNPC(insertNpc: InsertNPC): Promise<NPC> {
+    const id = this.currentNpcId++;
+    const npc: NPC = {
+      ...insertNpc,
+      id,
+      currentHp: insertNpc.maxHp,
+      isDead: false,
+      lastDeathTime: null,
+    };
+    this.npcsMap.set(id, npc);
+    return npc;
+  }
+
+  async updateNPC(id: number, updates: Partial<NPC>): Promise<NPC | undefined> {
+    const npc = this.npcsMap.get(id);
+    if (!npc) return undefined;
+
+    const updatedNpc = { ...npc, ...updates };
+    this.npcsMap.set(id, updatedNpc);
+    return updatedNpc;
+  }
+
+  async respawnNPC(npcId: number): Promise<NPC | undefined> {
+    const npc = this.npcsMap.get(npcId);
+    if (!npc) return undefined;
+
+    npc.isDead = false;
+    npc.currentHp = npc.maxHp;
+    npc.lastDeathTime = null;
+    this.npcsMap.set(npcId, npc);
+    return npc;
+  }
+
+  async killNPC(npcId: number): Promise<void> {
+    const npc = this.npcsMap.get(npcId);
+    if (npc) {
+      npc.isDead = true;
+      npc.currentHp = 0;
+      npc.lastDeathTime = new Date();
+      this.npcsMap.set(npcId, npc);
+    }
+  }
+
+  // Combat methods - use in-memory for real-time combat
+  private combatsMap = new Map<number, Combat>();
+  private currentCombatId = 1;
+
+  async getCombat(id: number): Promise<Combat | undefined> {
+    return this.combatsMap.get(id);
+  }
+
+  async getActiveCombatsInLocation(locationId: number): Promise<Combat[]> {
+    return Array.from(this.combatsMap.values()).filter(
+      combat => combat.locationId === locationId && combat.status === "active"
+    );
+  }
+
+  async getCharacterActiveCombat(characterId: number): Promise<Combat | undefined> {
+    const activeCombat = Array.from(this.combatsMap.values()).find(
+      combat => combat.status === "active" && combat.participants.includes(characterId)
+    );
+    console.log(`Getting active combat for character ${characterId}:`, activeCombat?.id);
+    return activeCombat;
+  }
+
+  async createCombat(locationId: number, participants: number[]): Promise<Combat> {
+    const id = this.currentCombatId++;
+    const combat: Combat = {
+      id,
+      locationId,
+      participants,
+      status: "active",
+      currentTurn: 0,
+      combatLog: [],
+      startedAt: new Date(),
+      finishedAt: null,
+    };
+    this.combatsMap.set(id, combat);
+    return combat;
+  }
+
+  async addCombatLogEntry(combatId: number, entry: CombatLogEntry): Promise<void> {
+    const combat = this.combatsMap.get(combatId);
+    if (combat) {
+      combat.combatLog.push(entry);
+      this.combatsMap.set(combatId, combat);
+    }
+  }
+
+  async addParticipantToCombat(combatId: number, characterId: number): Promise<Combat | undefined> {
+    const combat = this.combatsMap.get(combatId);
+    if (!combat) return undefined;
+
+    if (!combat.participants.includes(characterId)) {
+      combat.participants.push(characterId);
+      this.combatsMap.set(combatId, combat);
+    }
+    return combat;
+  }
+
+  async updateCombat(combatId: number, updates: Partial<Combat>): Promise<Combat | undefined> {
+    const combat = this.combatsMap.get(combatId);
+    if (!combat) return undefined;
+
+    const updatedCombat = { ...combat, ...updates };
+    this.combatsMap.set(combatId, updatedCombat);
+    return updatedCombat;
+  }
+
+  async finishCombat(combatId: number): Promise<Combat | undefined> {
+    const combat = this.combatsMap.get(combatId);
+    if (!combat) return undefined;
+
+    combat.status = "finished";
+    combat.isFinished = true;
+    combat.finishedAt = new Date();
+    this.combatsMap.set(combatId, combat);
+    return combat;
+  }
+
+  // Game Events - store in database
+  async createGameEvent(event: Omit<GameEvent, 'id' | 'createdAt'>): Promise<GameEvent> {
+    const [gameEvent] = await db
+      .insert(gameEvents)
+      .values(event)
+      .returning();
+    return gameEvent;
+  }
+
+  async getRecentEvents(limit: number): Promise<GameEvent[]> {
+    return await db
+      .select()
+      .from(gameEvents)
+      .orderBy(gameEvents.createdAt)
+      .limit(limit);
+  }
+
+  private calculateMaxHp(endurance: number): number {
+    return Math.floor(endurance * 4.5) + 50;
+  }
+}
+
+// Use DatabaseStorage instead of MemStorage
+export const storage = new DatabaseStorage();
