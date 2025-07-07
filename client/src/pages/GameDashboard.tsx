@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
 import { Home, Map, Sword, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGameState } from "@/hooks/useGameState";
@@ -9,9 +8,7 @@ import CharacterPanel from "@/components/CharacterPanel";
 import StatsPanel from "@/components/StatsPanel";
 import MapView from "@/components/MapView";
 import CombatModal from "@/components/CombatModal";
-import NavigationMenu from "@/components/NavigationMenu";
 import TopBar from "@/components/TopBar";
-import NPCPanel from "@/components/NPCPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,7 +17,9 @@ import type { Character, Combat } from "@shared/schema";
 
 type TabType = 'overview' | 'map' | 'combat' | 'profile';
 
-const navigate = (path: string) => window.location.href = path;
+const navigate = (path: string) => {
+  window.location.href = path;
+};
 
 export default function GameDashboard() {
   const { user } = useUser();
@@ -160,17 +159,6 @@ export default function GameDashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-            
-            {/* NPCs in Location */}
-            {gameState.npcsInLocation && gameState.npcsInLocation.length > 0 && (
-              <div className="mb-6">
-                <NPCPanel 
-                  npcs={gameState.npcsInLocation}
-                  onAttackNPC={(npcId) => startCombatMutation.mutate({ npcId })}
-                  canAttack={!gameState.isInCombat && !startCombatMutation.isPending}
-                />
               </div>
             )}
 
