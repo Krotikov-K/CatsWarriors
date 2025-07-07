@@ -84,6 +84,23 @@ export const gameEvents = pgTable("game_events", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  leaderId: integer("leader_id").notNull().references(() => characters.id),
+  locationId: integer("location_id").notNull().references(() => locations.id),
+  maxMembers: integer("max_members").notNull().default(5),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const groupMembers = pgTable("group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+  characterId: integer("character_id").notNull().references(() => characters.id, { onDelete: "cascade" }),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -143,6 +160,7 @@ export const startCombatSchema = z.object({
   targetId: z.number().optional(),
   npcId: z.number().optional(),
   locationId: z.number(),
+  groupId: z.number().optional(), // Optional group combat
 }).refine(data => data.targetId || data.npcId, {
   message: "Either targetId or npcId must be provided"
 });
@@ -150,6 +168,14 @@ export const startCombatSchema = z.object({
 export const joinCombatSchema = z.object({
   characterId: z.number(),
   combatId: z.number(),
+});
+
+export const createGroupSchema = z.object({
+  name: z.string().min(2).max(30),
+});
+
+export const joinGroupSchema = z.object({
+  groupId: z.number(),
 });
 
 // Types
@@ -178,6 +204,8 @@ export type InsertNPC = z.infer<typeof insertNpcSchema>;
 
 export type Combat = typeof combats.$inferSelect;
 export type GameEvent = typeof gameEvents.$inferSelect;
+export type Group = typeof groups.$inferSelect;
+export type GroupMember = typeof groupMembers.$inferSelect;
 
 export interface CombatLogEntry {
   timestamp: string;
@@ -203,6 +231,8 @@ export interface GameState {
   activeCombats: Combat[];
   isInCombat: boolean;
   currentCombat: Combat | null;
+  currentGroup: Group | null;
+  groupsInLocation: Group[];
 }
 
 export interface WebSocketMessage {

@@ -12,6 +12,7 @@ import CombatModal from "@/components/CombatModal";
 import CombatInterface from "@/components/CombatInterface";
 import TopBar from "@/components/TopBar";
 import NPCPanel from "@/components/NPCPanel";
+import GroupPanel from "@/components/GroupPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -64,11 +65,12 @@ export default function GameDashboard() {
   });
 
   const attackNPCMutation = useMutation({
-    mutationFn: async (npcId: number) => {
+    mutationFn: async ({ npcId, asGroup }: { npcId: number; asGroup?: boolean }) => {
       const response = await apiRequest("POST", "/api/combat/start", {
         characterId: gameState?.character?.id,
         npcId: npcId,
-        locationId: gameState?.character?.currentLocationId
+        locationId: gameState?.character?.currentLocationId,
+        asGroup: asGroup || false
       });
       return response.json();
     },
@@ -212,11 +214,15 @@ export default function GameDashboard() {
               </div>
             </div>
             
+            <GroupPanel gameState={gameState} />
+            
             {npcsInLocation.length > 0 && (
               <NPCPanel 
                 npcs={npcsInLocation}
-                onAttackNPC={handleAttackNPC}
+                onAttackNPC={(npcId, asGroup) => attackNPCMutation.mutate({ npcId, asGroup })}
                 canAttack={!gameState.isInCombat}
+                character={character}
+                currentGroup={gameState.currentGroup}
               />
             )}
 

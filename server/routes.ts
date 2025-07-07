@@ -11,6 +11,8 @@ import {
   moveCharacterSchema,
   startCombatSchema,
   joinCombatSchema,
+  createGroupSchema,
+  joinGroupSchema,
   type WebSocketMessage,
   type Character,
   type Combat
@@ -660,6 +662,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
       const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
       const currentCombat = await storage.getCharacterActiveCombat(characterId);
+      const currentGroup = await storage.getCharacterGroup(characterId);
+      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
 
       console.log(`Game state for character ${characterId}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
 
@@ -670,7 +674,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         npcsInLocation,
         activeCombats,
         isInCombat: !!currentCombat,
-        currentCombat
+        currentCombat,
+        currentGroup,
+        groupsInLocation
       });
     } catch (error) {
       console.error("Get game state error:", error);
@@ -771,6 +777,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Respawn NPC error:", error);
       res.status(500).json({ message: "Failed to respawn NPC" });
+    }
+  });
+
+  // Group routes
+  app.post("/api/groups", async (req, res) => {
+    try {
+      const { name } = createGroupSchema.parse(req.body);
+      const characterId = req.userId;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const character = await storage.getCharacter(characterId);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      // Check if character is already in a group
+      const existingGroup = await storage.getCharacterGroup(characterId);
+      if (existingGroup) {
+        return res.status(400).json({ message: "Already in a group" });
+      }
+
+      const group = await storage.createGroup(name, characterId, character.currentLocationId);
+      res.json(group);
+    } catch (error) {
+      console.error("Create group error:", error);
+      res.status(500).json({ message: "Failed to create group" });
+    }
+  });
+
+  app.post("/api/groups/:id/join", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const characterId = req.userId;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const member = await storage.joinGroup(groupId, characterId);
+      if (!member) {
+        return res.status(400).json({ message: "Cannot join group" });
+      }
+
+      res.json(member);
+    } catch (error) {
+      console.error("Join group error:", error);
+      res.status(500).json({ message: "Failed to join group" });
+    }
+  });
+
+  app.post("/api/groups/leave", async (req, res) => {
+    try {
+      const characterId = req.userId;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      await storage.leaveGroup(characterId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Leave group error:", error);
+      res.status(500).json({ message: "Failed to leave group" });
+    }
+  });
+
+  app.get("/api/groups/:id/members", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const members = await storage.getGroupMembers(groupId);
+      res.json(members);
+    } catch (error) {
+      console.error("Get group members error:", error);
+      res.status(500).json({ message: "Failed to get group members" });
     }
   });
 

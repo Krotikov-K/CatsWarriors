@@ -5,12 +5,16 @@ import {
   npcs,
   combats,
   gameEvents,
+  groups,
+  groupMembers,
   type User,
   type Character,
   type Location,
   type Combat,
   type NPC,
   type GameEvent,
+  type Group,
+  type GroupMember,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
@@ -69,6 +73,16 @@ export interface IStorage {
   createGameEvent(event: Omit<GameEvent, 'id' | 'createdAt'>): Promise<GameEvent>;
   getRecentEvents(limit: number): Promise<GameEvent[]>;
 
+  // Group methods
+  createGroup(name: string, leaderId: number, locationId: number): Promise<Group>;
+  getGroup(id: number): Promise<Group | undefined>;
+  getGroupsInLocation(locationId: number): Promise<Group[]>;
+  getCharacterGroup(characterId: number): Promise<Group | undefined>;
+  joinGroup(groupId: number, characterId: number): Promise<GroupMember | undefined>;
+  leaveGroup(characterId: number): Promise<void>;
+  disbandGroup(groupId: number): Promise<void>;
+  getGroupMembers(groupId: number): Promise<Character[]>;
+
   // Admin methods
   getAllUsers(): Promise<User[]>;
   updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined>;
@@ -81,6 +95,8 @@ export class MemStorage implements IStorage {
   private npcs: Map<number, NPC> = new Map();
   private combats: Map<number, Combat> = new Map();
   private gameEvents: Map<number, GameEvent> = new Map();
+  private groups: Map<number, Group> = new Map();
+  private groupMembers: Map<number, GroupMember> = new Map();
   
   private currentUserId = 1;
   private currentCharacterId = 1;
@@ -88,6 +104,8 @@ export class MemStorage implements IStorage {
   private currentNpcId = 1;
   private currentCombatId = 1;
   private currentEventId = 1;
+  private currentGroupId = 1;
+  private currentGroupMemberId = 1;
 
   constructor() {
     this.initializeLocations();
@@ -478,6 +496,118 @@ export class MemStorage implements IStorage {
     return updatedLocation;
   }
 
+  // Group methods
+  async createGroup(name: string, leaderId: number, locationId: number): Promise<Group> {
+    const id = this.currentGroupId++;
+    const group: Group = {
+      id,
+      name,
+      leaderId,
+      locationId,
+      maxMembers: 5,
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.groups.set(id, group);
+
+    // Add leader as first member
+    const memberId = this.currentGroupMemberId++;
+    const member: GroupMember = {
+      id: memberId,
+      groupId: id,
+      characterId: leaderId,
+      joinedAt: new Date(),
+    };
+    this.groupMembers.set(memberId, member);
+
+    return group;
+  }
+
+  async getGroup(id: number): Promise<Group | undefined> {
+    return this.groups.get(id);
+  }
+
+  async getGroupsInLocation(locationId: number): Promise<Group[]> {
+    return Array.from(this.groups.values()).filter(
+      group => group.locationId === locationId && group.isActive
+    );
+  }
+
+  async getCharacterGroup(characterId: number): Promise<Group | undefined> {
+    const membership = Array.from(this.groupMembers.values()).find(
+      member => member.characterId === characterId
+    );
+    if (!membership) return undefined;
+    return this.groups.get(membership.groupId);
+  }
+
+  async joinGroup(groupId: number, characterId: number): Promise<GroupMember | undefined> {
+    const group = this.groups.get(groupId);
+    if (!group || !group.isActive) return undefined;
+
+    // Check if character is already in a group
+    const existingMembership = Array.from(this.groupMembers.values()).find(
+      member => member.characterId === characterId
+    );
+    if (existingMembership) return undefined;
+
+    // Check group capacity
+    const currentMembers = Array.from(this.groupMembers.values()).filter(
+      member => member.groupId === groupId
+    );
+    if (currentMembers.length >= group.maxMembers) return undefined;
+
+    const memberId = this.currentGroupMemberId++;
+    const member: GroupMember = {
+      id: memberId,
+      groupId,
+      characterId,
+      joinedAt: new Date(),
+    };
+    this.groupMembers.set(memberId, member);
+    return member;
+  }
+
+  async leaveGroup(characterId: number): Promise<void> {
+    const membership = Array.from(this.groupMembers.values()).find(
+      member => member.characterId === characterId
+    );
+    if (!membership) return;
+
+    this.groupMembers.delete(membership.id);
+
+    // If leader leaves, disband group
+    const group = this.groups.get(membership.groupId);
+    if (group && group.leaderId === characterId) {
+      await this.disbandGroup(membership.groupId);
+    }
+  }
+
+  async disbandGroup(groupId: number): Promise<void> {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+
+    group.isActive = false;
+    this.groups.set(groupId, group);
+
+    // Remove all members
+    for (const [id, member] of this.groupMembers) {
+      if (member.groupId === groupId) {
+        this.groupMembers.delete(id);
+      }
+    }
+  }
+
+  async getGroupMembers(groupId: number): Promise<Character[]> {
+    const memberIds = Array.from(this.groupMembers.values())
+      .filter(member => member.groupId === groupId)
+      .map(member => member.characterId);
+
+    return memberIds
+      .map(id => this.characters.get(id))
+      .filter(char => char !== undefined) as Character[];
+  }
+
   private calculateMaxHp(endurance: number): number {
     return 80 + (endurance * 2);
   }
@@ -803,6 +933,106 @@ export class DatabaseStorage implements IStorage {
       .where(eq(locations.id, id))
       .returning();
     return updatedLocation || undefined;
+  }
+
+  // Group methods - store in database
+  async createGroup(name: string, leaderId: number, locationId: number): Promise<Group> {
+    const [group] = await db
+      .insert(groups)
+      .values({ name, leaderId, locationId })
+      .returning();
+
+    // Add leader as first member
+    await db
+      .insert(groupMembers)
+      .values({ groupId: group.id, characterId: leaderId });
+
+    return group;
+  }
+
+  async getGroup(id: number): Promise<Group | undefined> {
+    const [group] = await db
+      .select()
+      .from(groups)
+      .where(and(eq(groups.id, id), eq(groups.isActive, true)));
+    return group || undefined;
+  }
+
+  async getGroupsInLocation(locationId: number): Promise<Group[]> {
+    return await db
+      .select()
+      .from(groups)
+      .where(and(eq(groups.locationId, locationId), eq(groups.isActive, true)));
+  }
+
+  async getCharacterGroup(characterId: number): Promise<Group | undefined> {
+    const [result] = await db
+      .select({ group: groups })
+      .from(groupMembers)
+      .leftJoin(groups, eq(groupMembers.groupId, groups.id))
+      .where(and(
+        eq(groupMembers.characterId, characterId),
+        eq(groups.isActive, true)
+      ));
+    return result?.group || undefined;
+  }
+
+  async joinGroup(groupId: number, characterId: number): Promise<GroupMember | undefined> {
+    // Check if character is already in a group
+    const existingGroup = await this.getCharacterGroup(characterId);
+    if (existingGroup) return undefined;
+
+    // Check group capacity
+    const group = await this.getGroup(groupId);
+    if (!group) return undefined;
+
+    const currentMembers = await db
+      .select()
+      .from(groupMembers)
+      .where(eq(groupMembers.groupId, groupId));
+    
+    if (currentMembers.length >= group.maxMembers) return undefined;
+
+    const [member] = await db
+      .insert(groupMembers)
+      .values({ groupId, characterId })
+      .returning();
+    return member;
+  }
+
+  async leaveGroup(characterId: number): Promise<void> {
+    const currentGroup = await this.getCharacterGroup(characterId);
+    if (!currentGroup) return;
+
+    await db
+      .delete(groupMembers)
+      .where(eq(groupMembers.characterId, characterId));
+
+    // If leader leaves, disband group
+    if (currentGroup.leaderId === characterId) {
+      await this.disbandGroup(currentGroup.id);
+    }
+  }
+
+  async disbandGroup(groupId: number): Promise<void> {
+    await db
+      .update(groups)
+      .set({ isActive: false })
+      .where(eq(groups.id, groupId));
+
+    await db
+      .delete(groupMembers)
+      .where(eq(groupMembers.groupId, groupId));
+  }
+
+  async getGroupMembers(groupId: number): Promise<Character[]> {
+    const result = await db
+      .select({ character: characters })
+      .from(groupMembers)
+      .leftJoin(characters, eq(groupMembers.characterId, characters.id))
+      .where(eq(groupMembers.groupId, groupId));
+
+    return result.map(r => r.character).filter(char => char !== null) as Character[];
   }
 
   private calculateMaxHp(endurance: number): number {

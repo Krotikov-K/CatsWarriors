@@ -1,15 +1,18 @@
-import { type NPC } from "@shared/schema";
+import { type NPC, type Character, type GameState } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
+import { Users } from "lucide-react";
 
 interface NPCPanelProps {
   npcs: NPC[];
-  onAttackNPC: (npcId: number) => void;
+  onAttackNPC: (npcId: number, asGroup?: boolean) => void;
   canAttack: boolean;
+  character: Character;
+  currentGroup?: any;
 }
 
-export default function NPCPanel({ npcs, onAttackNPC, canAttack }: NPCPanelProps) {
+export default function NPCPanel({ npcs, onAttackNPC, canAttack, character, currentGroup }: NPCPanelProps) {
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Update timer every second for respawn countdown
@@ -135,22 +138,37 @@ export default function NPCPanel({ npcs, onAttackNPC, canAttack }: NPCPanelProps
 
           {/* Actions */}
           {npc.type === "enemy" || npc.type === "boss" ? (
-            <Button 
-              onClick={() => onAttackNPC(npc.id)}
-              disabled={!canAttack || npc.isDead}
-              variant="destructive"
-              size="sm"
-              className="w-full"
-            >
-              {npc.isDead ? (
-                (() => {
-                  const timeRemaining = getRespawnTimeRemaining(npc);
-                  return timeRemaining > 0 ? 
-                    `Возродится через ${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}` :
-                    "Побежден";
-                })()
-              ) : "⚔️ Атаковать"}
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => onAttackNPC(npc.id, false)}
+                disabled={!canAttack || npc.isDead}
+                variant="destructive"
+                size="sm"
+                className="w-full"
+              >
+                {npc.isDead ? (
+                  (() => {
+                    const timeRemaining = getRespawnTimeRemaining(npc);
+                    return timeRemaining > 0 ? 
+                      `Возродится через ${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}` :
+                      "Побежден";
+                  })()
+                ) : "⚔️ Атаковать"}
+              </Button>
+              
+              {currentGroup && currentGroup.leaderId === character.id && !npc.isDead && (
+                <Button 
+                  onClick={() => onAttackNPC(npc.id, true)}
+                  disabled={!canAttack}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  Атака группой
+                </Button>
+              )}
+            </div>
           ) : npc.type === "neutral" ? (
             <Button 
               variant="outline"
