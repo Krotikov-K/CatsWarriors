@@ -15,7 +15,7 @@ export function useGameState(userId: number | null) {
     enabled: !!userId,
     refetchInterval: false, // Disable auto-refresh to avoid loops
     refetchOnWindowFocus: true,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 0, // Always fetch fresh data
   });
 
   return {
