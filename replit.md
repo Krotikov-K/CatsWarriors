@@ -144,6 +144,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added NPC control system with parameter editing and forced respawn
   * Created user management interface for viewing all registered users
   * All admin functions fully integrated with database and real-time updates
+- July 07, 2025. Health regeneration system and healing mechanics:
+  * Implemented automatic health regeneration at 1 HP per minute
+  * Added healing poultices in clan camps that restore 100 HP instantly
+  * Created CampActions component for clan camp healing interface
+  * Added health tracking with lastHpRegeneration field in database
+  * Healing items only work in character's own clan camp (Thunderclan/Riverclan)
+  * Automatic regeneration triggers on every game state request
 
 ## User Preferences
 

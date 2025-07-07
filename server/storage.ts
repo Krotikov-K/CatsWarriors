@@ -86,6 +86,10 @@ export interface IStorage {
   // Admin methods
   getAllUsers(): Promise<User[]>;
   updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined>;
+  
+  // Health regeneration
+  processHealthRegeneration(characterId: number): Promise<Character | undefined>;
+  useHealingPoultice(characterId: number): Promise<Character | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -1037,6 +1041,65 @@ export class DatabaseStorage implements IStorage {
 
   private calculateMaxHp(endurance: number): number {
     return Math.floor(endurance * 4.5) + 50;
+  }
+  
+  async processHealthRegeneration(characterId: number): Promise<Character | undefined> {
+    const [character] = await db.select().from(characters).where(eq(characters.id, characterId));
+    if (!character) return undefined;
+    
+    const now = new Date();
+    const lastRegen = character.lastHpRegeneration ? new Date(character.lastHpRegeneration) : new Date(0);
+    const timeSinceRegen = (now.getTime() - lastRegen.getTime()) / 1000 / 60; // minutes
+    
+    if (timeSinceRegen >= 1 && character.currentHp < character.maxHp) {
+      const minutesPassed = Math.floor(timeSinceRegen);
+      const hpToRegenerate = Math.min(minutesPassed, character.maxHp - character.currentHp);
+      
+      const [updatedCharacter] = await db
+        .update(characters)
+        .set({ 
+          currentHp: character.currentHp + hpToRegenerate,
+          lastHpRegeneration: now
+        })
+        .where(eq(characters.id, characterId))
+        .returning();
+      
+      return updatedCharacter;
+    }
+    
+    return character;
+  }
+  
+  async useHealingPoultice(characterId: number): Promise<Character | undefined> {
+    const [character] = await db.select().from(characters).where(eq(characters.id, characterId));
+    if (!character) return undefined;
+    
+    // Check if character is in their clan's camp
+    const [location] = await db.select().from(locations).where(eq(locations.id, character.currentLocationId));
+    if (!location || location.type !== "camp") {
+      return undefined;
+    }
+    
+    // Check if it's the right clan camp
+    const isRightCamp = 
+      (character.clan === "Thunderclan" && location.name === "Лагерь Грозового племени") ||
+      (character.clan === "Riverclan" && location.name === "Лагерь Речного племени");
+    
+    if (!isRightCamp) {
+      return undefined;
+    }
+    
+    // Heal 100 HP, up to max HP
+    const healAmount = Math.min(100, character.maxHp - character.currentHp);
+    if (healAmount <= 0) return character;
+    
+    const [updatedCharacter] = await db
+      .update(characters)
+      .set({ currentHp: character.currentHp + healAmount })
+      .where(eq(characters.id, characterId))
+      .returning();
+    
+    return updatedCharacter;
   }
 }
 

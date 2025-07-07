@@ -647,14 +647,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health regeneration routes
+  app.post("/api/health/regenerate", async (req, res) => {
+    try {
+      const characterId = req.userId;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const character = await storage.processHealthRegeneration(characterId);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      res.json({ character });
+    } catch (error) {
+      console.error("Health regeneration error:", error);
+      res.status(500).json({ message: "Failed to process health regeneration" });
+    }
+  });
+
+  app.post("/api/health/use-poultice", async (req, res) => {
+    try {
+      const characterId = req.userId;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const character = await storage.useHealingPoultice(characterId);
+      if (!character) {
+        return res.status(400).json({ message: "Cannot use healing poultice here or character not found" });
+      }
+
+      res.json({ character });
+    } catch (error) {
+      console.error("Use healing poultice error:", error);
+      res.status(500).json({ message: "Failed to use healing poultice" });
+    }
+  });
+
   // Game state routes
   app.get("/api/game-state/:characterId", async (req, res) => {
     try {
       const characterId = parseInt(req.params.characterId);
-      const character = await storage.getCharacter(characterId);
+      let character = await storage.getCharacter(characterId);
       
       if (!character) {
         return res.status(404).json({ message: "Character not found" });
+      }
+
+      // Process health regeneration automatically
+      const regenCharacter = await storage.processHealthRegeneration(characterId);
+      if (regenCharacter) {
+        character = regenCharacter;
       }
 
       const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);

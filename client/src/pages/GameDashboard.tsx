@@ -13,6 +13,7 @@ import CombatInterface from "@/components/CombatInterface";
 import TopBar from "@/components/TopBar";
 import NPCPanel from "@/components/NPCPanel";
 import GroupPanel from "@/components/GroupPanel";
+import CampActions from "@/components/CampActions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -215,6 +216,10 @@ export default function GameDashboard() {
             </div>
             
             <GroupPanel gameState={gameState} />
+            
+            {location && character && location.type === "camp" && (
+              <CampActions character={character} location={location} />
+            )}
             
             {npcsInLocation.length > 0 && (
               <NPCPanel 
