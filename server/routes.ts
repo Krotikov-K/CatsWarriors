@@ -479,6 +479,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create PVE combat
         combat = await storage.createCombat(locationId, participants);
         
+        // Update combat with NPC participants
+        await storage.updateCombat(combat.id, { 
+          type: combatType,
+          npcParticipants: npcParticipants
+        });
+        
         // Start automated combat processing
         GameEngine.startAutoCombat(combat.id);
         
@@ -509,11 +515,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Either targetId or npcId must be provided" });
       }
 
-      // Update combat with correct type and participants
-      await storage.updateCombat(combat.id, { 
-        type: combatType,
-        npcParticipants: npcParticipants
-      });
+      // Update combat with correct type (if not already updated)
+      if (combatType === "pvp") {
+        await storage.updateCombat(combat.id, { 
+          type: combatType,
+          npcParticipants: npcParticipants
+        });
+      }
 
       eventData.combatId = combat.id;
       

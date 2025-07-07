@@ -232,15 +232,23 @@ export class GameEngine {
   }
 
   static async startAutoCombat(combatId: number): Promise<void> {
+    console.log(`Starting auto combat for combat ID: ${combatId}`);
+    
     // Process combat turns every 3 seconds
     const interval = setInterval(async () => {
-      const combat = await storage.getCombat(combatId);
-      if (!combat || combat.status !== "active") {
-        clearInterval(interval);
-        return;
+      try {
+        const combat = await storage.getCombat(combatId);
+        if (!combat || combat.status !== "active") {
+          console.log(`Combat ${combatId} ended or not found, stopping auto combat`);
+          clearInterval(interval);
+          return;
+        }
+        
+        console.log(`Processing turn ${combat.currentTurn} for combat ${combatId}`);
+        await this.processCombatTurn(combatId);
+      } catch (error) {
+        console.error(`Error processing combat turn for ${combatId}:`, error);
       }
-      
-      await this.processCombatTurn(combatId);
     }, 3000);
   }
 
