@@ -20,7 +20,10 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
 
   const createGroupMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
-      const response = await apiRequest('POST', '/api/groups', data);
+      const response = await apiRequest('POST', '/api/groups', {
+        name: data.name,
+        characterId: gameState.character?.id
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -42,7 +45,9 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
 
   const joinGroupMutation = useMutation({
     mutationFn: async (groupId: number) => {
-      const response = await apiRequest('POST', `/api/groups/${groupId}/join`, {});
+      const response = await apiRequest('POST', `/api/groups/${groupId}/join`, {
+        characterId: gameState.character?.id
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -63,7 +68,9 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
 
   const leaveGroupMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/groups/leave', {});
+      const response = await apiRequest('POST', '/api/groups/leave', {
+        characterId: gameState.character?.id
+      });
       return response.json();
     },
     onSuccess: () => {

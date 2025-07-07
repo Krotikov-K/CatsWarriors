@@ -830,11 +830,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Group routes
   app.post("/api/groups", async (req, res) => {
     try {
-      const { name } = createGroupSchema.parse(req.body);
-      const characterId = req.userId;
+      const { name, characterId } = req.body;
       
       if (!characterId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(401).json({ message: "Character ID required" });
       }
 
       const character = await storage.getCharacter(characterId);
@@ -859,10 +858,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/groups/:id/join", async (req, res) => {
     try {
       const groupId = parseInt(req.params.id);
-      const characterId = req.userId;
+      const { characterId } = req.body;
       
       if (!characterId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(401).json({ message: "Character ID required" });
       }
 
       const member = await storage.joinGroup(groupId, characterId);
@@ -879,10 +878,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/groups/leave", async (req, res) => {
     try {
-      const characterId = req.userId;
+      const { characterId } = req.body;
       
       if (!characterId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(401).json({ message: "Character ID required" });
       }
 
       await storage.leaveGroup(characterId);
