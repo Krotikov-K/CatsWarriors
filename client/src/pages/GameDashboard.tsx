@@ -67,7 +67,8 @@ export default function GameDashboard() {
       const response = await apiRequest("POST", "/api/combat/start", {
         characterId: gameState?.character?.id,
         targetId: npcId,
-        targetType: "npc"
+        targetType: "npc",
+        locationId: gameState?.character?.currentLocationId
       });
       return response.json();
     },

@@ -86,6 +86,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.initializeLocations();
     this.initializeNPCs();
+    this.spawnInitialNPCs();
   }
 
   private initializeLocations() {
@@ -108,30 +109,37 @@ export class MemStorage implements IStorage {
   }
 
   private initializeNPCs() {
+    // NPCs data structures initialized but not spawned yet
+  }
+
+  private spawnInitialNPCs() {
+    // Spawn initial NPCs in hunting and combat locations
     NPCS_DATA.forEach(npcData => {
-      const npc: NPC = {
-        id: npcData.id,
-        name: npcData.name,
-        type: npcData.type,
-        level: npcData.level,
-        currentHp: npcData.maxHp,
-        maxHp: npcData.maxHp,
-        strength: npcData.strength,
-        agility: npcData.agility,
-        intelligence: npcData.intelligence,
-        endurance: npcData.endurance,
-        description: npcData.description,
-        emoji: npcData.emoji,
-        experienceReward: npcData.experienceReward,
-        spawnsInLocation: npcData.spawnsInLocation,
-        respawnTime: npcData.respawnTime,
-        isAlive: true,
-        lastKilled: null,
-        createdAt: new Date(),
-      };
-      this.npcs.set(npc.id, npc);
-      if (npc.id >= this.currentNpcId) {
-        this.currentNpcId = npc.id + 1;
+      if (npcData.type === 'enemy' || npcData.type === 'boss') {
+        const npc: NPC = {
+          id: npcData.id,
+          name: npcData.name,
+          type: npcData.type,
+          level: npcData.level,
+          strength: npcData.strength,
+          agility: npcData.agility,
+          intelligence: npcData.intelligence,
+          endurance: npcData.endurance,
+          currentHp: npcData.maxHp,
+          maxHp: npcData.maxHp,
+          description: npcData.description,
+          emoji: npcData.emoji,
+          experienceReward: npcData.experienceReward,
+          spawnsInLocation: npcData.spawnsInLocation,
+          respawnTime: npcData.respawnTime,
+          isAlive: true,
+          lastDeath: null,
+          createdAt: new Date(),
+        };
+        this.npcs.set(npc.id, npc);
+        if (npc.id >= this.currentNpcId) {
+          this.currentNpcId = npc.id + 1;
+        }
       }
     });
   }
