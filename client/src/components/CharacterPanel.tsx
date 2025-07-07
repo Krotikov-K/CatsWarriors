@@ -24,15 +24,15 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
       <div className="flex items-center mb-4">
         {/* Character Avatar */}
         <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getClanGradient(character.clan)} flex items-center justify-center mr-4`}>
-          <i className="fas fa-cat text-2xl text-white"></i>
+          <span className="text-2xl text-white">🐱</span>
         </div>
         
         {/* Character Info */}
         <div>
-          <h3 className="font-gaming font-semibold text-lg text-white">
+          <h3 className="font-semibold text-lg text-foreground">
             {character.name}
           </h3>
-          <div className="flex items-center text-sm text-gray-400">
+          <div className="flex items-center text-sm text-muted-foreground">
             <span>{clan?.name || character.clan}</span>
             <span className="mx-2">•</span>
             <span>Уровень {character.level}</span>
@@ -43,14 +43,14 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
       {/* Health Bar */}
       <div className="mb-3">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-300">Здоровье</span>
-          <span className="font-stats text-white">
+          <span className="text-muted-foreground">Здоровье</span>
+          <span className="font-bold text-foreground">
             {character.currentHp}/{character.maxHp}
           </span>
         </div>
-        <div className="health-bar">
+        <div className="w-full bg-secondary rounded-full h-2">
           <div 
-            className="health-bar-fill bg-green-500" 
+            className="bg-green-500 h-2 rounded-full transition-all duration-300" 
             style={{ width: `${hpPercentage}%` }}
           ></div>
         </div>
@@ -59,14 +59,14 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
       {/* Experience Bar */}
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-300">Опыт</span>
-          <span className="font-stats text-white">
+          <span className="text-muted-foreground">Опыт</span>
+          <span className="font-bold text-foreground">
             {character.experience}/{character.level * 1000}
           </span>
         </div>
-        <div className="health-bar">
+        <div className="w-full bg-secondary rounded-full h-2">
           <div 
-            className="health-bar-fill bg-blue-500" 
+            className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
             style={{ width: `${expPercentage}%` }}
           ></div>
         </div>

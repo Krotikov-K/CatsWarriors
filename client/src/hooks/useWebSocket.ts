@@ -99,16 +99,9 @@ export function useWebSocket(characterId: number | null) {
     }
   };
 
-  const disconnect = () => {
-    if (ws.current) {
-      ws.current.close();
-    }
-  };
-
   return {
     isConnected,
     lastMessage,
-    sendMessage,
-    disconnect
+    sendMessage
   };
 }
