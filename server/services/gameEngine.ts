@@ -73,15 +73,24 @@ export class GameEngine {
       return;
     }
 
-    // Sort combatants by agility (higher agility goes first)
-    allCombatants.sort((a, b) => b.agility - a.agility);
+    // Create stable sorted list for consistent turn order
+    const sortedCombatants = [...allCombatants].sort((a, b) => {
+      if (b.agility !== a.agility) return b.agility - a.agility;
+      // If agility is equal, sort by type and then ID for consistency
+      if ('userId' in a && 'type' in b) return -1; // Characters first
+      if ('type' in a && 'userId' in b) return 1;  // NPCs second
+      return a.id - b.id; // Then by ID
+    });
     
     // Process one attack per turn, cycling through combatants
-    const currentTurnIndex = combat.currentTurn % allCombatants.length;
-    const attacker = allCombatants[currentTurnIndex];
+    const currentTurnIndex = combat.currentTurn % sortedCombatants.length;
+    const attacker = sortedCombatants[currentTurnIndex];
+    
+    console.log(`Turn ${combat.currentTurn}: ${attacker.name} (${currentTurnIndex}/${sortedCombatants.length})`);
     
     // Make sure attacker is still alive
     if (attacker.currentHp <= 0) {
+      console.log(`Attacker ${attacker.name} is dead, skipping turn`);
       await storage.updateCombat(combatId, {
         currentTurn: combat.currentTurn + 1
       });
@@ -93,16 +102,18 @@ export class GameEngine {
     if (combat.type === "pve") {
       // In PVE, characters attack NPCs and NPCs attack characters
       if ('userId' in attacker) { // Character
-        possibleTargets = aliveNPCs;
+        possibleTargets = aliveNPCs.filter(npc => npc.currentHp > 0);
       } else { // NPC
-        possibleTargets = aliveCharacters;
+        possibleTargets = aliveCharacters.filter(char => char.currentHp > 0);
       }
     } else {
       // In PVP/mixed, everyone can attack everyone else
-      possibleTargets = allCombatants.filter(target => 
+      possibleTargets = sortedCombatants.filter(target => 
         target !== attacker && target.currentHp > 0
       );
     }
+    
+    console.log(`${attacker.name} can target:`, possibleTargets.map(t => t.name));
 
     if (possibleTargets.length > 0) {
       const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
@@ -253,7 +264,7 @@ export class GameEngine {
   static async startAutoCombat(combatId: number): Promise<void> {
     console.log(`Starting auto combat for combat ID: ${combatId}`);
     
-    // Process combat turns every 3 seconds
+    // Process combat turns every 2 seconds for more responsive combat
     const interval = setInterval(async () => {
       try {
         const combat = await storage.getCombat(combatId);
@@ -263,12 +274,12 @@ export class GameEngine {
           return;
         }
         
-        console.log(`Processing turn ${combat.currentTurn} for combat ${combatId}`);
         await this.processCombatTurn(combatId);
       } catch (error) {
         console.error(`Error processing combat turn for ${combatId}:`, error);
+        // Don't stop combat on single error, just log it
       }
-    }, 3000);
+    }, 2000);
   }
 
   static calculateExperienceGain(level: number, enemyLevel: number): number {
