@@ -67,8 +67,7 @@ export default function GameDashboard() {
     mutationFn: async (npcId: number) => {
       const response = await apiRequest("POST", "/api/combat/start", {
         characterId: gameState?.character?.id,
-        targetId: npcId,
-        targetType: "npc",
+        npcId: npcId,
         locationId: gameState?.character?.currentLocationId
       });
       return response.json();

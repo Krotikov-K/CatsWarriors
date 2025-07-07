@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "NPC not found" });
         }
 
-        if (!npc.isAlive || !npc.spawnsInLocation.includes(locationId)) {
+        if (npc.isDead || !npc.spawnsInLocation.includes(locationId)) {
           return res.status(400).json({ message: "NPC is not available in this location" });
         }
 

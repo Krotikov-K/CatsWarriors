@@ -130,6 +130,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Fixed NPC disappearing issue after database integration
   * Characters now persist between sessions and are linked to Telegram accounts
   * Combat system remains in-memory for fast real-time performance
+- July 07, 2025. NPC respawn system and combat fixes:
+  * Fixed NPC status display from "побежден" to proper live/dead status
+  * Implemented automatic NPC respawn system with configurable timers (2-10 minutes)
+  * Added real-time countdown display for dead NPCs showing "Возродится через X:XX"
+  * Fixed combat system compatibility with new isDead field schema
+  * Corrected API calls to use npcId parameter for NPC combat initiation
+  * Combat system now fully functional with automatic turn-based mechanics
 
 ## User Preferences
 

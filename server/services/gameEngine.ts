@@ -47,7 +47,7 @@ export class GameEngine {
     ) as Character[];
     
     const aliveNPCs = npcs.filter(npc => 
-      npc && npc.currentHp > 0 && npc.isAlive
+      npc && npc.currentHp > 0 && !npc.isDead
     ) as NPC[];
 
     const allCombatants = [...aliveCharacters, ...aliveNPCs];
