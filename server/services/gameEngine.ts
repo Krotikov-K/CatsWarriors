@@ -1,9 +1,9 @@
 import { storage } from "../storage";
-import { type Character, type DerivedStats, type CombatLogEntry } from "@shared/schema";
+import { type Character, type NPC, type DerivedStats, type CombatLogEntry } from "@shared/schema";
 
 export class GameEngine {
   
-  static calculateDerivedStats(character: Character): DerivedStats {
+  static calculateDerivedStats(character: Character | NPC): DerivedStats {
     const { strength, agility, intelligence, endurance } = character;
     
     // Damage calculation: strength is primary factor
@@ -34,39 +34,61 @@ export class GameEngine {
     const combat = await storage.getCombat(combatId);
     if (!combat || combat.status !== "active") return;
 
-    // Get all participants
-    const participants = await Promise.all(
+    // Get all participants (characters and NPCs)
+    const characters = await Promise.all(
       combat.participants.map(id => storage.getCharacter(id))
     );
-    const aliveCombatants = participants.filter(char => 
+    const npcs = await Promise.all(
+      combat.npcParticipants.map(id => storage.getNPC(id))
+    );
+
+    const aliveCharacters = characters.filter(char => 
       char && char.currentHp > 0
     ) as Character[];
+    
+    const aliveNPCs = npcs.filter(npc => 
+      npc && npc.currentHp > 0 && npc.isAlive
+    ) as NPC[];
 
-    if (aliveCombatants.length < 2) {
+    const allCombatants = [...aliveCharacters, ...aliveNPCs];
+
+    // Check if combat should end
+    if (combat.type === "pve") {
+      if (aliveCharacters.length === 0 || aliveNPCs.length === 0) {
+        await this.endCombat(combatId);
+        return;
+      }
+    } else if (allCombatants.length < 2) {
       await this.endCombat(combatId);
       return;
     }
 
-    // Simple turn-based combat: each character attacks a random enemy
-    for (const attacker of aliveCombatants) {
-      const enemies = aliveCombatants.filter(char => 
-        char.id !== attacker.id && char.currentHp > 0
-      );
+    // Process combat turns
+    for (const attacker of allCombatants) {
+      let possibleTargets: (Character | NPC)[];
       
-      if (enemies.length === 0) break;
+      if (combat.type === "pve") {
+        // In PVE, characters attack NPCs and NPCs attack characters
+        if ('userId' in attacker) { // Character
+          possibleTargets = aliveNPCs;
+        } else { // NPC
+          possibleTargets = aliveCharacters;
+        }
+      } else {
+        // In PVP/mixed, everyone can attack everyone else
+        possibleTargets = allCombatants.filter(target => 
+          target !== attacker && target.currentHp > 0
+        );
+      }
 
-      const target = enemies[Math.floor(Math.random() * enemies.length)];
+      if (possibleTargets.length === 0) continue;
+
+      const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
       await this.executeAttack(attacker, target, combatId);
-    }
-
-    // Check if combat should end
-    const remainingAlive = aliveCombatants.filter(char => char.currentHp > 0);
-    if (remainingAlive.length < 2) {
-      await this.endCombat(combatId);
     }
   }
 
-  private static async executeAttack(attacker: Character, target: Character, combatId: number): Promise<void> {
+  private static async executeAttack(attacker: Character | NPC, target: Character | NPC, combatId: number): Promise<void> {
     const attackerStats = this.calculateDerivedStats(attacker);
     const targetStats = this.calculateDerivedStats(target);
 
@@ -112,7 +134,44 @@ export class GameEngine {
 
     // Apply damage
     const newHp = Math.max(0, target.currentHp - damage);
-    await storage.updateCharacter(target.id, { currentHp: newHp });
+    
+    // Update character or NPC health
+    if ('userId' in target) { // Character
+      await storage.updateCharacter(target.id, { currentHp: newHp });
+    } else { // NPC
+      await storage.updateNPC(target.id, { currentHp: newHp });
+      
+      // If NPC is killed, handle death and experience gain
+      if (newHp === 0) {
+        await storage.killNPC(target.id);
+        
+        // Award experience to all participating characters
+        const combat = await storage.getCombat(combatId);
+        if (combat) {
+          for (const characterId of combat.participants) {
+            const character = await storage.getCharacter(characterId);
+            if (character && character.currentHp > 0) {
+              const expGain = target.experienceReward;
+              const newExp = character.experience + expGain;
+              const newLevel = Math.floor(newExp / this.calculateLevelUpRequirement(character.level)) + 1;
+              
+              await storage.updateCharacter(characterId, { 
+                experience: newExp,
+                level: Math.max(character.level, newLevel)
+              });
+
+              const expEntry: CombatLogEntry = {
+                timestamp: new Date().toISOString(),
+                type: "damage",
+                actorId: characterId,
+                message: `${character.name} получает ${expGain} опыта!`
+              };
+              await storage.addCombatLogEntry(combatId, expEntry);
+            }
+          }
+        }
+      }
+    }
 
     const attackEntry: CombatLogEntry = {
       timestamp: new Date().toISOString(),

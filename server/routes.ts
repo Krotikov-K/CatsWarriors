@@ -270,6 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const location = await storage.getLocation(character.currentLocationId);
       const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
+      const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
       const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
       const currentCombat = await storage.getCharacterActiveCombat(characterId);
 
@@ -277,6 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         character,
         location,
         playersInLocation,
+        npcsInLocation,
         activeCombats,
         isInCombat: !!currentCombat,
         currentCombat
@@ -286,6 +288,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get game state error:", error);
       res.status(500).json({ message: "Failed to get game state" });
+    }
+  });
+
+  // NPC routes
+  app.get("/api/npcs", async (req, res) => {
+    try {
+      const npcs = await storage.getAllNPCs();
+      res.json({ npcs });
+    } catch (error) {
+      console.error("Get NPCs error:", error);
+      res.status(500).json({ message: "Failed to get NPCs" });
+    }
+  });
+
+  app.get("/api/npcs/location/:locationId", async (req, res) => {
+    try {
+      const locationId = parseInt(req.params.locationId);
+      const npcs = await storage.getNPCsByLocation(locationId);
+      res.json({ npcs });
+    } catch (error) {
+      console.error("Get NPCs by location error:", error);
+      res.status(500).json({ message: "Failed to get NPCs for location" });
     }
   });
 
@@ -365,35 +389,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Combat routes
   app.post("/api/combat/start", async (req, res) => {
     try {
-      const { characterId, targetId, locationId } = startCombatSchema.parse(req.body);
+      const { characterId, targetId, npcId, locationId } = startCombatSchema.parse(req.body);
       
       const character = await storage.getCharacter(characterId);
-      const target = await storage.getCharacter(targetId);
-      
-      if (!character || !target) {
+      if (!character) {
         return res.status(404).json({ message: "Character not found" });
       }
 
-      if (character.currentLocationId !== locationId || target.currentLocationId !== locationId) {
-        return res.status(400).json({ message: "Characters must be in the same location" });
+      if (character.currentLocationId !== locationId) {
+        return res.status(400).json({ message: "Character must be in the specified location" });
       }
 
-      // Check if either character is already in combat
+      // Check if character is already in combat
       const characterCombat = await storage.getCharacterActiveCombat(characterId);
-      const targetCombat = await storage.getCharacterActiveCombat(targetId);
-      
-      if (characterCombat || targetCombat) {
-        return res.status(400).json({ message: "One or both characters are already in combat" });
+      if (characterCombat) {
+        return res.status(400).json({ message: "Character is already in combat" });
       }
 
-      const combat = await storage.createCombat(locationId, [characterId, targetId]);
+      let combat;
+      let combatType: "pvp" | "pve" = "pvp";
+      let participants: number[] = [characterId];
+      let npcParticipants: number[] = [];
+      let eventData: any = { combatId: 0, participants: [characterId] };
+
+      if (npcId) {
+        // PVE combat with NPC
+        const npc = await storage.getNPC(npcId);
+        if (!npc) {
+          return res.status(404).json({ message: "NPC not found" });
+        }
+
+        if (!npc.isAlive || !npc.spawnsInLocation.includes(locationId)) {
+          return res.status(400).json({ message: "NPC is not available in this location" });
+        }
+
+        combatType = "pve";
+        npcParticipants = [npcId];
+        eventData.npcParticipants = [npcId];
+        
+        // Create PVE combat
+        combat = await storage.createCombat(locationId, participants);
+        
+      } else if (targetId) {
+        // PVP combat with another character
+        const target = await storage.getCharacter(targetId);
+        if (!target) {
+          return res.status(404).json({ message: "Target character not found" });
+        }
+
+        if (target.currentLocationId !== locationId) {
+          return res.status(400).json({ message: "Target character must be in the same location" });
+        }
+
+        // Check if target is already in combat
+        const targetCombat = await storage.getCharacterActiveCombat(targetId);
+        if (targetCombat) {
+          return res.status(400).json({ message: "Target character is already in combat" });
+        }
+
+        participants = [characterId, targetId];
+        eventData.participants = participants;
+        
+        // Create PVP combat
+        combat = await storage.createCombat(locationId, participants);
+      } else {
+        return res.status(400).json({ message: "Either targetId or npcId must be provided" });
+      }
+
+      // Update combat with correct type and participants
+      await storage.updateCombat(combat.id, { 
+        type: combatType,
+        npcParticipants: npcParticipants
+      });
+
+      eventData.combatId = combat.id;
       
       // Create combat start event
       await storage.createGameEvent({
         type: "combat_start",
         characterId,
         locationId,
-        data: { combatId: combat.id, participants: [characterId, targetId] }
+        data: eventData
+      });
+
+      // Add initial log entry
+      const startMessage = combatType === "pve" 
+        ? `${character.name} вступает в бой с ${await (await storage.getNPC(npcId!))?.name}!`
+        : `Начинается бой между игроками!`;
+        
+      await storage.addCombatLogEntry(combat.id, {
+        timestamp: new Date().toISOString(),
+        type: "join",
+        actorId: characterId,
+        message: startMessage
       });
 
       // Start auto-combat
@@ -402,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send Telegram notifications
       if (telegramBot.isEnabled()) {
         const location = await storage.getLocation(locationId);
-        await telegramBot.notifyCombatStart([characterId, targetId], location?.name || "Unknown");
+        await telegramBot.notifyCombatStart(participants, location?.name || "Unknown");
       }
 
       // Broadcast combat update

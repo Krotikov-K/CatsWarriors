@@ -11,7 +11,11 @@ import MapView from "@/components/MapView";
 import CombatModal from "@/components/CombatModal";
 import NavigationMenu from "@/components/NavigationMenu";
 import TopBar from "@/components/TopBar";
+import NPCPanel from "@/components/NPCPanel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Character, Combat } from "@shared/schema";
 
 type TabType = 'overview' | 'map' | 'combat' | 'profile';
@@ -21,9 +25,39 @@ const navigate = (path: string) => window.location.href = path;
 export default function GameDashboard() {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { gameState, isLoading, error } = useGameState(user?.id || null);
   const { sendMessage } = useWebSocket(gameState?.character?.id || null);
+
+  const startCombatMutation = useMutation({
+    mutationFn: async ({ npcId }: { npcId: number }) => {
+      const response = await apiRequest("POST", "/api/combat/start", {
+        characterId: gameState?.character?.id,
+        npcId,
+        locationId: gameState?.character?.currentLocationId
+      });
+      if (!response.ok) {
+        throw new Error("Failed to start combat");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      toast({
+        title: "Бой начался!",
+        description: "Вы вступили в сражение с существом.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка боя",
+        description: "Не удалось начать бой. Попробуйте снова.",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     if (!user) {
@@ -129,6 +163,17 @@ export default function GameDashboard() {
               </div>
             )}
             
+            {/* NPCs in Location */}
+            {gameState.npcsInLocation && gameState.npcsInLocation.length > 0 && (
+              <div className="mb-6">
+                <NPCPanel 
+                  npcs={gameState.npcsInLocation}
+                  onAttackNPC={(npcId) => startCombatMutation.mutate({ npcId })}
+                  canAttack={!gameState.isInCombat && !startCombatMutation.isPending}
+                />
+              </div>
+            )}
+
             {/* Location Description */}
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="font-semibold mb-2">О локации</h3>

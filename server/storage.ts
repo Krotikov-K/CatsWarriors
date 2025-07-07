@@ -8,12 +8,15 @@ import {
   type Character,
   type Location,
   type Combat,
+  type NPC,
   type GameEvent,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
+  type InsertNPC,
   type CombatLogEntry,
-  LOCATIONS_DATA
+  LOCATIONS_DATA,
+  NPCS_DATA
 } from "@shared/schema";
 
 export interface IStorage {
@@ -40,6 +43,15 @@ export interface IStorage {
   getAllLocations(): Promise<Location[]>;
   createLocation(location: InsertLocation): Promise<Location>;
 
+  // NPC methods
+  getNPC(id: number): Promise<NPC | undefined>;
+  getNPCsByLocation(locationId: number): Promise<NPC[]>;
+  getAllNPCs(): Promise<NPC[]>;
+  createNPC(npc: InsertNPC): Promise<NPC>;
+  updateNPC(id: number, updates: Partial<NPC>): Promise<NPC | undefined>;
+  respawnNPC(npcId: number): Promise<NPC | undefined>;
+  killNPC(npcId: number): Promise<void>;
+
   // Combat methods
   getCombat(id: number): Promise<Combat | undefined>;
   getActiveCombatsInLocation(locationId: number): Promise<Combat[]>;
@@ -47,6 +59,7 @@ export interface IStorage {
   createCombat(locationId: number, participants: number[]): Promise<Combat>;
   addCombatLogEntry(combatId: number, entry: CombatLogEntry): Promise<void>;
   addParticipantToCombat(combatId: number, characterId: number): Promise<Combat | undefined>;
+  updateCombat(combatId: number, updates: Partial<Combat>): Promise<Combat | undefined>;
   finishCombat(combatId: number): Promise<Combat | undefined>;
 
   // Game Events
@@ -58,17 +71,20 @@ export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
   private characters: Map<number, Character> = new Map();
   private locations: Map<number, Location> = new Map();
+  private npcs: Map<number, NPC> = new Map();
   private combats: Map<number, Combat> = new Map();
   private gameEvents: Map<number, GameEvent> = new Map();
   
   private currentUserId = 1;
   private currentCharacterId = 1;
   private currentLocationId = 1;
+  private currentNpcId = 1;
   private currentCombatId = 1;
   private currentEventId = 1;
 
   constructor() {
     this.initializeLocations();
+    this.initializeNPCs();
   }
 
   private initializeLocations() {
@@ -86,6 +102,35 @@ export class MemStorage implements IStorage {
       this.locations.set(location.id, location);
       if (location.id >= this.currentLocationId) {
         this.currentLocationId = location.id + 1;
+      }
+    });
+  }
+
+  private initializeNPCs() {
+    NPCS_DATA.forEach(npcData => {
+      const npc: NPC = {
+        id: npcData.id,
+        name: npcData.name,
+        type: npcData.type,
+        level: npcData.level,
+        currentHp: npcData.maxHp,
+        maxHp: npcData.maxHp,
+        strength: npcData.strength,
+        agility: npcData.agility,
+        intelligence: npcData.intelligence,
+        endurance: npcData.endurance,
+        description: npcData.description,
+        emoji: npcData.emoji,
+        experienceReward: npcData.experienceReward,
+        spawnsInLocation: npcData.spawnsInLocation,
+        respawnTime: npcData.respawnTime,
+        isAlive: true,
+        lastKilled: null,
+        createdAt: new Date(),
+      };
+      this.npcs.set(npc.id, npc);
+      if (npc.id >= this.currentNpcId) {
+        this.currentNpcId = npc.id + 1;
       }
     });
   }
@@ -231,6 +276,90 @@ export class MemStorage implements IStorage {
     return location;
   }
 
+  // NPC methods
+  async getNPC(id: number): Promise<NPC | undefined> {
+    return this.npcs.get(id);
+  }
+
+  async getNPCsByLocation(locationId: number): Promise<NPC[]> {
+    return Array.from(this.npcs.values()).filter(npc => 
+      npc.isAlive && npc.spawnsInLocation.includes(locationId)
+    );
+  }
+
+  async getAllNPCs(): Promise<NPC[]> {
+    return Array.from(this.npcs.values());
+  }
+
+  async createNPC(insertNpc: InsertNPC): Promise<NPC> {
+    const id = this.currentNpcId++;
+    const npc: NPC = {
+      id,
+      name: insertNpc.name,
+      type: insertNpc.type,
+      level: insertNpc.level,
+      currentHp: insertNpc.maxHp || 100,
+      maxHp: insertNpc.maxHp || 100,
+      strength: insertNpc.strength,
+      agility: insertNpc.agility,
+      intelligence: insertNpc.intelligence,
+      endurance: insertNpc.endurance,
+      description: insertNpc.description,
+      emoji: insertNpc.emoji || "🐱",
+      experienceReward: insertNpc.experienceReward || 50,
+      spawnsInLocation: insertNpc.spawnsInLocation || [],
+      respawnTime: insertNpc.respawnTime || 300,
+      isAlive: true,
+      lastKilled: null,
+      createdAt: new Date(),
+    };
+    this.npcs.set(id, npc);
+    return npc;
+  }
+
+  async updateNPC(id: number, updates: Partial<NPC>): Promise<NPC | undefined> {
+    const npc = this.npcs.get(id);
+    if (!npc) return undefined;
+
+    const updatedNpc = { ...npc, ...updates };
+    this.npcs.set(id, updatedNpc);
+    return updatedNpc;
+  }
+
+  async respawnNPC(npcId: number): Promise<NPC | undefined> {
+    const npc = this.npcs.get(npcId);
+    if (!npc) return undefined;
+
+    const respawnedNpc = {
+      ...npc,
+      isAlive: true,
+      currentHp: npc.maxHp,
+      lastKilled: null,
+    };
+    this.npcs.set(npcId, respawnedNpc);
+    return respawnedNpc;
+  }
+
+  async killNPC(npcId: number): Promise<void> {
+    const npc = this.npcs.get(npcId);
+    if (!npc) return;
+
+    const killedNpc = {
+      ...npc,
+      isAlive: false,
+      currentHp: 0,
+      lastKilled: new Date(),
+    };
+    this.npcs.set(npcId, killedNpc);
+
+    // Schedule respawn if respawnTime > 0
+    if (npc.respawnTime > 0) {
+      setTimeout(() => {
+        this.respawnNPC(npcId);
+      }, npc.respawnTime * 1000);
+    }
+  }
+
   // Combat methods
   async getCombat(id: number): Promise<Combat | undefined> {
     return this.combats.get(id);
@@ -279,6 +408,15 @@ export class MemStorage implements IStorage {
     combat.participants.push(characterId);
     this.combats.set(combatId, combat);
     return combat;
+  }
+
+  async updateCombat(combatId: number, updates: Partial<Combat>): Promise<Combat | undefined> {
+    const combat = this.combats.get(combatId);
+    if (!combat) return undefined;
+
+    const updatedCombat = { ...combat, ...updates };
+    this.combats.set(combatId, updatedCombat);
+    return updatedCombat;
   }
 
   async finishCombat(combatId: number): Promise<Combat | undefined> {
