@@ -63,7 +63,23 @@ export default function GameDashboard() {
     );
   }
 
-  if (error || !gameState?.character) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4">Ошибка</h1>
+          <p className="text-red-500 mb-6">
+            Не удалось загрузить игровые данные
+          </p>
+          <Button onClick={() => navigate("/create-character")}>
+            Создать персонажа
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!gameState?.character) {
     navigate("/create-character");
     return null;
   }

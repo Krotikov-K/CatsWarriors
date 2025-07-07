@@ -59,9 +59,13 @@ export default function CharacterCreation() {
         title: "Персонаж создан!",
         description: "Ваш кот-воитель готов к приключениям.",
       });
-      // Invalidate characters cache to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/characters', user?.id] });
-      navigate("/");
+      // Invalidate all game-related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      // Navigate to game after a small delay to allow state update
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
     },
     onError: (error: any) => {
       toast({
