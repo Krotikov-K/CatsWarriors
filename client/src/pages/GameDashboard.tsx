@@ -30,34 +30,6 @@ export default function GameDashboard() {
   const { gameState, isLoading, error } = useGameState(user?.id || null);
   const { sendMessage } = useWebSocket(gameState?.character?.id || null);
 
-  const startCombatMutation = useMutation({
-    mutationFn: async ({ npcId }: { npcId: number }) => {
-      const response = await apiRequest("POST", "/api/combat/start", {
-        characterId: gameState?.character?.id,
-        npcId,
-        locationId: gameState?.character?.currentLocationId
-      });
-      if (!response.ok) {
-        throw new Error("Failed to start combat");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
-      toast({
-        title: "Бой начался!",
-        description: "Вы вступили в сражение с существом.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка боя",
-        description: "Не удалось начать бой. Попробуйте снова.",
-        variant: "destructive",
-      });
-    },
-  });
-
   useEffect(() => {
     if (!user) {
       navigate("/");
@@ -134,34 +106,6 @@ export default function GameDashboard() {
               </div>
             )}
             
-            {/* Active Combats */}
-            {gameState.activeCombats && gameState.activeCombats.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">
-                  Активные бои ({gameState.activeCombats.length})
-                </h3>
-                <div className="space-y-3">
-                  {gameState.activeCombats.map((combat: Combat) => (
-                    <div key={combat.id} className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-red-900 dark:text-red-100">
-                            Бой №{combat.id}
-                          </p>
-                          <p className="text-sm text-red-700 dark:text-red-300">
-                            Участники: {combat.participants.length}
-                          </p>
-                        </div>
-                        <Button size="sm" variant="destructive">
-                          Присоединиться
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Location Description */}
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="font-semibold mb-2">О локации</h3>
@@ -170,8 +114,8 @@ export default function GameDashboard() {
               </p>
               <div className="flex items-center text-sm text-muted-foreground">
                 <span className="mr-4">Тип: {gameState.location?.type}</span>
-                <span className="mr-4">Уровень опасности: {gameState.location?.dangerLevel}</span>
-                <span>Макс. игроков: {gameState.location?.maxPlayers}</span>
+                <span className="mr-4">Уровень опасности: {gameState.location?.dangerLevel || 'Низкий'}</span>
+                <span>Макс. игроков: {gameState.location?.maxPlayers || 'Неограничено'}</span>
               </div>
             </div>
           </div>
@@ -186,11 +130,13 @@ export default function GameDashboard() {
               playersInLocation={gameState.playersInLocation || []}
               activeCombats={gameState.activeCombats || []}
               onLocationChange={(locationId) => {
-                sendMessage({
-                  type: 'move_character',
-                  data: { characterId: gameState.character!.id, locationId },
-                  timestamp: new Date().toISOString()
-                });
+                if (sendMessage) {
+                  sendMessage({
+                    type: 'move_character',
+                    data: { characterId: gameState.character!.id, locationId },
+                    timestamp: new Date().toISOString()
+                  });
+                }
               }}
             />
           </div>
@@ -363,11 +309,13 @@ export default function GameDashboard() {
             // Handle combat close if needed
           }}
           onJoinCombat={(combatId) => {
-            sendMessage({
-              type: 'join_combat',
-              data: { characterId: gameState.character!.id, combatId },
-              timestamp: new Date().toISOString()
-            });
+            if (sendMessage) {
+              sendMessage({
+                type: 'join_combat',
+                data: { characterId: gameState.character!.id, combatId },
+                timestamp: new Date().toISOString()
+              });
+            }
           }}
         />
       )}

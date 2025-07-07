@@ -1,19 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { type GameState } from "@shared/schema";
 
-export function useGameState(characterId: number | null) {
+export function useGameState(userId: number | null) {
   const { data: gameState, isLoading, error } = useQuery<GameState>({
-    queryKey: ['/api/game-state', characterId],
+    queryKey: ['/api/game-state', userId],
     queryFn: async () => {
-      const res = await fetch(`/api/game-state/${characterId}`);
+      if (!userId) throw new Error('No user ID');
+      const res = await fetch(`/api/game-state?userId=${userId}`);
       if (!res.ok) {
         throw new Error('Failed to fetch game state');
       }
       return res.json();
     },
-    enabled: !!characterId,
-    refetchInterval: 5000, // Refresh every 5 seconds
-    staleTime: 1000, // Consider data stale after 1 second
+    enabled: !!userId,
+    refetchInterval: 5000,
+    staleTime: 1000,
   });
 
   return {

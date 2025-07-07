@@ -258,7 +258,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Game state route
+  // Game state routes
+  app.get("/api/game-state", async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : null;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // Get user's characters
+      const characters = await storage.getCharactersByUserId(userId);
+      
+      if (characters.length === 0) {
+        return res.json({ 
+          character: null,
+          location: null,
+          playersInLocation: [],
+          npcsInLocation: [],
+          activeCombats: [],
+          isInCombat: false,
+          currentCombat: null
+        });
+      }
+
+      // Use the first character for now
+      const character = characters[0];
+      const location = await storage.getLocation(character.currentLocationId);
+      const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
+      const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
+      const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
+      const currentCombat = await storage.getCharacterActiveCombat(character.id);
+
+      const gameState = {
+        character,
+        location,
+        playersInLocation,
+        npcsInLocation,
+        activeCombats,
+        isInCombat: !!currentCombat,
+        currentCombat
+      };
+
+      res.json(gameState);
+    } catch (error) {
+      console.error("Get game state error:", error);
+      res.status(500).json({ message: "Failed to get game state" });
+    }
+  });
+
   app.get("/api/game-state/:characterId", async (req, res) => {
     try {
       const characterId = parseInt(req.params.characterId);
