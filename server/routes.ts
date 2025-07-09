@@ -688,8 +688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
       const location = await storage.getLocation(character.currentLocationId);
       const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
-      const activeCombats: any[] = []; // Empty for now since combat system uses in-memory
-      const currentCombat = null; // Empty for now since combat system uses in-memory
+      const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
+      const currentCombat = await storage.getCharacterActiveCombat(character.id);
       
       const currentGroup = await storage.getCharacterGroup(character.id);
       const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
@@ -697,9 +697,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Game state for character ${character.id}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
       console.log(`Current group for character ${character.id}:`, currentGroup);
       console.log(`Groups in location ${character.currentLocationId}:`, groupsInLocation);
+      console.log(`Active combats in location ${character.currentLocationId}:`, activeCombats.length);
 
       // Get last completed combat for results
       const lastCombat = await storage.getCharacterLastCompletedCombat(character.id);
+      console.log(`Last completed combat for character ${character.id}:`, lastCombat?.id, lastCombat?.status);
       
       res.json({
         character,
