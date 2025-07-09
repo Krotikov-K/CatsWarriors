@@ -15,6 +15,7 @@ import TopBar from "@/components/TopBar";
 import NPCPanel from "@/components/NPCPanel";
 import GroupPanel from "@/components/GroupPanel";
 import CampActions from "@/components/CampActions";
+import LevelUpModal from "@/components/LevelUpModal";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,12 +40,48 @@ export default function GameDashboard() {
   const [combatResult, setCombatResult] = useState<any>(null);
   const [showCombatResult, setShowCombatResult] = useState(false);
   const [wasInCombat, setWasInCombat] = useState(false);
+  
+  // Level up tracking
+  const [previousLevel, setPreviousLevel] = useState<number | null>(null);
+  const [levelUpData, setLevelUpData] = useState<any>(null);
+  const [showLevelUp, setShowLevelUp] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Track level ups
+  useEffect(() => {
+    if (gameState?.character) {
+      const currentLevel = gameState.character.level;
+      
+      if (previousLevel !== null && currentLevel > previousLevel) {
+        console.log('*** LEVEL UP DETECTED ***', {
+          from: previousLevel,
+          to: currentLevel,
+          character: gameState.character.name
+        });
+        
+        // Show level up modal with current stats as base
+        setLevelUpData({
+          characterName: gameState.character.name,
+          newLevel: currentLevel,
+          baseStats: {
+            strength: gameState.character.strength,
+            agility: gameState.character.agility,
+            intelligence: gameState.character.intelligence,
+            endurance: gameState.character.endurance,
+            maxHp: gameState.character.maxHp
+          }
+        });
+        setShowLevelUp(true);
+      }
+      
+      setPreviousLevel(currentLevel);
+    }
+  }, [gameState?.character?.level, previousLevel]);
 
   // Track combat end and show results
   useEffect(() => {
@@ -241,6 +278,39 @@ export default function GameDashboard() {
 
   const handleJoinCombat = (combatId: number) => {
     joinCombatMutation.mutate(combatId);
+  };
+
+  const applyLevelUpMutation = useMutation({
+    mutationFn: async (statBoosts: { strength: number; agility: number; intelligence: number; endurance: number }) => {
+      const response = await apiRequest("POST", "/api/character/apply-level-up", { statBoosts });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      toast({ 
+        title: "Уровень повышен!", 
+        description: "Характеристики персонажа улучшены" 
+      });
+      setShowLevelUp(false);
+      setLevelUpData(null);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Ошибка повышения уровня", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Handle level up modal
+  const handleLevelUpClose = (statBoosts?: { strength: number; agility: number; intelligence: number; endurance: number }) => {
+    if (statBoosts) {
+      applyLevelUpMutation.mutate(statBoosts);
+    } else {
+      setShowLevelUp(false);
+      setLevelUpData(null);
+    }
   };
 
   if (userLoading || gameLoading) {
@@ -501,6 +571,17 @@ export default function GameDashboard() {
         onClose={() => setShowCombatResult(false)}
         result={combatResult}
       />
+
+      {/* Level Up Modal */}
+      {showLevelUp && levelUpData && (
+        <LevelUpModal
+          isOpen={showLevelUp}
+          onClose={handleLevelUpClose}
+          characterName={levelUpData.characterName}
+          newLevel={levelUpData.newLevel}
+          baseStats={levelUpData.baseStats}
+        />
+      )}
     </div>
   );
 }

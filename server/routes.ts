@@ -669,6 +669,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Level up endpoints
+  app.post("/api/character/apply-level-up", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { statBoosts } = req.body;
+      
+      if (!statBoosts || typeof statBoosts !== 'object') {
+        return res.status(400).json({ message: "Invalid stat boosts data" });
+      }
+
+      const { strength = 0, agility = 0, intelligence = 0, endurance = 0 } = statBoosts;
+      
+      // Validate that total points don't exceed 5
+      const totalPoints = strength + agility + intelligence + endurance;
+      if (totalPoints !== 5 || strength < 0 || agility < 0 || intelligence < 0 || endurance < 0) {
+        return res.status(400).json({ message: "Invalid stat distribution" });
+      }
+
+      const character = await storage.getCharactersByUserId(req.userId);
+      if (!character.length) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const currentChar = character[0];
+      const newMaxHp = 100 + ((currentChar.endurance + endurance) * 10);
+      
+      // Calculate new HP maintaining the same percentage
+      const hpPercentage = currentChar.currentHp / currentChar.maxHp;
+      const newCurrentHp = Math.max(1, Math.floor(newMaxHp * hpPercentage));
+
+      const updatedCharacter = await storage.updateCharacterStats(currentChar.id, {
+        strength: currentChar.strength + strength,
+        agility: currentChar.agility + agility,
+        intelligence: currentChar.intelligence + intelligence,
+        endurance: currentChar.endurance + endurance
+      });
+
+      if (!updatedCharacter) {
+        return res.status(400).json({ message: "Could not apply level up" });
+      }
+
+      // Update current HP if endurance changed
+      if (endurance > 0) {
+        await storage.updateCharacter(currentChar.id, { 
+          currentHp: newCurrentHp,
+          maxHp: newMaxHp 
+        });
+      }
+
+      // Get updated character data
+      const finalCharacter = await storage.getCharacter(currentChar.id);
+      
+      res.json({ character: finalCharacter });
+    } catch (error) {
+      console.error("Apply level up error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Game state routes
   app.get("/api/game-state", async (req, res) => {
     try {

@@ -29,6 +29,7 @@ export function useUser() {
           setUser(data.user);
         } else {
           // Fallback to demo user for development
+          console.log('No Telegram user, using demo user for development');
           setUser({ id: 1, username: 'demo_user' });
         }
       } catch (error) {
@@ -40,10 +41,16 @@ export function useUser() {
       }
     };
 
+    // In development, always authenticate after a short delay
     if (isInitialized) {
       authenticateUser();
+    } else {
+      // For browser development without Telegram, auto-authenticate
+      setTimeout(() => {
+        authenticateUser();
+      }, 100);
     }
-  }, [isInitialized]);
+  }, [isInitialized, telegramUser]);
 
   return {
     user,
