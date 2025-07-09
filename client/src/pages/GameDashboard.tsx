@@ -52,15 +52,45 @@ export default function GameDashboard() {
       const isCurrentlyInCombat = gameState.isInCombat || !!gameState.currentCombat;
       
       // If we were in combat but no longer are, show results
-      if (wasInCombat && !isCurrentlyInCombat) {
-        // Create combat result based on character state
+      if (wasInCombat && !isCurrentlyInCombat && gameState.lastCompletedCombat) {
+        const combat = gameState.lastCompletedCombat;
+        const characterId = gameState.character?.id;
+        
+        // Calculate damage dealt and taken from combat log
+        let damageDealt = 0;
+        let damageTaken = 0;
+        let enemyName = "Противник";
+        
+        if (combat.combatLog) {
+          combat.combatLog.forEach(entry => {
+            if (entry.type === "damage") {
+              if (entry.actorId === characterId) {
+                damageDealt += entry.damage || 0;
+              } else if (entry.targetId === characterId) {
+                damageTaken += entry.damage || 0;
+              }
+            }
+          });
+          
+          // Find enemy name from first attack entry
+          const firstAttack = combat.combatLog.find(entry => 
+            entry.type === "attack" && entry.actorId !== characterId
+          );
+          if (firstAttack && firstAttack.message) {
+            const match = firstAttack.message.match(/^([^а-я]+)\s/);
+            if (match) {
+              enemyName = match[1].trim();
+            }
+          }
+        }
+        
         const result = {
           victory: (gameState.character?.currentHp || 0) > 0,
-          experienceGained: 10, // Basic XP for participating
-          damageDealt: 0, // Will be calculated from combat log in future
-          damageTaken: 0, // Will be calculated from combat log in future
-          enemyName: "Противник", // Will be improved with actual enemy name
-          survivedTurns: 1
+          experienceGained: combat.combatLog?.length || 5, // XP based on combat length
+          damageDealt,
+          damageTaken,
+          enemyName,
+          survivedTurns: combat.currentTurn || 1
         };
         
         setCombatResult(result);

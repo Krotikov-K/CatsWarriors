@@ -698,6 +698,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Current group for character ${character.id}:`, currentGroup);
       console.log(`Groups in location ${character.currentLocationId}:`, groupsInLocation);
 
+      // Get last completed combat for results
+      const lastCombat = await storage.getCharacterLastCompletedCombat(character.id);
+      
       res.json({
         character,
         location,
@@ -707,7 +710,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isInCombat: !!currentCombat,
         currentCombat,
         currentGroup,
-        groupsInLocation
+        groupsInLocation,
+        lastCompletedCombat: lastCombat
       });
     } catch (error) {
       console.error("Get game state error:", error);

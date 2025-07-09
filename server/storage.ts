@@ -63,6 +63,7 @@ export interface IStorage {
   getCombat(id: number): Promise<Combat | undefined>;
   getActiveCombatsInLocation(locationId: number): Promise<Combat[]>;
   getCharacterActiveCombat(characterId: number): Promise<Combat | undefined>;
+  getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined>;
   createCombat(locationId: number, participants: number[]): Promise<Combat>;
   addCombatLogEntry(combatId: number, entry: CombatLogEntry): Promise<void>;
   addParticipantToCombat(combatId: number, characterId: number): Promise<Combat | undefined>;
@@ -414,6 +415,18 @@ export class MemStorage implements IStorage {
     );
     console.log(`Getting active combat for character ${characterId}:`, activeCombat?.id);
     return activeCombat;
+  }
+
+  async getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined> {
+    const completedCombats = Array.from(this.combats.values())
+      .filter(combat => 
+        combat.status === "finished" && 
+        combat.participants.includes(characterId) &&
+        combat.finishedAt
+      )
+      .sort((a, b) => (b.finishedAt?.getTime() || 0) - (a.finishedAt?.getTime() || 0));
+    
+    return completedCombats[0]; // Most recent completed combat
   }
 
   async createCombat(locationId: number, participants: number[]): Promise<Combat> {
@@ -852,6 +865,18 @@ export class DatabaseStorage implements IStorage {
     );
     console.log(`Getting active combat for character ${characterId}:`, activeCombat?.id);
     return activeCombat;
+  }
+
+  async getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined> {
+    const completedCombats = Array.from(this.combatsMap.values())
+      .filter(combat => 
+        combat.status === "finished" && 
+        combat.participants.includes(characterId) &&
+        combat.finishedAt
+      )
+      .sort((a, b) => (b.finishedAt?.getTime() || 0) - (a.finishedAt?.getTime() || 0));
+    
+    return completedCombats[0]; // Most recent completed combat
   }
 
   async createCombat(locationId: number, participants: number[]): Promise<Combat> {
