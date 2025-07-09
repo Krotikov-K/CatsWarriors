@@ -10,6 +10,7 @@ import StatsPanel from "@/components/StatsPanel";
 import MapView from "@/components/MapView";
 import CombatModal from "@/components/CombatModal";
 import CombatInterface from "@/components/CombatInterface";
+import CombatResultModal from "@/components/CombatResultModal";
 import TopBar from "@/components/TopBar";
 import NPCPanel from "@/components/NPCPanel";
 import GroupPanel from "@/components/GroupPanel";
@@ -35,12 +36,41 @@ export default function GameDashboard() {
 
   const [selectedCombat, setSelectedCombat] = useState<Combat | null>(null);
   const [showCombatModal, setShowCombatModal] = useState(false);
+  const [combatResult, setCombatResult] = useState<any>(null);
+  const [showCombatResult, setShowCombatResult] = useState(false);
+  const [wasInCombat, setWasInCombat] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Track combat end and show results
+  useEffect(() => {
+    if (gameState) {
+      const isCurrentlyInCombat = gameState.isInCombat || !!gameState.currentCombat;
+      
+      // If we were in combat but no longer are, show results
+      if (wasInCombat && !isCurrentlyInCombat) {
+        // Create combat result based on character state
+        const result = {
+          victory: (gameState.character?.currentHp || 0) > 0,
+          experienceGained: 10, // Basic XP for participating
+          damageDealt: 0, // Will be calculated from combat log in future
+          damageTaken: 0, // Will be calculated from combat log in future
+          enemyName: "Противник", // Will be improved with actual enemy name
+          survivedTurns: 1
+        };
+        
+        setCombatResult(result);
+        setShowCombatResult(true);
+        setWasInCombat(false);
+      } else if (isCurrentlyInCombat && !wasInCombat) {
+        setWasInCombat(true);
+      }
+    }
+  }, [gameState, wasInCombat]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
@@ -400,6 +430,13 @@ export default function GameDashboard() {
           onJoinCombat={handleJoinCombat}
         />
       )}
+
+      {/* Combat Result Modal */}
+      <CombatResultModal
+        isOpen={showCombatResult}
+        onClose={() => setShowCombatResult(false)}
+        result={combatResult}
+      />
     </div>
   );
 }
