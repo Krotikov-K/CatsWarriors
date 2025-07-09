@@ -33,29 +33,29 @@ export function useUser() {
             console.log('Authentication successful, user:', data.user);
             setUser(data.user);
           } else {
-            console.log('No user data returned, using fallback');
-            setUser({ id: 1, username: 'demo_user' });
+            console.log('No user data returned from Telegram auth');
+            // Create unique fallback based on Telegram ID if available
+            const fallbackId = Math.abs(telegramUser.id % 1000) + 1000; // Generate unique ID from Telegram ID
+            setUser({ id: fallbackId, username: `telegram_${telegramUser.id}` });
           }
         } else {
-          console.log('No Telegram user, using fallback for development');
-          // Try to find any existing user for development
-          try {
-            const response = await fetch('/api/characters?userId=2');
-            if (response.ok) {
-              setUser({ id: 2, username: 'dev_user_2' });
-            } else {
-              setUser({ id: 3, username: 'dev_user_3' });
-            }
-          } catch {
-            setUser({ id: 3, username: 'dev_user_3' });
+          console.log('No Telegram user detected, using development mode');
+          // Create unique session-based user for development
+          let sessionUserId = localStorage.getItem('dev_session_user_id');
+          if (!sessionUserId) {
+            // Generate random user ID for this browser session
+            sessionUserId = Math.floor(Math.random() * 900 + 100).toString(); // Random ID between 100-999
+            localStorage.setItem('dev_session_user_id', sessionUserId);
+            console.log('Created new development session user:', sessionUserId);
           }
+          setUser({ id: parseInt(sessionUserId), username: `dev_session_${sessionUserId}` });
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        // Try different user IDs for development based on session
-        const sessionUserId = parseInt(localStorage.getItem('dev_user_id') || '2');
-        localStorage.setItem('dev_user_id', sessionUserId.toString());
-        setUser({ id: sessionUserId, username: `dev_user_${sessionUserId}` });
+        // Generate unique fallback based on browser fingerprint
+        const browserFingerprint = navigator.userAgent.length + window.screen.width + window.screen.height;
+        const fallbackUserId = Math.abs(browserFingerprint % 500) + 500; // ID between 500-999
+        setUser({ id: fallbackUserId, username: `fallback_${fallbackUserId}` });
       } finally {
         setIsLoading(false);
       }

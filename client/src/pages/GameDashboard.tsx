@@ -29,6 +29,8 @@ export default function GameDashboard() {
   
   const { gameState, isLoading: gameLoading, error } = useGameState(user?.id || null);
   
+  console.log('GameDashboard render:', { user, userLoading, gameState, gameLoading, error });
+  
   // UI State
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedCombat, setSelectedCombat] = useState<Combat | null>(null);
@@ -334,8 +336,22 @@ export default function GameDashboard() {
   }
 
   if (!gameState?.character) {
-    navigate("/create-character");
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4">Добро пожаловать в Cats War!</h1>
+          <p className="text-muted-foreground mb-6">
+            У вас пока нет персонажа. Создайте своего воина-кота.
+          </p>
+          <button 
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded text-white font-medium"
+            onClick={() => navigate("/create-character")}
+          >
+            Создать персонажа
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const character = gameState.character;
