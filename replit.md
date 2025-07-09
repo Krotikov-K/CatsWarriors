@@ -202,6 +202,9 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added full location names display on all devices
   * Enhanced z-index hierarchy for proper visual ordering
   * Reduced map size to 150vw x 140vh for more compact navigation
+  * Removed "Древний Храм" and "Край Света" locations for cleaner map
+  * Fixed connection issues with "Заброшенная Пещера" and "Болотистая Низина"
+  * Repositioned "Болотистая Низина" closer to "Старая Дорога" with proper connections
 
 ## User Preferences
 
