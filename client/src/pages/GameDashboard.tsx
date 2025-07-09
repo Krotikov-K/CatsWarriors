@@ -61,26 +61,72 @@ export default function GameDashboard() {
       
       // Detect combat end transition
       if (wasInCombat && !isCurrentlyInCombat) {
-        console.log('*** COMBAT ENDED - SHOWING RESULTS ***');
+        console.log('*** COMBAT ENDED - GETTING REAL RESULTS ***');
         
-        const result = {
-          victory: (gameState.character?.currentHp || 0) > 0,
-          experienceGained: Math.floor(Math.random() * 50) + 25,
-          damageDealt: Math.floor(Math.random() * 40) + 15,
-          damageTaken: Math.floor(Math.random() * 30) + 10,
-          enemyName: "Дикий Противник",
-          survivedTurns: Math.floor(Math.random() * 8) + 3
-        };
+        // Get real combat results from last completed combat
+        const lastCombat = gameState.lastCompletedCombat;
+        let result;
         
-        console.log('*** SETTING COMBAT RESULT ***', result);
+        if (lastCombat && lastCombat.combatLog) {
+          console.log('*** PARSING REAL COMBAT LOG ***', lastCombat.combatLog);
+          
+          const characterId = gameState.character?.id;
+          let damageDealt = 0;
+          let damageTaken = 0;
+          let experienceGained = 0;
+          let enemyName = "Противник";
+          
+          // Parse combat log for real data
+          lastCombat.combatLog.forEach(entry => {
+            if (entry.type === "attack" && entry.damage) {
+              if (entry.actorId === characterId) {
+                damageDealt += entry.damage;
+              } else if (entry.targetId === characterId) {
+                damageTaken += entry.damage;
+              }
+              
+              // Extract enemy name from first enemy attack
+              if (entry.actorId !== characterId && !enemyName.includes("Противник")) {
+                const nameMatch = entry.message.match(/^([^а-я]*\S+)/);
+                if (nameMatch) {
+                  enemyName = nameMatch[1];
+                }
+              }
+            }
+            
+            // Get experience from log
+            if (entry.message.includes("получает") && entry.message.includes("опыта")) {
+              const expMatch = entry.message.match(/(\d+)\s+опыта/);
+              if (expMatch) {
+                experienceGained += parseInt(expMatch[1]);
+              }
+            }
+          });
+          
+          result = {
+            victory: (gameState.character?.currentHp || 0) > 0,
+            experienceGained: experienceGained || 25,
+            damageDealt,
+            damageTaken,
+            enemyName,
+            survivedTurns: lastCombat.currentTurn || 1
+          };
+        } else {
+          // Fallback for when no combat log is available
+          result = {
+            victory: (gameState.character?.currentHp || 0) > 0,
+            experienceGained: 25,
+            damageDealt: 15,
+            damageTaken: 10,
+            enemyName: "Противник",
+            survivedTurns: 3
+          };
+        }
+        
+        console.log('*** SETTING REAL COMBAT RESULT ***', result);
         setCombatResult(result);
         setShowCombatResult(true);
         setWasInCombat(false);
-        
-        // Force update to ensure modal shows
-        setTimeout(() => {
-          console.log('*** DELAYED CHECK - MODAL SHOULD BE VISIBLE ***');
-        }, 100);
       } else if (isCurrentlyInCombat && !wasInCombat) {
         console.log('*** COMBAT STARTED ***');
         setWasInCombat(true);

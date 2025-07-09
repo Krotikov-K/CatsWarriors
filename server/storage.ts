@@ -422,23 +422,31 @@ export class MemStorage implements IStorage {
     console.log(`Total combats in memory:`, this.combats.size);
     
     const allCombats = Array.from(this.combats.values());
-    console.log(`Character ${characterId} combats:`, allCombats.filter(c => c.participants.includes(characterId)).map(c => ({
+    const characterCombats = allCombats.filter(c => c.participants.includes(characterId));
+    
+    console.log(`Character ${characterId} combats:`, characterCombats.map(c => ({
       id: c.id,
       status: c.status,
       participants: c.participants,
-      finishedAt: c.finishedAt
+      finishedAt: c.finishedAt,
+      logEntries: c.combatLog?.length || 0
     })));
     
-    const completedCombats = allCombats
+    const completedCombats = characterCombats
       .filter(combat => 
         combat.status === "finished" && 
-        combat.participants.includes(characterId) &&
         combat.finishedAt
       )
       .sort((a, b) => (b.finishedAt?.getTime() || 0) - (a.finishedAt?.getTime() || 0));
     
     console.log(`Found ${completedCombats.length} completed combats for character ${characterId}`);
-    return completedCombats[0]; // Most recent completed combat
+    const lastCombat = completedCombats[0];
+    
+    if (lastCombat) {
+      console.log(`Returning combat ${lastCombat.id} with ${lastCombat.combatLog?.length || 0} log entries`);
+    }
+    
+    return lastCombat;
   }
 
   async createCombat(locationId: number, participants: number[]): Promise<Combat> {
