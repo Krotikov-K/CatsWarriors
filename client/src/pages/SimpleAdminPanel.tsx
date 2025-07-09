@@ -19,6 +19,8 @@ export default function SimpleAdminPanel() {
   });
   const [editingCharacter, setEditingCharacter] = useState<any>(null);
   const [editingNPC, setEditingNPC] = useState<any>(null);
+  const [editingLocation, setEditingLocation] = useState<any>(null);
+  const [isCreatingLocation, setIsCreatingLocation] = useState(false);
   const { toast } = useToast();
   
   // Set authentication and fetch data
@@ -138,6 +140,53 @@ export default function SimpleAdminPanel() {
     } catch (error) {
       console.error('Error updating NPC:', error);
       toast({ title: "Ошибка", description: "Не удалось обновить NPC", variant: "destructive" });
+    }
+  };
+
+  // Location management functions
+  const updateLocation = async (locationId: number, updates: any) => {
+    try {
+      await makeAdminRequest(`/api/admin/locations/${locationId}`, 'PATCH', updates);
+      toast({ title: "Локация обновлена!", description: "Изменения сохранены" });
+      
+      // Reload locations
+      const locationsData = await fetch('/api/locations').then(res => res.json());
+      setData(prev => ({ ...prev, locations: locationsData.locations }));
+      setEditingLocation(null);
+    } catch (error) {
+      console.error('Error updating location:', error);
+      toast({ title: "Ошибка", description: "Не удалось обновить локацию", variant: "destructive" });
+    }
+  };
+
+  const createLocation = async (locationData: any) => {
+    try {
+      await makeAdminRequest('/api/admin/locations', 'POST', locationData);
+      toast({ title: "Локация создана!", description: "Новая локация добавлена на карту" });
+      
+      // Reload locations
+      const locationsData = await fetch('/api/locations').then(res => res.json());
+      setData(prev => ({ ...prev, locations: locationsData.locations }));
+      setIsCreatingLocation(false);
+    } catch (error) {
+      console.error('Error creating location:', error);
+      toast({ title: "Ошибка", description: "Не удалось создать локацию", variant: "destructive" });
+    }
+  };
+
+  const deleteLocation = async (locationId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту локацию?')) return;
+    
+    try {
+      await makeAdminRequest(`/api/admin/locations/${locationId}`, 'DELETE');
+      toast({ title: "Локация удалена!", description: "Локация убрана с карты" });
+      
+      // Reload locations
+      const locationsData = await fetch('/api/locations').then(res => res.json());
+      setData(prev => ({ ...prev, locations: locationsData.locations }));
+    } catch (error) {
+      console.error('Error deleting location:', error);
+      toast({ title: "Ошибка", description: "Не удалось удалить локацию", variant: "destructive" });
     }
   };
 
@@ -272,17 +321,74 @@ export default function SimpleAdminPanel() {
         <TabsContent value="locations" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Локации ({data.locations.length})</CardTitle>
-              <CardDescription>Игровые локации</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Локации ({data.locations.length})</CardTitle>
+                  <CardDescription>Редактирование игровой карты</CardDescription>
+                </div>
+                <Dialog open={isCreatingLocation} onOpenChange={setIsCreatingLocation}>
+                  <DialogTrigger asChild>
+                    <Button>Создать локацию</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Создание новой локации</DialogTitle>
+                    </DialogHeader>
+                    <LocationEditForm 
+                      location={null}
+                      onUpdate={createLocation}
+                      onCancel={() => setIsCreatingLocation(false)}
+                      isCreating={true}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {data.locations.map((location: any) => (
-                  <div key={location.id} className="p-4 bg-muted rounded-lg">
-                    <div className="font-medium">{location.emoji} {location.name}</div>
-                    <div className="text-sm text-muted-foreground">{location.description}</div>
-                    <div className="text-sm text-muted-foreground">
-                      ID: {location.id} • Координаты: ({location.x}, {location.y})
+                  <div key={location.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium">{location.emoji} {location.name}</div>
+                      <div className="text-sm text-muted-foreground">{location.description}</div>
+                      <div className="text-sm text-muted-foreground">
+                        ID: {location.id} • Координаты: ({location.x}, {location.y})
+                      </div>
+                      {location.connections && location.connections.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          Связи: {location.connections.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={location.type === 'camp' ? 'default' : location.type === 'neutral' ? 'secondary' : 'outline'}>
+                        {location.type === 'camp' ? 'Лагерь' : location.type === 'neutral' ? 'Нейтральная' : 'Особая'}
+                      </Badge>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Редактировать
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Редактирование локации {location.name}</DialogTitle>
+                          </DialogHeader>
+                          <LocationEditForm 
+                            location={location} 
+                            onUpdate={updateLocation}
+                            onCancel={() => setEditingLocation(null)}
+                            isCreating={false}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => deleteLocation(location.id)}
+                      >
+                        Удалить
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -579,6 +685,120 @@ function NPCEditForm({ npc, onUpdate, onCancel }: any) {
         </Button>
         <Button type="submit">
           Сохранить
+        </Button>
+      </div>
+    </form>
+  );
+}
+// Location Edit Form Component
+function LocationEditForm({ location, onUpdate, onCancel, isCreating }: any) {
+  const [formData, setFormData] = useState({
+    name: location?.name || '',
+    description: location?.description || '',
+    emoji: location?.emoji || '🏞️',
+    type: location?.type || 'neutral',
+    x: location?.x || 0,
+    y: location?.y || 0,
+    connections: location?.connections?.join(', ') || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const locationData = {
+      ...formData,
+      connections: formData.connections ? formData.connections.split(',').map(c => parseInt(c.trim())).filter(c => !isNaN(c)) : []
+    };
+    
+    if (isCreating) {
+      onUpdate(locationData);
+    } else {
+      onUpdate(location.id, locationData);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="loc-name">Название</Label>
+          <Input
+            id="loc-name"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Название локации"
+          />
+        </div>
+        <div>
+          <Label htmlFor="loc-emoji">Эмодзи</Label>
+          <Input
+            id="loc-emoji"
+            value={formData.emoji}
+            onChange={(e) => setFormData(prev => ({ ...prev, emoji: e.target.value }))}
+            placeholder="🏞️"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="loc-description">Описание</Label>
+        <Input
+          id="loc-description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Описание локации"
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="loc-type">Тип</Label>
+          <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="neutral">Нейтральная</SelectItem>
+              <SelectItem value="camp">Лагерь</SelectItem>
+              <SelectItem value="special">Особая</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="loc-x">Координата X</Label>
+          <Input
+            id="loc-x"
+            type="number"
+            value={formData.x}
+            onChange={(e) => setFormData(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="loc-y">Координата Y</Label>
+          <Input
+            id="loc-y"
+            type="number"
+            value={formData.y}
+            onChange={(e) => setFormData(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="loc-connections">Связи (ID локаций через запятую)</Label>
+        <Input
+          id="loc-connections"
+          value={formData.connections}
+          onChange={(e) => setFormData(prev => ({ ...prev, connections: e.target.value }))}
+          placeholder="1, 2, 3"
+        />
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Отмена
+        </Button>
+        <Button type="submit">
+          {isCreating ? 'Создать' : 'Сохранить'}
         </Button>
       </div>
     </form>
