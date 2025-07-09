@@ -38,12 +38,24 @@ export function useUser() {
           }
         } else {
           console.log('No Telegram user, using fallback for development');
-          setUser({ id: 1, username: 'demo_user' });
+          // Try to find any existing user for development
+          try {
+            const response = await fetch('/api/characters?userId=2');
+            if (response.ok) {
+              setUser({ id: 2, username: 'dev_user_2' });
+            } else {
+              setUser({ id: 3, username: 'dev_user_3' });
+            }
+          } catch {
+            setUser({ id: 3, username: 'dev_user_3' });
+          }
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        // Always provide fallback for development
-        setUser({ id: 1, username: 'demo_user' });
+        // Try different user IDs for development based on session
+        const sessionUserId = parseInt(localStorage.getItem('dev_user_id') || '2');
+        localStorage.setItem('dev_user_id', sessionUserId.toString());
+        setUser({ id: sessionUserId, username: `dev_user_${sessionUserId}` });
       } finally {
         setIsLoading(false);
       }

@@ -169,6 +169,8 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Fixed critical authentication bug where different Telegram users accessed same character
   * Each Telegram user now correctly gets their own character based on Telegram ID
   * Updated character display to show gender with appropriate icons (🐱/🐈)
+  * Removed problematic character "Искорка" to resolve authentication conflicts
+  * Development mode now correctly uses different user IDs to prevent cross-account access
 - July 08, 2025. Telegram Stars monetization system (hidden):
   * Implemented complete Telegram Stars payment system for future use
   * Created TelegramPayments service and ShopPanel component (disabled)
