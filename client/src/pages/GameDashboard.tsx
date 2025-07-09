@@ -104,10 +104,19 @@ export default function GameDashboard() {
   useEffect(() => {
     const isCurrentlyInCombat = gameState?.isInCombat;
     
+    console.log('Combat tracking:', { 
+      wasInCombat, 
+      isCurrentlyInCombat, 
+      lastCompletedCombat: gameState?.lastCompletedCombat,
+      combatEndDetected: wasInCombat && !isCurrentlyInCombat 
+    });
+    
     if (wasInCombat && !isCurrentlyInCombat) {
       console.log('*** COMBAT ENDED ***');
       // Combat just ended, check for last completed combat
       const lastCombat = gameState?.lastCompletedCombat;
+      
+      console.log('Last combat data:', lastCombat);
       
       if (lastCombat && lastCombat.combatLog && Array.isArray(lastCombat.combatLog)) {
         let result = {
