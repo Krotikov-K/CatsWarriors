@@ -139,7 +139,7 @@ class AdminBotService {
       session.timestamp = Date.now();
     }
 
-    const adminUrl = `${process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 'http://localhost:5000'}/admin-panel`;
+    const adminUrl = `${process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 'http://localhost:5000'}/admin`;
 
     const keyboard = {
       inline_keyboard: [

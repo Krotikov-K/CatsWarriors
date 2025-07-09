@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Route, Switch } from "wouter";
 import GameDashboard from "@/pages/GameDashboard";
 import CharacterCreation from "@/pages/CharacterCreation";
-import AdminPanel from "@/pages/AdminPanel";
+import SimpleAdminPanel from "@/pages/SimpleAdminPanel";
 import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
 
@@ -17,7 +17,8 @@ function App() {
         <Switch>
           <Route path="/create-character" component={CharacterCreation} />
           <Route path="/admin-login" component={AdminLogin} />
-          <Route path="/admin-panel" component={AdminPanel} />
+          <Route path="/admin-panel" component={SimpleAdminPanel} />
+          <Route path="/admin" component={SimpleAdminPanel} />
           <Route path="/" component={GameDashboard} />
           <Route component={NotFound} />
         </Switch>
