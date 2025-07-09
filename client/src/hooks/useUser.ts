@@ -11,17 +11,18 @@ export interface User {
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user: telegramUser, isReady } = useTelegramWebApp();
+  const { user: telegramUser, isInitialized } = useTelegramWebApp();
   const authAttempted = useRef(false);
 
   useEffect(() => {
     const authenticateUser = async () => {
-      if (!isReady || authAttempted.current) return;
+      if (!isInitialized || authAttempted.current) return;
       
       authAttempted.current = true;
       
       try {
-        if (telegramUser) {
+        if (telegramUser?.id) {
+          console.log('Authenticating Telegram user:', telegramUser.id);
           // Authenticate via Telegram
           const response = await apiRequest('POST', '/api/auth/telegram', {
             telegramUser
@@ -29,18 +30,19 @@ export function useUser() {
           const data = await response.json();
           
           if (data.user) {
+            console.log('Authentication successful, user:', data.user);
             setUser(data.user);
           } else {
-            // Fallback for development
+            console.log('No user data returned, using fallback');
             setUser({ id: 1, username: 'demo_user' });
           }
         } else {
-          // Fallback for development without Telegram
+          console.log('No Telegram user, using fallback for development');
           setUser({ id: 1, username: 'demo_user' });
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        // Fallback for development
+        // Always provide fallback for development
         setUser({ id: 1, username: 'demo_user' });
       } finally {
         setIsLoading(false);
@@ -48,7 +50,7 @@ export function useUser() {
     };
 
     authenticateUser();
-  }, [isReady, telegramUser]);
+  }, [isInitialized, telegramUser]);
 
   return {
     user,
