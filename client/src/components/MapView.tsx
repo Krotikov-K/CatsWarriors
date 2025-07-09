@@ -164,24 +164,47 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
+    // Calculate circle radius in viewport units (approximately 3% for mobile, 4% for desktop)
+    const circleRadius = 3;
+    
+    // Calculate direction vector
     const dx = to.x - from.x;
     const dy = to.y - from.y;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Normalize direction
+    const dirX = dx / distance;
+    const dirY = dy / distance;
+    
+    // Calculate start and end points at edge of circles
+    const startX = from.x + dirX * circleRadius;
+    const startY = from.y + dirY * circleRadius;
+    const endX = to.x - dirX * circleRadius;
+    const endY = to.y - dirY * circleRadius;
     
     return (
-      <div
+      <svg
         key={`path-${from.id}-${to.id}`}
-        className="absolute border-t-2 border-dashed border-gray-300 opacity-60"
+        className="absolute pointer-events-none"
         style={{
-          left: `${from.x}%`,
-          top: `${from.y}%`,
-          width: `${length}%`,
-          transformOrigin: '0 0',
-          transform: `rotate(${angle}deg)`,
+          left: '0%',
+          top: '0%',
+          width: '100%',
+          height: '100%',
           zIndex: 1
         }}
-      />
+      >
+        <line
+          x1={`${startX}%`}
+          y1={`${startY}%`}
+          x2={`${endX}%`}
+          y2={`${endY}%`}
+          stroke="#9CA3AF"
+          strokeWidth="2"
+          strokeDasharray="8,4"
+          opacity="0.6"
+        />
+      </svg>
     );
   };
 
