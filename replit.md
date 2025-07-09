@@ -177,6 +177,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Created TelegramPayments service and ShopPanel component (disabled)
   * Monetization features temporarily hidden per user request
   * Shop tab and /shop command disabled but code preserved for later activation
+- July 09, 2025. Combat results modal closure fix:
+  * Fixed critical UI bug where combat results modal could not be closed
+  * Added combat ID tracking to prevent duplicate modal appearances
+  * Removed async/await issue in modal onClose handler
+  * Modal now properly closes and clears server-side combat results
+  * Combat system fully functional with proper UI feedback
 
 ## User Preferences
 
