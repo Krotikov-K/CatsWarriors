@@ -103,9 +103,10 @@ export default function GameDashboard() {
             }
           });
           
+          const isVictory = (gameState.character?.currentHp || 0) > 0;
           result = {
-            victory: (gameState.character?.currentHp || 0) > 0,
-            experienceGained: experienceGained || 25,
+            victory: isVictory,
+            experienceGained: isVictory ? (experienceGained || 0) : 0, // No experience if defeated
             damageDealt,
             damageTaken,
             enemyName,
@@ -113,9 +114,10 @@ export default function GameDashboard() {
           };
         } else {
           // Fallback for when no combat log is available
+          const isVictory = (gameState.character?.currentHp || 0) > 0;
           result = {
-            victory: (gameState.character?.currentHp || 0) > 0,
-            experienceGained: 25,
+            victory: isVictory,
+            experienceGained: isVictory ? 25 : 0, // No experience if defeated
             damageDealt: 15,
             damageTaken: 10,
             enemyName: "Противник",

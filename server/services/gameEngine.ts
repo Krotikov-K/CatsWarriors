@@ -186,11 +186,12 @@ export class GameEngine {
       if (newHp === 0) {
         await storage.killNPC(target.id);
         
-        // Award experience to all participating characters
+        // Award experience only to ALIVE participating characters (winners)
         const combat = await storage.getCombat(combatId);
         if (combat) {
           for (const characterId of combat.participants) {
             const character = await storage.getCharacter(characterId);
+            // Only give experience if character is still alive (won the fight)
             if (character && character.currentHp > 0) {
               const expGain = target.experienceReward;
               const newExp = character.experience + expGain;
@@ -205,15 +206,10 @@ export class GameEngine {
                 timestamp: new Date().toISOString(),
                 type: "join",
                 actorId: characterId,
-                message: `${character.name} получает ${expGain} опыта!`
+                message: `${character.name} получает ${expGain} опыта за победу!`
               };
               await storage.addCombatLogEntry(combatId, expEntry);
             }
-          }
-          
-          // Kill the NPC if it's an NPC that was defeated
-          if ('type' in target) {
-            await storage.killNPC(target.id);
           }
         }
       }
