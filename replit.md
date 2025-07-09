@@ -156,6 +156,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Kept only healing poultices as health restoration method
   * Cleaned up interface to remove regeneration mentions
   * Healing poultices remain functional in clan camps (+100 HP)
+- July 09, 2025. Fixed level-up stat distribution system:
+  * Added unspentStatPoints field to character database schema
+  * Fixed automatic level progression with 5 stat points per level gained
+  * Level-up modal automatically appears when unspent stat points are available
+  * Players can distribute points among strength, agility, intelligence, endurance
+  * Fixed 401 authentication error in apply-level-up endpoint
+  * Character stats now properly increase when leveling up (tested with Искорка)
 - July 08, 2025. Telegram Stars monetization system (hidden):
   * Implemented complete Telegram Stars payment system for future use
   * Created TelegramPayments service and ShopPanel component (disabled)

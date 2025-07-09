@@ -670,13 +670,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Level up endpoints
-  app.post("/api/character/apply-level-up", async (req: AuthenticatedRequest, res: Response) => {
+  app.post("/api/character/apply-level-up", async (req: Request, res: Response) => {
     try {
-      if (!req.userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      const { statBoosts, userId } = req.body;
 
-      const { statBoosts } = req.body;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
       
       if (!statBoosts || typeof statBoosts !== 'object') {
         return res.status(400).json({ message: "Invalid stat boosts data" });
@@ -690,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid stat distribution" });
       }
 
-      const character = await storage.getCharactersByUserId(req.userId);
+      const character = await storage.getCharactersByUserId(userId);
       if (!character.length) {
         return res.status(404).json({ message: "Character not found" });
       }

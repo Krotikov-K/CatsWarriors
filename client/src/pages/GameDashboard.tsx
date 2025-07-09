@@ -245,7 +245,10 @@ export default function GameDashboard() {
 
   const applyLevelUpMutation = useMutation({
     mutationFn: async (statBoosts: { strength: number; agility: number; intelligence: number; endurance: number }) => {
-      const response = await apiRequest("POST", "/api/character/apply-level-up", { statBoosts });
+      const response = await apiRequest("POST", "/api/character/apply-level-up", { 
+        statBoosts,
+        userId: gameState?.character?.userId 
+      });
       return response.json();
     },
     onSuccess: () => {
