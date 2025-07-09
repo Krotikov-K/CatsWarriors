@@ -254,10 +254,9 @@ export default function MapView({
             <div 
               className="relative transition-transform duration-700 ease-in-out"
               style={{
-                transform: `translate(calc(50% - ${character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50}%), calc(50% - ${character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50}%))`,
-                width: '400%',
-                height: '400%',
-                transformOrigin: 'center center'
+                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50) * 3}%, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50) * 3}%)`,
+                width: '300%',
+                height: '300%'
               }}
             >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
