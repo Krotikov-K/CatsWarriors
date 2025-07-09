@@ -163,33 +163,7 @@ export default function MapView({
     onLocationChange(locationId);
   };
 
-  const renderPath = (from: any, to: any) => {
-    // Simple line rendering without complex calculations
-    return (
-      <svg
-        key={`path-${from.id}-${to.id}`}
-        className="absolute pointer-events-none"
-        style={{
-          left: '0%',
-          top: '0%',
-          width: '100%',
-          height: '100%',
-          zIndex: 1
-        }}
-      >
-        <line
-          x1={`${from.x}%`}
-          y1={`${from.y}%`}
-          x2={`${to.x}%`}
-          y2={`${to.y}%`}
-          stroke="#6B7280"
-          strokeWidth="2"
-          strokeDasharray="5,5"
-          opacity="0.7"
-        />
-      </svg>
-    );
-  };
+
 
   return (
     <div className="w-full h-full">
@@ -227,38 +201,73 @@ export default function MapView({
             </p>
           </div>
 
-          {/* Map Container - Simple Fixed View */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[50vh] mb-3 overflow-hidden">
-            {/* Map Area - No complex transforms */}
-            <div className="relative w-full h-full">
-              {/* Render paths between connected locations - LOWER Z-INDEX */}
+          {/* Map Container - Simple Grid View */}
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[60vh] mb-3 overflow-hidden">
+            {/* SVG Map for precise positioning */}
+            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+              {/* Render connection lines first */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
                   const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
-                  if (!connectedLoc || connectedLoc.id < loc.id) return null; // Avoid duplicate paths
-                  return renderPath(loc, connectedLoc);
+                  if (!connectedLoc || connectedLoc.id < loc.id) return null;
+                  return (
+                    <line
+                      key={`path-${loc.id}-${connectedId}`}
+                      x1={loc.x}
+                      y1={loc.y}
+                      x2={connectedLoc.x}
+                      y2={connectedLoc.y}
+                      stroke="#6B7280"
+                      strokeWidth="0.5"
+                      strokeDasharray="2,2"
+                      opacity="0.6"
+                    />
+                  );
                 })
               ).flat()}
+            </svg>
 
-              {/* Render locations - HIGHER Z-INDEX */}
-              {LOCATIONS_DATA.map((loc) => (
-                <MapLocation
-                  key={loc.id}
-                  id={loc.id}
-                  name={loc.name}
-                  type={loc.type}
-                  clan={loc.clan}
-                  x={loc.x}
-                  y={loc.y}
-                  emoji={loc.emoji}
-                  connectedTo={loc.connectedTo as readonly number[]}
-                  isCurrentLocation={loc.id === character.currentLocationId}
-                  canMoveTo={canMoveToLocation(loc.id)}
-                  playerCount={getPlayerCountForLocation(loc.id)}
-                  onClick={() => handleLocationClick(loc.id)}
-                />
-              ))}
-            </div>
+            {/* Render locations over the SVG */}
+            {LOCATIONS_DATA.map((loc) => (
+              <div
+                key={loc.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+                style={{ 
+                  left: `${loc.x}%`, 
+                  top: `${loc.y}%`
+                }}
+                onClick={canMoveToLocation(loc.id) ? () => handleLocationClick(loc.id) : undefined}
+              >
+                <div 
+                  className={`
+                    w-10 h-10 rounded-full border-2 flex items-center justify-center text-base
+                    ${loc.id === character.currentLocationId 
+                      ? 'border-white bg-blue-600 shadow-lg shadow-white/50 scale-125 animate-pulse' 
+                      : canMoveToLocation(loc.id)
+                      ? 'border-green-300 bg-green-500 hover:scale-110'
+                      : 'border-gray-500 bg-gray-600 opacity-60'
+                    }
+                    transition-all duration-200
+                  `}
+                >
+                  {loc.emoji}
+                </div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 text-center">
+                  <div className={`text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap ${
+                    loc.id === character.currentLocationId 
+                      ? 'bg-blue-600 text-white font-bold' 
+                      : 'bg-black bg-opacity-80 text-white'
+                  }`}>
+                    {loc.name}
+                  </div>
+                  {getPlayerCountForLocation(loc.id) > 0 && (
+                    <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
+                      {getPlayerCountForLocation(loc.id)} 🐱
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Map Legend - Mobile Optimized */}
