@@ -45,6 +45,7 @@ export default function GameDashboard() {
   const [combatResult, setCombatResult] = useState<any>(null);
   const [showCombatResult, setShowCombatResult] = useState(false);
   const [wasInCombat, setWasInCombat] = useState(false);
+  const [lastProcessedCombatId, setLastProcessedCombatId] = useState<number | null>(null);
 
   // Track level ups and unspent stat points
   useEffect(() => {
@@ -103,80 +104,101 @@ export default function GameDashboard() {
   // Track combat completion for results
   useEffect(() => {
     const isCurrentlyInCombat = gameState?.isInCombat;
+    const lastCombat = gameState?.lastCompletedCombat;
+    const currentCombatId = lastCombat?.id;
     
     console.log('Combat tracking:', { 
       wasInCombat, 
       isCurrentlyInCombat, 
-      lastCompletedCombat: gameState?.lastCompletedCombat,
-      combatEndDetected: wasInCombat && !isCurrentlyInCombat 
+      lastCompletedCombat: lastCombat,
+      combatEndDetected: wasInCombat && !isCurrentlyInCombat,
+      hasLastCombat: !!lastCombat,
+      lastCombatId: currentCombatId,
+      lastProcessedCombatId,
+      lastCombatLogLength: lastCombat?.combatLog?.length
     });
     
+    // Method 1: Traditional combat end detection
     if (wasInCombat && !isCurrentlyInCombat) {
-      console.log('*** COMBAT ENDED ***');
-      // Combat just ended, check for last completed combat
-      const lastCombat = gameState?.lastCompletedCombat;
-      
-      console.log('Last combat data:', lastCombat);
-      
-      if (lastCombat && lastCombat.combatLog && Array.isArray(lastCombat.combatLog)) {
-        let result = {
-          victory: false,
-          experienceGained: 0,
-          damageDealt: 0,
-          damageTaken: 0,
-          enemyName: "Противник",
-          survivedTurns: 1
-        };
-        
-        let experienceGained = 0;
-        let damageDealt = 0;
-        let damageTaken = 0;
-        let enemyName = "Противник";
-        
-        lastCombat.combatLog.forEach((entry: any) => {
-          if (entry.type === "damage") {
-            if (entry.actorId === gameState.character?.id) {
-              damageDealt += entry.damage || 0;
-            } else if (entry.targetId === gameState.character?.id) {
-              damageTaken += entry.damage || 0;
-            }
-          }
-          
-          if (entry.message.includes("атакует") && !entry.message.includes(gameState.character?.name)) {
-            const nameMatch = entry.message.match(/^([^]+?)\s+атакует/);
-            if (nameMatch) {
-              enemyName = nameMatch[1];
-            }
-          }
-          
-          if (entry.message.includes("получает") && entry.message.includes("опыта")) {
-            const expMatch = entry.message.match(/(\d+)\s+опыта/);
-            if (expMatch) {
-              experienceGained += parseInt(expMatch[1]);
-            }
-          }
-        });
-        
-        const isVictory = (gameState.character?.currentHp || 0) > 0;
-        result = {
-          victory: isVictory,
-          experienceGained: isVictory ? (experienceGained || 0) : 0,
-          damageDealt,
-          damageTaken,
-          enemyName,
-          survivedTurns: lastCombat.currentTurn || 1
-        };
-        
-        setCombatResult(result);
-        setShowCombatResult(true);
-        setWasInCombat(false);
-      }
-    } else if (isCurrentlyInCombat && !wasInCombat) {
+      console.log('*** COMBAT ENDED (Traditional) ***');
+      processCompletedCombat(lastCombat);
+    } 
+    // Method 2: New completed combat detection (when there's a new combat result we haven't processed)
+    else if (lastCombat && currentCombatId && currentCombatId !== lastProcessedCombatId && !isCurrentlyInCombat) {
+      console.log('*** NEW COMPLETED COMBAT DETECTED ***', { currentCombatId, lastProcessedCombatId });
+      processCompletedCombat(lastCombat);
+      setLastProcessedCombatId(currentCombatId);
+    }
+    
+    // Track combat state changes
+    if (isCurrentlyInCombat && !wasInCombat) {
       console.log('*** COMBAT STARTED ***');
       setWasInCombat(true);
       setActiveTab('combat'); // Auto-switch to combat tab
     }
-  }, [gameState?.isInCombat, gameState?.currentCombat?.id]);
+    
+    function processCompletedCombat(combat: any) {
+      if (!combat || !combat.combatLog || !Array.isArray(combat.combatLog)) {
+        console.log('No valid combat data to process');
+        return;
+      }
+      
+      console.log('Processing completed combat:', combat);
+      
+      let result = {
+        victory: false,
+        experienceGained: 0,
+        damageDealt: 0,
+        damageTaken: 0,
+        enemyName: "Противник",
+        survivedTurns: 1
+      };
+      
+      let experienceGained = 0;
+      let damageDealt = 0;
+      let damageTaken = 0;
+      let enemyName = "Противник";
+      
+      combat.combatLog.forEach((entry: any) => {
+        if (entry.type === "attack" && entry.damage) {
+          if (entry.actorId === gameState?.character?.id) {
+            damageDealt += entry.damage || 0;
+          } else if (entry.targetId === gameState?.character?.id) {
+            damageTaken += entry.damage || 0;
+          }
+        }
+        
+        if (entry.message.includes("атакует") && !entry.message.includes(gameState?.character?.name)) {
+          const nameMatch = entry.message.match(/^([^]+?)\s+атакует/);
+          if (nameMatch) {
+            enemyName = nameMatch[1];
+          }
+        }
+        
+        if (entry.message.includes("получает") && entry.message.includes("опыта")) {
+          const expMatch = entry.message.match(/(\d+)\s+опыта/);
+          if (expMatch) {
+            experienceGained += parseInt(expMatch[1]);
+          }
+        }
+      });
+      
+      const isVictory = (gameState?.character?.currentHp || 0) > 0;
+      result = {
+        victory: isVictory,
+        experienceGained: isVictory ? (experienceGained || 0) : 0,
+        damageDealt,
+        damageTaken,
+        enemyName,
+        survivedTurns: combat.currentTurn || 1
+      };
+      
+      console.log('Combat result calculated:', result);
+      setCombatResult(result);
+      setShowCombatResult(true);
+      setWasInCombat(false);
+    }
+  }, [gameState?.isInCombat, gameState?.currentCombat?.id, gameState?.lastCompletedCombat?.id, lastProcessedCombatId]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
