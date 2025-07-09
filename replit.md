@@ -195,6 +195,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Cleared all player characters from database per user request
   * Authentication system ready for fresh character creation
   * All users will see character creation screen on next login
+- July 09, 2025. Map visual improvements and layout optimization:
+  * Fixed visual layering - locations now appear above connection lines
+  * Improved connection lines to properly align with location centers
+  * Optimized location coordinates for better spacing without text overlap
+  * Added full location names display on all devices
+  * Enhanced z-index hierarchy for proper visual ordering
+  * Reduced map size to 150vw x 140vh for more compact navigation
 
 ## User Preferences
 

@@ -64,7 +64,7 @@ function MapLocation({
 
   return (
     <div 
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300"
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 z-20"
       style={{ left: `${x}%`, top: `${y}%` }}
       onClick={canMoveTo ? onClick : undefined}
     >
@@ -76,17 +76,16 @@ function MapLocation({
           ${canMoveTo ? 'hover:scale-110 hover:shadow-xl active:scale-95' : ''}
           ${isCurrentLocation ? 'scale-110 md:scale-125 animate-pulse' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
-          transition-all duration-200
+          transition-all duration-200 relative z-10
         `}
       >
         {emoji}
       </div>
       
       {/* Location Name */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center">
-        <div className="bg-black bg-opacity-80 text-white text-xs px-1 md:px-2 py-0.5 md:py-1 rounded whitespace-nowrap max-w-20 md:max-w-none">
-          <span className="block md:hidden text-xs truncate">{name.split(' ')[0]}</span>
-          <span className="hidden md:block">{name}</span>
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
+        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-32 md:max-w-none">
+          <span className="text-xs">{name}</span>
         </div>
         {playerCount > 0 && (
           <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
@@ -173,11 +172,11 @@ export default function MapView({
     return (
       <div
         key={`path-${from.id}-${to.id}`}
-        className="absolute border-t-2 border-dashed border-gray-400 opacity-50"
+        className="absolute border-t-2 border-dashed border-gray-300 opacity-60"
         style={{
           left: `${from.x}%`,
           top: `${from.y}%`,
-          width: `${length * 0.8}%`,
+          width: `${length}%`,
           transformOrigin: '0 0',
           transform: `rotate(${angle}deg)`,
           zIndex: 1
@@ -218,8 +217,8 @@ export default function MapView({
           {/* Map Container with Scroll */}
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Scrollable Map Area - Extended for new locations */}
-            <div className="relative min-w-[200vw] min-h-[180vh]">
-              {/* Render paths between connected locations */}
+            <div className="relative min-w-[150vw] min-h-[140vh]">
+              {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
                   const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
@@ -228,7 +227,7 @@ export default function MapView({
                 })
               ).flat()}
 
-              {/* Render locations */}
+              {/* Render locations - HIGHER Z-INDEX */}
               {LOCATIONS_DATA.map((loc) => (
                 <MapLocation
                   key={loc.id}
