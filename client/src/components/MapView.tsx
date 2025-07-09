@@ -68,31 +68,27 @@ function MapLocation({
       style={{ left: `${x}%`, top: `${y}%` }}
       onClick={canMoveTo ? onClick : undefined}
     >
-      {/* Location Circle - Mobile Optimized */}
+      {/* Location Circle */}
       <div 
         className={`
-          w-14 h-14 rounded-full border-3 ${getBorderColor()} ${getLocationColor()}
-          flex items-center justify-center text-xl
-          ${canMoveTo ? 'active:scale-95 touch-manipulation' : ''}
-          ${isCurrentLocation ? 'scale-125 animate-pulse shadow-lg' : ''}
+          w-12 h-12 md:w-16 md:h-16 rounded-full border-2 md:border-3 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-lg md:text-2xl
+          ${canMoveTo ? 'hover:scale-110 hover:shadow-xl active:scale-95' : ''}
+          ${isCurrentLocation ? 'scale-110 md:scale-125 animate-pulse' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
-          transition-all duration-300 relative z-10
+          transition-all duration-200 relative z-10
         `}
-        style={{
-          minWidth: '3.5rem',
-          minHeight: '3.5rem'
-        }}
       >
         {emoji}
       </div>
       
-      {/* Location Name - Mobile Optimized */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-center z-10">
-        <div className="bg-black bg-opacity-90 text-white text-sm px-3 py-1 rounded whitespace-nowrap shadow-lg">
-          <span className="font-medium">{name}</span>
+      {/* Location Name */}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
+        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-32 md:max-w-none">
+          <span className="text-xs">{name}</span>
         </div>
         {playerCount > 0 && (
-          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded mt-1 shadow-md">
+          <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
             {playerCount} 🐱
           </div>
         )}
@@ -168,8 +164,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius for scrollable view
-    const circleRadius = 2;
+    // Calculate circle radius in viewport units (approximately 3% for mobile, 4% for desktop)
+    const circleRadius = 3;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -249,9 +245,9 @@ export default function MapView({
           </div>
 
           {/* Map Container - Scrollable */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[45vh] mb-3 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Scrollable Map Area */}
-            <div className="relative min-w-[300vw] min-h-[300vh]">
+            <div className="relative min-w-[150vw] min-h-[140vh]">
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
