@@ -56,8 +56,15 @@ export function formatTime(timestamp: string): string {
 }
 
 export function calculateLevelProgress(experience: number, level: number): number {
-  const levelExp = level * 1000;
-  return Math.min(100, (experience / levelExp) * 100);
+  // Experience needed for CURRENT level (not next level)
+  const currentLevelExp = (level - 1) * 1000;  // Level 1 starts at 0 exp
+  const nextLevelExp = level * 1000;           // Level 2 starts at 1000 exp
+  
+  // Progress within current level
+  const progressInLevel = experience - currentLevelExp;
+  const expForThisLevel = nextLevelExp - currentLevelExp;
+  
+  return Math.min(100, (progressInLevel / expForThisLevel) * 100);
 }
 
 export function getHealthColor(currentHp: number, maxHp: number): string {

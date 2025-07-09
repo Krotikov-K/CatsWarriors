@@ -747,11 +747,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if character should level up (for existing characters with enough exp)
       const GameEngine = (await import("../services/gameEngine")).GameEngine;
+      console.log(`Checking level up for character ${character.name}: level=${character.level}, exp=${character.experience}`);
       const leveledUp = await GameEngine.checkAndProcessLevelUp(character.id);
+      console.log(`Level up result for ${character.name}: ${leveledUp}`);
       if (leveledUp) {
         // Refresh character data after level up
         const updatedCharacter = await storage.getCharacter(character.id);
         if (updatedCharacter) {
+          console.log(`Character ${character.name} leveled up from ${character.level} to ${updatedCharacter.level}`);
           character = updatedCharacter;
         }
       } // Use first character
@@ -795,6 +798,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get game state error:", error);
       res.status(500).json({ message: "Failed to get game state" });
+    }
+  });
+
+  // Test level up endpoint
+  app.post("/api/test-level-up", async (req, res) => {
+    try {
+      const { characterId } = req.body;
+      const GameEngine = (await import("../services/gameEngine")).GameEngine;
+      
+      console.log("=== TESTING LEVEL UP ===");
+      const character = await storage.getCharacter(characterId || 1);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+      
+      console.log(`Character ${character.name}: level=${character.level}, exp=${character.experience}`);
+      const requiredExp = GameEngine.getRequiredExperienceForLevel(character.level + 1);
+      console.log(`Required exp for next level: ${requiredExp}`);
+      console.log(`Exp check: ${character.experience} >= ${requiredExp} = ${character.experience >= requiredExp}`);
+      
+      const leveledUp = await GameEngine.checkAndProcessLevelUp(character.id);
+      console.log(`Level up result: ${leveledUp}`);
+      
+      const updatedCharacter = await storage.getCharacter(character.id);
+      console.log(`Updated character: level=${updatedCharacter?.level}, exp=${updatedCharacter?.experience}`);
+      
+      res.json({ 
+        originalCharacter: character,
+        updatedCharacter,
+        leveledUp,
+        requiredExp
+      });
+    } catch (error) {
+      console.error("Test level up error:", error);
+      res.status(500).json({ message: "Test failed", error: error.message });
     }
   });
 
