@@ -713,11 +713,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Could not apply level up" });
       }
 
-      // Update current HP if endurance changed
+      // Update current HP if endurance changed and reset unspent stat points
       if (endurance > 0) {
         await storage.updateCharacter(currentChar.id, { 
           currentHp: newCurrentHp,
-          maxHp: newMaxHp 
+          maxHp: newMaxHp,
+          unspentStatPoints: 0
+        });
+      } else {
+        // Just reset unspent stat points
+        await storage.updateCharacter(currentChar.id, { 
+          unspentStatPoints: 0
         });
       }
 

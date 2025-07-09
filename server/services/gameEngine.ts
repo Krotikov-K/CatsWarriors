@@ -318,9 +318,13 @@ export class GameEngine {
       const newLevel = Math.max(character.level + 1, correctLevel);
       console.log(`Character ${character.name} leveling up! Exp: ${character.experience}/${requiredExp} -> Level ${newLevel}`);
       
-      // Level up the character to the correct level
+      // Level up the character to the correct level and give stat points
+      const levelsGained = newLevel - character.level;
+      const statPointsGained = levelsGained * 5; // 5 stat points per level
+      
       await storage.updateCharacter(characterId, {
-        level: newLevel
+        level: newLevel,
+        unspentStatPoints: character.unspentStatPoints + statPointsGained
       });
 
       // Create level up event

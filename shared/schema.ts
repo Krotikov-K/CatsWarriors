@@ -26,6 +26,7 @@ export const characters = pgTable("characters", {
   endurance: integer("endurance").notNull(),
   currentLocationId: integer("current_location_id").notNull(),
   isOnline: boolean("is_online").notNull().default(false),
+  unspentStatPoints: integer("unspent_stat_points").notNull().default(0),
   lastActivity: timestamp("last_activity").defaultNow(),
   lastHpRegeneration: timestamp("last_hp_regeneration").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

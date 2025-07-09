@@ -44,11 +44,35 @@ export default function GameDashboard() {
   const [showCombatResult, setShowCombatResult] = useState(false);
   const [wasInCombat, setWasInCombat] = useState(false);
 
-  // Track level ups
+  // Track level ups and unspent stat points
   useEffect(() => {
     if (gameState?.character) {
       const currentLevel = gameState.character.level;
+      const unspentPoints = gameState.character.unspentStatPoints || 0;
       
+      // Show level up modal if character has unspent stat points
+      if (unspentPoints > 0 && !showLevelUp) {
+        console.log('*** UNSPENT STAT POINTS DETECTED ***', {
+          character: gameState.character.name,
+          level: currentLevel,
+          unspentPoints: unspentPoints
+        });
+        
+        setLevelUpData({
+          characterName: gameState.character.name,
+          newLevel: currentLevel,
+          baseStats: {
+            strength: gameState.character.strength,
+            agility: gameState.character.agility,
+            intelligence: gameState.character.intelligence,
+            endurance: gameState.character.endurance,
+            maxHp: gameState.character.maxHp
+          }
+        });
+        setShowLevelUp(true);
+      }
+      
+      // Also detect fresh level ups
       if (previousLevel !== null && currentLevel > previousLevel) {
         console.log('*** LEVEL UP DETECTED ***', {
           from: previousLevel,
@@ -72,7 +96,7 @@ export default function GameDashboard() {
       
       setPreviousLevel(currentLevel);
     }
-  }, [gameState?.character?.level, previousLevel]);
+  }, [gameState?.character?.level, gameState?.character?.unspentStatPoints, previousLevel, showLevelUp]);
 
   // Track combat completion for results
   useEffect(() => {

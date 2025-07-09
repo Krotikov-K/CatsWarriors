@@ -71,6 +71,18 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
           ></div>
         </div>
       </div>
+
+      {/* Unspent stat points notification */}
+      {character.unspentStatPoints && character.unspentStatPoints > 0 && (
+        <div className="mb-4 p-3 bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 rounded">
+          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            📈 Доступно очков: {character.unspentStatPoints}
+          </div>
+          <div className="text-xs text-blue-600 dark:text-blue-300">
+            Повысьте характеристики!
+          </div>
+        </div>
+      )}
     </div>
   );
 }
