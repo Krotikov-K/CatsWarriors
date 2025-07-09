@@ -1,6 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { storage } from "../storage";
 import { GameEngine } from "./gameEngine";
+import { TelegramPayments, GAME_PURCHASES } from "./telegramPayments";
 
 export class TelegramBotService {
   private bot: TelegramBot | null = null;
@@ -36,7 +37,8 @@ export class TelegramBotService {
       { command: 'start', description: '🎮 Начать игру' },
       { command: 'help', description: 'ℹ️ Помощь и команды' },
       { command: 'play', description: '🐱 Открыть игру' },
-      { command: 'status', description: '📊 Статус персонажа' }
+      { command: 'status', description: '📊 Статус персонажа' },
+      { command: 'shop', description: '🛒 Магазин (Stars)' }
     ]);
     console.log("Telegram bot commands set up");
   }
@@ -249,6 +251,179 @@ export class TelegramBotService {
       } catch (error) {
         console.error("Error getting status:", error);
         await this.bot?.sendMessage(chatId, "Ошибка при получении статуса");
+      }
+    });
+
+    // Shop command - show available purchases
+    this.bot.onText(/\/shop/, async (msg) => {
+      const chatId = msg.chat.id;
+      const telegramId = msg.from?.id.toString();
+
+      if (!telegramId) return;
+
+      try {
+        const user = await storage.getUserByTelegramId(telegramId);
+        if (!user) {
+          await this.bot?.sendMessage(chatId, 
+            "Аккаунт не привязан. Используйте /start для создания аккаунта."
+          );
+          return;
+        }
+
+        // Create inline keyboard with purchase options
+        const keyboard = GAME_PURCHASES.map(purchase => [{
+          text: `${purchase.name} - ${purchase.price} ⭐`,
+          callback_data: `buy_${purchase.id}`
+        }]);
+
+        await this.bot?.sendMessage(chatId,
+          "🛒 Магазин Cats War\n\n" +
+          "Выберите товар для покупки за Telegram Stars:\n\n" +
+          GAME_PURCHASES.map(p => 
+            `⭐ ${p.name} - ${p.price} Stars\n${p.description}`
+          ).join('\n\n'),
+          {
+            reply_markup: {
+              inline_keyboard: keyboard
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Error showing shop:", error);
+        await this.bot?.sendMessage(chatId, "Ошибка при загрузке магазина");
+      }
+    });
+
+    // Handle purchase callbacks
+    this.bot.on('callback_query', async (query) => {
+      const chatId = query.message?.chat.id;
+      const data = query.data;
+      const telegramId = query.from.id.toString();
+
+      if (!chatId || !data) return;
+
+      if (data.startsWith('buy_')) {
+        const purchaseId = data.replace('buy_', '');
+        const purchase = GAME_PURCHASES.find(p => p.id === purchaseId);
+        
+        if (!purchase) {
+          await this.bot?.answerCallbackQuery(query.id, {
+            text: "Товар не найден",
+            show_alert: true
+          });
+          return;
+        }
+
+        try {
+          const user = await storage.getUserByTelegramId(telegramId);
+          if (!user) {
+            await this.bot?.answerCallbackQuery(query.id, {
+              text: "Аккаунт не найден",
+              show_alert: true
+            });
+            return;
+          }
+
+          // Create invoice
+          const invoice = TelegramPayments.createInvoice(purchase, user.id);
+          
+          await this.bot?.sendInvoice(
+            chatId,
+            invoice.title,
+            invoice.description,
+            invoice.payload,
+            invoice.provider_token,
+            invoice.currency,
+            invoice.prices
+          );
+
+          await this.bot?.answerCallbackQuery(query.id);
+        } catch (error) {
+          console.error("Error creating invoice:", error);
+          await this.bot?.answerCallbackQuery(query.id, {
+            text: "Ошибка при создании счета",
+            show_alert: true
+          });
+        }
+      } else if (data === 'help') {
+        await this.bot?.sendMessage(chatId,
+          "🎮 Как играть в Cats War:\n\n" +
+          "1. Создайте своего кота-воителя\n" +
+          "2. Выберите племя (Грозовое или Речное)\n" +
+          "3. Распределите очки характеристик\n" +
+          "4. Исследуйте территории и сражайтесь с NPC\n" +
+          "5. Повышайте уровень и становитесь сильнее!\n\n" +
+          "Используйте /play для входа в игру."
+        );
+      }
+
+      await this.bot?.answerCallbackQuery(query.id);
+    });
+
+    // Handle pre-checkout queries (required for Stars payments)
+    this.bot.on('pre_checkout_query', async (query) => {
+      console.log('Pre-checkout query received:', query);
+      
+      try {
+        // Validate the purchase
+        const payload = JSON.parse(query.invoice_payload);
+        const purchase = GAME_PURCHASES.find(p => p.id === payload.purchaseId);
+        
+        if (!purchase) {
+          await this.bot?.answerPreCheckoutQuery(query.id, false, {
+            error_message: "Товар не найден"
+          });
+          return;
+        }
+
+        if (query.total_amount !== purchase.price) {
+          await this.bot?.answerPreCheckoutQuery(query.id, false, {
+            error_message: "Неверная сумма"
+          });
+          return;
+        }
+
+        // Approve the payment
+        await this.bot?.answerPreCheckoutQuery(query.id, true);
+      } catch (error) {
+        console.error("Pre-checkout error:", error);
+        await this.bot?.answerPreCheckoutQuery(query.id, false, {
+          error_message: "Ошибка валидации"
+        });
+      }
+    });
+
+    // Handle successful payments
+    this.bot.on('successful_payment', async (msg) => {
+      const chatId = msg.chat.id;
+      const payment = msg.successful_payment;
+      
+      if (!payment) return;
+
+      console.log('Payment received:', payment);
+
+      try {
+        const success = await TelegramPayments.processPurchase(payment);
+        
+        if (success) {
+          await this.bot?.sendMessage(chatId,
+            `✅ Покупка успешна!\n\n` +
+            `Товар: ${payment.invoice_payload}\n` +
+            `Сумма: ${payment.total_amount} ⭐\n\n` +
+            `Товар добавлен к вашему персонажу. Зайдите в игру, чтобы использовать!`
+          );
+        } else {
+          await this.bot?.sendMessage(chatId,
+            `❌ Ошибка при обработке покупки\n\n` +
+            `Обратитесь к администратору с ID платежа: ${payment.telegram_payment_charge_id}`
+          );
+        }
+      } catch (error) {
+        console.error("Payment processing error:", error);
+        await this.bot?.sendMessage(chatId,
+          `❌ Техническая ошибка при обработке платежа\n\n` +
+          `ID: ${payment.telegram_payment_charge_id}`
+        );
       }
     });
 

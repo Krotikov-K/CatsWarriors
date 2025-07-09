@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Map, Sword, User } from "lucide-react";
+import { Home, Map, Sword, User, ShoppingCart } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useGameState } from "@/hooks/useGameState";
@@ -14,13 +14,14 @@ import TopBar from "@/components/TopBar";
 import NPCPanel from "@/components/NPCPanel";
 import GroupPanel from "@/components/GroupPanel";
 import CampActions from "@/components/CampActions";
+import ShopPanel from "@/components/ShopPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Character, Combat } from "@shared/schema";
 
-type TabType = 'overview' | 'map' | 'combat' | 'profile';
+type TabType = 'overview' | 'map' | 'combat' | 'profile' | 'shop';
 
 export default function GameDashboard() {
   const [, navigate] = useLocation();
@@ -316,6 +317,13 @@ export default function GameDashboard() {
           </div>
         );
 
+      case 'shop':
+        return (
+          <div className="p-4 space-y-6 pb-20">
+            <ShopPanel />
+          </div>
+        );
+
       default:
         return (
           <div className="h-full p-4 flex items-center justify-center pb-16">
@@ -371,6 +379,18 @@ export default function GameDashboard() {
           >
             <Sword className="w-5 h-5 mb-1" />
             <span className="text-xs font-medium">Бой</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('shop')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'shop'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ShoppingCart className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Магазин</span>
           </button>
           
           <button
