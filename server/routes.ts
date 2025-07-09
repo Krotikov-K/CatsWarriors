@@ -650,13 +650,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health regeneration routes
   app.post("/api/health/regenerate", async (req, res) => {
     try {
-      const characterId = req.userId;
+      const { characterId } = req.body;
       
       if (!characterId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(400).json({ message: "Character ID required" });
       }
 
+      console.log(`*** Manual regen test for character ${characterId} ***`);
       const character = await storage.processHealthRegeneration(characterId);
+      console.log(`*** Manual regen result: ${character ? character.currentHp : 'undefined'} HP ***`);
+      
       if (!character) {
         return res.status(404).json({ message: "Character not found" });
       }
