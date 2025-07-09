@@ -1067,9 +1067,13 @@ export class DatabaseStorage implements IStorage {
     const lastRegen = character.lastHpRegeneration ? new Date(character.lastHpRegeneration) : new Date(0);
     const timeSinceRegen = (now.getTime() - lastRegen.getTime()) / 1000 / 60; // minutes
     
+    console.log(`Health regen check for character ${characterId}: timeSinceRegen=${timeSinceRegen.toFixed(2)} minutes, currentHp=${character.currentHp}/${character.maxHp}`);
+    
     if (timeSinceRegen >= 1 && character.currentHp < character.maxHp) {
       const minutesPassed = Math.floor(timeSinceRegen);
       const hpToRegenerate = Math.min(minutesPassed, character.maxHp - character.currentHp);
+      
+      console.log(`Regenerating ${hpToRegenerate} HP for character ${characterId} (${minutesPassed} minutes passed)`);
       
       const [updatedCharacter] = await db
         .update(characters)

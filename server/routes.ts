@@ -692,6 +692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/game-state/:characterId", async (req, res) => {
     try {
       const characterId = parseInt(req.params.characterId);
+      console.log(`*** Game state request for character ${characterId} ***`);
       let character = await storage.getCharacter(characterId);
       
       if (!character) {
@@ -699,7 +700,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Process health regeneration automatically
+      console.log(`*** About to call processHealthRegeneration for character ${characterId} ***`);
       const regenCharacter = await storage.processHealthRegeneration(characterId);
+      console.log(`*** processHealthRegeneration returned:`, regenCharacter ? `character with ${regenCharacter.currentHp} HP` : 'undefined');
       if (regenCharacter) {
         character = regenCharacter;
       }
