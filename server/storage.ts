@@ -418,7 +418,18 @@ export class MemStorage implements IStorage {
   }
 
   async getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined> {
-    const completedCombats = Array.from(this.combats.values())
+    console.log(`Looking for completed combats for character ${characterId}`);
+    console.log(`Total combats in memory:`, this.combats.size);
+    
+    const allCombats = Array.from(this.combats.values());
+    console.log(`Character ${characterId} combats:`, allCombats.filter(c => c.participants.includes(characterId)).map(c => ({
+      id: c.id,
+      status: c.status,
+      participants: c.participants,
+      finishedAt: c.finishedAt
+    })));
+    
+    const completedCombats = allCombats
       .filter(combat => 
         combat.status === "finished" && 
         combat.participants.includes(characterId) &&
@@ -426,6 +437,7 @@ export class MemStorage implements IStorage {
       )
       .sort((a, b) => (b.finishedAt?.getTime() || 0) - (a.finishedAt?.getTime() || 0));
     
+    console.log(`Found ${completedCombats.length} completed combats for character ${characterId}`);
     return completedCombats[0]; // Most recent completed combat
   }
 

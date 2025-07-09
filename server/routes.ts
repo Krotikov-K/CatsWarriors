@@ -701,7 +701,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get last completed combat for results
       const lastCombat = await storage.getCharacterLastCompletedCombat(character.id);
-      console.log(`Last completed combat for character ${character.id}:`, lastCombat?.id, lastCombat?.status);
+      if (lastCombat) {
+        console.log(`Last completed combat for character ${character.id}:`, lastCombat.id, lastCombat.status, 'finished at:', lastCombat.finishedAt);
+      } else {
+        console.log(`No completed combat found for character ${character.id}`);
+      }
       
       res.json({
         character,
