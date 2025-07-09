@@ -151,14 +151,11 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added health tracking with lastHpRegeneration field in database
   * Healing items only work in character's own clan camp (Thunderclan/Riverclan)
   * Automatic regeneration triggers on every game state request
-- July 08, 2025. Telegram Stars monetization system:
-  * Implemented complete Telegram Stars payment system for in-game purchases
-  * Added /shop command to Telegram bot with interactive purchase interface
-  * Created TelegramPayments service for processing Stars transactions
-  * Built ShopPanel component in web interface with 6 purchase categories
-  * Added healing items, XP boosts, cosmetics, and premium subscriptions
-  * Integrated pre-checkout validation and successful payment handling
-  * Added shop tab to mobile navigation in game dashboard
+- July 08, 2025. Telegram Stars monetization system (hidden):
+  * Implemented complete Telegram Stars payment system for future use
+  * Created TelegramPayments service and ShopPanel component (disabled)
+  * Monetization features temporarily hidden per user request
+  * Shop tab and /shop command disabled but code preserved for later activation
 
 ## User Preferences
 
