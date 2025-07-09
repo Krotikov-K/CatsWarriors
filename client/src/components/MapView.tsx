@@ -71,10 +71,10 @@ function MapLocation({
       {/* Location Circle */}
       <div 
         className={`
-          w-12 h-12 md:w-16 md:h-16 rounded-full border-2 md:border-3 ${getBorderColor()} ${getLocationColor()}
-          flex items-center justify-center text-lg md:text-2xl
+          w-16 h-16 md:w-20 md:h-20 rounded-full border-3 md:border-4 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-2xl md:text-3xl
           ${canMoveTo ? 'hover:scale-110 hover:shadow-xl active:scale-95' : ''}
-          ${isCurrentLocation ? 'scale-110 md:scale-125 animate-pulse' : ''}
+          ${isCurrentLocation ? 'scale-125 md:scale-150 animate-pulse' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
           transition-all duration-200 relative z-10
         `}
@@ -83,12 +83,12 @@ function MapLocation({
       </div>
       
       {/* Location Name */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
-        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-32 md:max-w-none">
-          <span className="text-xs">{name}</span>
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 md:mt-3 text-center z-10">
+        <div className="bg-black bg-opacity-90 text-white text-sm px-3 py-1 rounded whitespace-nowrap">
+          <span className="font-medium">{name}</span>
         </div>
         {playerCount > 0 && (
-          <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded mt-1">
             {playerCount} 🐱
           </div>
         )}
@@ -164,8 +164,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius in viewport units (approximately 3% for mobile, 4% for desktop)
-    const circleRadius = 3;
+    // Calculate circle radius for the fixed view (adjusted for larger map)
+    const circleRadius = 2;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -237,10 +237,17 @@ export default function MapView({
             </p>
           </div>
 
-          {/* Map Container with Scroll */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
-            {/* Scrollable Map Area - Extended for new locations */}
-            <div className="relative min-w-[150vw] min-h-[140vh]">
+          {/* Map Container - Fixed View */}
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-hidden">
+            {/* Fixed Map Area - Centered on current location */}
+            <div 
+              className="relative w-full h-full transition-transform duration-500 ease-in-out"
+              style={{
+                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50)}vw, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50)}vh)`,
+                width: '200vw',
+                height: '200vh'
+              }}
+            >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
