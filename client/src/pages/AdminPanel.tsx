@@ -25,6 +25,20 @@ export default function AdminPanel() {
     
     console.log("Admin auth check:", { isAuthenticated, timestamp });
     
+    // Check if coming from Telegram WebApp
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      const initData = webApp.initData;
+      
+      if (initData) {
+        // Automatically authenticate from Telegram
+        localStorage.setItem("adminAuthenticated", "true");
+        localStorage.setItem("adminTimestamp", Date.now().toString());
+        console.log("Authenticated via Telegram WebApp");
+        return;
+      }
+    }
+    
     if (!isAuthenticated || !timestamp) {
       navigate("/admin-login");
       return;

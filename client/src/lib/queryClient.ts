@@ -24,6 +24,20 @@ export async function apiRequest(
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
     if (isAuthenticated) {
       (options.headers as any)['x-admin-password'] = '3138';
+      
+      // Add Telegram user ID if available
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        const initData = webApp.initData;
+        if (initData) {
+          const urlParams = new URLSearchParams(initData);
+          const userParam = urlParams.get('user');
+          if (userParam) {
+            const user = JSON.parse(userParam);
+            (options.headers as any)['x-telegram-user-id'] = user.id.toString();
+          }
+        }
+      }
     }
   }
 
@@ -54,6 +68,20 @@ export const getQueryFn: <T>(options: {
         const isAuthenticated = localStorage.getItem("adminAuthenticated");
         if (isAuthenticated) {
           (options.headers as any)['x-admin-password'] = '3138';
+          
+          // Add Telegram user ID if available
+          if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+            const webApp = window.Telegram.WebApp;
+            const initData = webApp.initData;
+            if (initData) {
+              const urlParams = new URLSearchParams(initData);
+              const userParam = urlParams.get('user');
+              if (userParam) {
+                const user = JSON.parse(userParam);
+                (options.headers as any)['x-telegram-user-id'] = user.id.toString();
+              }
+            }
+          }
         }
       }
 
