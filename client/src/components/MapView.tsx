@@ -201,73 +201,96 @@ export default function MapView({
             </p>
           </div>
 
-          {/* Map Container - Simple Grid View */}
+          {/* Map Container - Centered and Responsive */}
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[60vh] mb-3 overflow-hidden">
-            {/* SVG Map for precise positioning */}
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-              {/* Render connection lines first */}
-              {LOCATIONS_DATA.map(loc => 
-                loc.connectedTo.map(connectedId => {
-                  const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
-                  if (!connectedLoc || connectedLoc.id < loc.id) return null;
-                  return (
-                    <line
-                      key={`path-${loc.id}-${connectedId}`}
-                      x1={loc.x}
-                      y1={loc.y}
-                      x2={connectedLoc.x}
-                      y2={connectedLoc.y}
-                      stroke="#6B7280"
-                      strokeWidth="0.5"
-                      strokeDasharray="2,2"
-                      opacity="0.6"
-                    />
-                  );
-                })
-              ).flat()}
-            </svg>
-
-            {/* Render locations over the SVG */}
-            {LOCATIONS_DATA.map((loc) => (
-              <div
-                key={loc.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
-                style={{ 
-                  left: `${loc.x}%`, 
-                  top: `${loc.y}%`
-                }}
-                onClick={canMoveToLocation(loc.id) ? () => handleLocationClick(loc.id) : undefined}
+            {/* Map viewport with smooth centering */}
+            <div 
+              className="relative w-full h-full transition-transform duration-500 ease-out"
+              style={{
+                transform: character.currentLocationId 
+                  ? (() => {
+                      const currentLoc = LOCATIONS_DATA.find(l => l.id === character.currentLocationId);
+                      if (!currentLoc) return 'translate(0%, 0%)';
+                      // Center the current location by translating the entire map
+                      const offsetX = 50 - currentLoc.x; // Center horizontally
+                      const offsetY = 50 - currentLoc.y; // Center vertically
+                      return `translate(${offsetX}%, ${offsetY}%)`;
+                    })()
+                  : 'translate(0%, 0%)'
+              }}
+            >
+              {/* SVG Map for connection lines */}
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none" 
+                viewBox="0 0 100 100" 
+                preserveAspectRatio="xMidYMid meet"
               >
-                <div 
-                  className={`
-                    w-10 h-10 rounded-full border-2 flex items-center justify-center text-base
-                    ${loc.id === character.currentLocationId 
-                      ? 'border-white bg-blue-600 shadow-lg shadow-white/50 scale-125 animate-pulse' 
-                      : canMoveToLocation(loc.id)
-                      ? 'border-green-300 bg-green-500 hover:scale-110'
-                      : 'border-gray-500 bg-gray-600 opacity-60'
-                    }
-                    transition-all duration-200
-                  `}
+                {/* Render connection lines */}
+                {LOCATIONS_DATA.map(loc => 
+                  loc.connectedTo.map(connectedId => {
+                    const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
+                    if (!connectedLoc || connectedLoc.id < loc.id) return null;
+                    return (
+                      <line
+                        key={`path-${loc.id}-${connectedId}`}
+                        x1={loc.x}
+                        y1={loc.y}
+                        x2={connectedLoc.x}
+                        y2={connectedLoc.y}
+                        stroke="#6B7280"
+                        strokeWidth="0.5"
+                        strokeDasharray="2,2"
+                        opacity="0.6"
+                      />
+                    );
+                  })
+                ).flat()}
+              </svg>
+
+              {/* Render locations */}
+              {LOCATIONS_DATA.map((loc) => (
+                <div
+                  key={loc.id}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+                  style={{ 
+                    left: `${loc.x}%`, 
+                    top: `${loc.y}%`
+                  }}
+                  onClick={canMoveToLocation(loc.id) ? () => handleLocationClick(loc.id) : undefined}
                 >
-                  {loc.emoji}
-                </div>
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 text-center">
-                  <div className={`text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap ${
-                    loc.id === character.currentLocationId 
-                      ? 'bg-blue-600 text-white font-bold' 
-                      : 'bg-black bg-opacity-80 text-white'
-                  }`}>
-                    {loc.name}
+                  <div 
+                    className={`
+                      w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg
+                      ${loc.id === character.currentLocationId 
+                        ? 'border-white bg-blue-600 shadow-lg shadow-white/50 scale-125 animate-pulse' 
+                        : canMoveToLocation(loc.id)
+                        ? 'border-green-300 bg-green-500 hover:scale-110'
+                        : 'border-gray-500 bg-gray-600 opacity-60'
+                      }
+                      transition-all duration-200
+                    `}
+                  >
+                    {loc.emoji}
                   </div>
-                  {getPlayerCountForLocation(loc.id) > 0 && (
-                    <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
-                      {getPlayerCountForLocation(loc.id)} 🐱
+                  
+                  {/* Location name positioned below with better spacing */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 z-20" style={{ top: '120%' }}>
+                    <div className={`text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap max-w-24 text-center ${
+                      loc.id === character.currentLocationId 
+                        ? 'bg-blue-600 text-white font-bold' 
+                        : 'bg-black bg-opacity-90 text-white'
+                    }`}>
+                      {loc.name}
                     </div>
-                  )}
+                    {getPlayerCountForLocation(loc.id) > 0 && (
+                      <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1 text-center">
+                        {getPlayerCountForLocation(loc.id)} 🐱
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Map Legend - Mobile Optimized */}
