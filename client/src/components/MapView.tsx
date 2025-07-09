@@ -68,27 +68,31 @@ function MapLocation({
       style={{ left: `${x}%`, top: `${y}%` }}
       onClick={canMoveTo ? onClick : undefined}
     >
-      {/* Location Circle */}
+      {/* Location Circle - Mobile Optimized */}
       <div 
         className={`
-          w-12 h-12 md:w-16 md:h-16 rounded-full border-2 md:border-3 ${getBorderColor()} ${getLocationColor()}
-          flex items-center justify-center text-lg md:text-2xl
-          ${canMoveTo ? 'hover:scale-110 hover:shadow-xl active:scale-95' : ''}
-          ${isCurrentLocation ? 'scale-110 md:scale-125 animate-pulse' : ''}
+          w-14 h-14 rounded-full border-3 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-xl
+          ${canMoveTo ? 'active:scale-95 touch-manipulation' : ''}
+          ${isCurrentLocation ? 'scale-125 animate-pulse shadow-lg' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
-          transition-all duration-200 relative z-10
+          transition-all duration-300 relative z-10
         `}
+        style={{
+          minWidth: '3.5rem',
+          minHeight: '3.5rem'
+        }}
       >
         {emoji}
       </div>
       
-      {/* Location Name */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
-        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+      {/* Location Name - Mobile Optimized */}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-center z-10">
+        <div className="bg-black bg-opacity-90 text-white text-sm px-3 py-1 rounded whitespace-nowrap shadow-lg">
           <span className="font-medium">{name}</span>
         </div>
         {playerCount > 0 && (
-          <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded mt-1 shadow-md">
             {playerCount} 🐱
           </div>
         )}
@@ -164,8 +168,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius in viewport units (approximately 3% for mobile, 4% for desktop)
-    const circleRadius = 3;
+    // Calculate circle radius for mobile fixed view
+    const circleRadius = 2;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -200,9 +204,9 @@ export default function MapView({
           x2={`${endX}%`}
           y2={`${endY}%`}
           stroke="#9CA3AF"
-          strokeWidth="2"
+          strokeWidth="3"
           strokeDasharray="8,4"
-          opacity="0.6"
+          opacity="0.7"
         />
       </svg>
     );
@@ -227,43 +231,34 @@ export default function MapView({
 
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col">
-          {/* Header */}
-          <div className="mb-4 flex-shrink-0">
-            <h3 className="text-lg md:text-2xl font-bold mb-2 text-foreground">
-              🗺️ Карта Территорий
+          {/* Header - Mobile Optimized */}
+          <div className="mb-3 flex-shrink-0">
+            <h3 className="text-lg font-bold mb-2 text-foreground">
+              🗺️ Карта
             </h3>
-            <p className="text-sm text-muted-foreground">
-              {location?.name || 'Неизвестно'} • Нажмите на зеленые локации для перехода
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-xs bg-secondary px-2 py-1 rounded">
+                {character.clan === 'thunder' ? '⚡ Грозовое' : '🌊 Речное'}
+              </span>
+              <span>•</span>
+              <span className="truncate">{location?.name || 'Неизвестно'}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Нажмите на зеленые локации для перехода
             </p>
           </div>
 
-          {/* Map Container */}
-          <div 
-            className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300"
-            ref={(ref) => {
-              if (ref && character.currentLocationId) {
-                const currentLoc = LOCATIONS_DATA.find(l => l.id === character.currentLocationId);
-                if (currentLoc) {
-                  // Center the scroll position on the current location
-                  const containerWidth = ref.clientWidth;
-                  const containerHeight = ref.clientHeight;
-                  const mapWidth = ref.scrollWidth;
-                  const mapHeight = ref.scrollHeight;
-                  
-                  const centerX = (currentLoc.x / 100) * mapWidth - containerWidth / 2;
-                  const centerY = (currentLoc.y / 100) * mapHeight - containerHeight / 2;
-                  
-                  ref.scrollTo({
-                    left: Math.max(0, Math.min(centerX, mapWidth - containerWidth)),
-                    top: Math.max(0, Math.min(centerY, mapHeight - containerHeight)),
-                    behavior: 'smooth'
-                  });
-                }
-              }
-            }}
-          >
-            {/* Scrollable Map Area */}
-            <div className="relative min-w-[150vw] min-h-[140vh]">
+          {/* Map Container - Mobile Optimized Fixed View */}
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[45vh] mb-3 overflow-hidden">
+            {/* Fixed Map Area - Centered on current location */}
+            <div 
+              className="relative w-full h-full transition-transform duration-700 ease-in-out"
+              style={{
+                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50)}%, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50)}%)`,
+                width: '250%',
+                height: '250%'
+              }}
+            >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
@@ -294,12 +289,11 @@ export default function MapView({
             </div>
           </div>
 
-          {/* Map Legend and Info - Collapsible on mobile */}
-          <div className="flex-shrink-0 space-y-3">
-            {/* Map Legend */}
-            <div className="bg-secondary bg-opacity-80 rounded-lg p-3">
-              <h4 className="font-semibold mb-2 text-sm text-foreground">Легенда карты</h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Map Legend - Mobile Optimized */}
+          <div className="flex-shrink-0">
+            <div className="bg-secondary bg-opacity-80 rounded-lg p-2">
+              <h4 className="font-semibold mb-2 text-xs text-foreground">Легенда</h4>
+              <div className="grid grid-cols-2 gap-1 text-xs">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 mr-2"></div>
                   <span className="text-muted-foreground">Грозовое</span>
