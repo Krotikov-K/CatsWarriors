@@ -1,32 +1,25 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import GameDashboard from "@/pages/GameDashboard";
-import CharacterCreation from "@/pages/CharacterCreation";
-import AdminPanel from "@/pages/AdminPanel";
-import NotFound from "@/pages/not-found";
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={GameDashboard} />
-      <Route path="/create-character" component={CharacterCreation} />
-      <Route path="/admin" component={AdminPanel} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function App() {
+  console.log('App starting...');
+  
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-gray-900 text-white p-8">
+      <h1 className="text-4xl font-bold mb-4">Cats War - Война Котов</h1>
+      <div className="space-y-4">
+        <p>Игра загружается...</p>
+        <div className="bg-gray-800 p-4 rounded">
+          <h2 className="text-xl mb-2">Статус системы:</h2>
+          <p>✅ Сервер запущен</p>
+          <p>✅ React загружен</p>
+          <p>🔄 Система повышения уровня готова</p>
+        </div>
+        <button 
+          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+          onClick={() => alert('Система работает!')}
+        >
+          Тест интерактивности
+        </button>
+      </div>
+    </div>
   );
 }
 

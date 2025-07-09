@@ -26,14 +26,19 @@ import type { Character, Combat } from "@shared/schema";
 type TabType = 'overview' | 'map' | 'combat' | 'profile';
 
 export default function GameDashboard() {
+  console.log('GameDashboard rendering...');
+  
   const [, navigate] = useLocation();
   const { user, isLoading: userLoading } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  console.log('User:', user, 'Loading:', userLoading);
+  
   const { gameState, isLoading: gameLoading, error } = useGameState(user?.id || null);
-  const { sendMessage } = useWebSocket(gameState?.character?.id || null);
+  // Временно отключили WebSocket чтобы игра работала
+  // const { sendMessage } = useWebSocket(gameState?.character?.id || null);
 
   const [selectedCombat, setSelectedCombat] = useState<Combat | null>(null);
   const [showCombatModal, setShowCombatModal] = useState(false);

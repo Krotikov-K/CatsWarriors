@@ -13,8 +13,10 @@ export function useWebSocket(characterId: number | null) {
 
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      // В Replit используем тот же хост, что и для HTTP
       const wsUrl = `${protocol}//${window.location.host}/ws`;
       
+      console.log('Connecting to WebSocket:', wsUrl);
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
