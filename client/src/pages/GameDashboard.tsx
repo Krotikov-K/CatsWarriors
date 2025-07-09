@@ -106,9 +106,17 @@ export default function GameDashboard() {
     const isCurrentlyInCombat = gameState?.isInCombat;
     const lastCombat = gameState?.lastCompletedCombat;
     
-    // Simple approach: if there's a completed combat and we're not in combat, show results
-    if (lastCombat && lastCombat.combatLog && !isCurrentlyInCombat && !showCombatResult) {
-      console.log('*** COMPLETED COMBAT FOUND - SHOWING RESULTS ***');
+    // Only show results if we have a new completed combat that we haven't processed yet
+    if (lastCombat && 
+        lastCombat.combatLog && 
+        !isCurrentlyInCombat && 
+        !showCombatResult && 
+        lastCombat.id !== lastProcessedCombatId) {
+      
+      console.log('*** NEW COMPLETED COMBAT FOUND - SHOWING RESULTS ***', {
+        combatId: lastCombat.id,
+        lastProcessed: lastProcessedCombatId
+      });
       
       let experienceGained = 0;
       let damageDealt = 0;
@@ -153,6 +161,7 @@ export default function GameDashboard() {
       console.log('Showing combat result:', result);
       setCombatResult(result);
       setShowCombatResult(true);
+      setLastProcessedCombatId(lastCombat.id); // Mark this combat as processed
     }
     
     // Track combat state changes for UI
@@ -567,19 +576,18 @@ export default function GameDashboard() {
       {showCombatResult && combatResult && (
         <CombatResultModal
           isOpen={showCombatResult}
-          onClose={async () => {
+          onClose={() => {
+            console.log('*** CLOSING COMBAT RESULT MODAL ***');
             setShowCombatResult(false);
             setCombatResult(null);
             
-            // Clear combat results on server
+            // Clear combat results on server (fire and forget)
             if (gameState?.character?.id) {
-              try {
-                await apiRequest("POST", "/api/combat/clear-results", {
-                  characterId: gameState.character.id
-                });
-              } catch (error) {
+              apiRequest("POST", "/api/combat/clear-results", {
+                characterId: gameState.character.id
+              }).catch(error => {
                 console.error("Failed to clear combat results:", error);
-              }
+              });
             }
           }}
           result={combatResult}
