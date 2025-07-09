@@ -234,6 +234,7 @@ export interface GameState {
   currentCombat: Combat | null;
   currentGroup: Group | null;
   groupsInLocation: Group[];
+  lastCompletedCombat?: Combat | null;
 }
 
 export interface WebSocketMessage {

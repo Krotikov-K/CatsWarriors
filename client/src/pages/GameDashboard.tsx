@@ -51,10 +51,20 @@ export default function GameDashboard() {
     if (gameState) {
       const isCurrentlyInCombat = gameState.isInCombat || !!gameState.currentCombat;
       
+      console.log('Combat tracking:', {
+        wasInCombat,
+        isCurrentlyInCombat,
+        hasLastCombat: !!gameState.lastCompletedCombat,
+        combatId: gameState.lastCompletedCombat?.id,
+        combatStatus: gameState.lastCompletedCombat?.status
+      });
+      
       // If we were in combat but no longer are, show results
       if (wasInCombat && !isCurrentlyInCombat && gameState.lastCompletedCombat) {
         const combat = gameState.lastCompletedCombat;
         const characterId = gameState.character?.id;
+        
+        console.log('Showing combat results for combat:', combat.id);
         
         // Calculate damage dealt and taken from combat log
         let damageDealt = 0;
@@ -93,10 +103,12 @@ export default function GameDashboard() {
           survivedTurns: combat.currentTurn || 1
         };
         
+        console.log('Combat result:', result);
         setCombatResult(result);
         setShowCombatResult(true);
         setWasInCombat(false);
       } else if (isCurrentlyInCombat && !wasInCombat) {
+        console.log('Combat started');
         setWasInCombat(true);
       }
     }
