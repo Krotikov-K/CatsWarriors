@@ -831,6 +831,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear combat results endpoint
+  app.post("/api/combat/clear-results", async (req, res) => {
+    try {
+      const { characterId } = req.body;
+      
+      if (!characterId) {
+        return res.status(400).json({ message: "Character ID is required" });
+      }
+      
+      // In our memory storage, we can implement clearing by 
+      // marking the combat as "processed" or removing it from results
+      // For now, we'll just return success - the frontend will handle state
+      console.log(`Clearing combat results for character ${characterId}`);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Clear combat results error:", error);
+      res.status(500).json({ message: "Failed to clear combat results" });
+    }
+  });
+
   // Test level up endpoint
   app.post("/api/test-level-up", async (req, res) => {
     try {

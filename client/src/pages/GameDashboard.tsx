@@ -567,7 +567,21 @@ export default function GameDashboard() {
       {showCombatResult && combatResult && (
         <CombatResultModal
           isOpen={showCombatResult}
-          onClose={() => setShowCombatResult(false)}
+          onClose={async () => {
+            setShowCombatResult(false);
+            setCombatResult(null);
+            
+            // Clear combat results on server
+            if (gameState?.character?.id) {
+              try {
+                await apiRequest("POST", "/api/combat/clear-results", {
+                  characterId: gameState.character.id
+                });
+              } catch (error) {
+                console.error("Failed to clear combat results:", error);
+              }
+            }
+          }}
           result={combatResult}
         />
       )}
