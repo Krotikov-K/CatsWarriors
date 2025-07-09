@@ -243,12 +243,6 @@ export class GameEngine {
   private static async endCombat(combatId: number): Promise<void> {
     console.log(`Ending combat ${combatId}`);
     
-    // Update combat status to finished
-    await storage.updateCombat(combatId, { 
-      status: "finished",
-      finishedAt: new Date()
-    });
-    
     const endEntry: CombatLogEntry = {
       timestamp: new Date().toISOString(),
       type: "leave",
@@ -256,6 +250,10 @@ export class GameEngine {
       message: "Бой завершен!"
     };
     await storage.addCombatLogEntry(combatId, endEntry);
+    
+    // Finish combat using storage method
+    const finishedCombat = await storage.finishCombat(combatId);
+    console.log(`Combat ${combatId} finished with status:`, finishedCombat?.status);
 
     // Create game event
     await storage.createGameEvent({
