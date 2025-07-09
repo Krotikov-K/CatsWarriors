@@ -23,6 +23,8 @@ export default function AdminPanel() {
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
     const timestamp = localStorage.getItem("adminTimestamp");
     
+    console.log("Admin auth check:", { isAuthenticated, timestamp });
+    
     if (!isAuthenticated || !timestamp) {
       navigate("/admin-login");
       return;
@@ -39,20 +41,30 @@ export default function AdminPanel() {
   }, []);
   
   // Fetch all data
-  const { data: characters = [] } = useQuery<Character[]>({
+  const { data: characters = [], isLoading: charactersLoading, error: charactersError } = useQuery<Character[]>({
     queryKey: ['/api/admin/characters'],
   });
   
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
   });
   
-  const { data: locations = [] } = useQuery<Location[]>({
+  const { data: locations = [], isLoading: locationsLoading, error: locationsError } = useQuery<Location[]>({
     queryKey: ['/api/locations'],
   });
   
-  const { data: npcs = [] } = useQuery<NPC[]>({
+  const { data: npcs = [], isLoading: npcsLoading, error: npcsError } = useQuery<NPC[]>({
     queryKey: ['/api/npcs'],
+  });
+
+  // Debug logging
+  console.log("Admin Panel Data:", {
+    characters: characters?.length || 0,
+    users: users?.length || 0,
+    locations: locations?.length || 0,
+    npcs: npcs?.length || 0,
+    loading: { charactersLoading, usersLoading, locationsLoading, npcsLoading },
+    errors: { charactersError, usersError, locationsError, npcsError }
   });
 
   // Character management
@@ -241,6 +253,43 @@ export default function AdminPanel() {
     localStorage.removeItem("adminTimestamp");
     navigate("/");
   };
+
+  // Show loading state
+  if (charactersLoading || usersLoading || locationsLoading || npcsLoading) {
+    return (
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="text-center py-8">
+          <div className="text-lg">Загрузка админ-панели...</div>
+          <div className="text-sm text-muted-foreground mt-2">
+            Персонажи: {charactersLoading ? 'загрузка...' : '✓'} | 
+            Пользователи: {usersLoading ? 'загрузка...' : '✓'} | 
+            Локации: {locationsLoading ? 'загрузка...' : '✓'} | 
+            NPC: {npcsLoading ? 'загрузка...' : '✓'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (charactersError || usersError || locationsError || npcsError) {
+    return (
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="text-center py-8">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Ошибка загрузки</h1>
+          <div className="text-left bg-red-50 border border-red-200 rounded p-4 max-w-md mx-auto">
+            {charactersError && <div>Персонажи: {String(charactersError)}</div>}
+            {usersError && <div>Пользователи: {String(usersError)}</div>}
+            {locationsError && <div>Локации: {String(locationsError)}</div>}
+            {npcsError && <div>NPC: {String(npcsError)}</div>}
+          </div>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Перезагрузить
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
