@@ -46,42 +46,47 @@ export default function GameDashboard() {
     }
   }, [user, navigate]);
 
-  // Track combat end and show results - simplified approach
+  // Track combat end and show results
   useEffect(() => {
     if (gameState) {
       const isCurrentlyInCombat = gameState.isInCombat || !!gameState.currentCombat;
       
-      console.log('Combat tracking:', {
+      console.log('*** COMBAT TRACKING ***', {
         wasInCombat,
         isCurrentlyInCombat,
         characterHp: gameState.character?.currentHp,
-        location: gameState.location?.name
+        location: gameState.location?.name,
+        combatId: gameState.currentCombat?.id
       });
       
-      // If we were in combat but no longer are, show mock results
+      // Detect combat end transition
       if (wasInCombat && !isCurrentlyInCombat) {
-        console.log('Combat ended, showing results');
+        console.log('*** COMBAT ENDED - SHOWING RESULTS ***');
         
-        // Create simple combat result based on character's current state
         const result = {
           victory: (gameState.character?.currentHp || 0) > 0,
-          experienceGained: Math.floor(Math.random() * 50) + 25, // Random XP 25-75
-          damageDealt: Math.floor(Math.random() * 40) + 15, // Random damage 15-55
-          damageTaken: Math.floor(Math.random() * 30) + 10, // Random damage taken 10-40
+          experienceGained: Math.floor(Math.random() * 50) + 25,
+          damageDealt: Math.floor(Math.random() * 40) + 15,
+          damageTaken: Math.floor(Math.random() * 30) + 10,
           enemyName: "Дикий Противник",
-          survivedTurns: Math.floor(Math.random() * 8) + 3 // Random turns 3-10
+          survivedTurns: Math.floor(Math.random() * 8) + 3
         };
         
-        console.log('Combat result:', result);
+        console.log('*** SETTING COMBAT RESULT ***', result);
         setCombatResult(result);
         setShowCombatResult(true);
         setWasInCombat(false);
+        
+        // Force update to ensure modal shows
+        setTimeout(() => {
+          console.log('*** DELAYED CHECK - MODAL SHOULD BE VISIBLE ***');
+        }, 100);
       } else if (isCurrentlyInCombat && !wasInCombat) {
-        console.log('Combat started');
+        console.log('*** COMBAT STARTED ***');
         setWasInCombat(true);
       }
     }
-  }, [gameState, wasInCombat]);
+  }, [gameState?.isInCombat, gameState?.currentCombat?.id]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
