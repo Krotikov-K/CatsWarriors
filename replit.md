@@ -191,6 +191,9 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Map now spans multiple screen sizes and supports touch scrolling
   * Character authentication works correctly with unique Telegram user IDs
   * All existing characters preserved and functional in expanded map system
+  * Fixed character-user relationship issues after map expansion
+  * Created new characters for all active users to ensure proper functionality
+  * Authentication system now correctly links Telegram users to their characters
 
 ## User Preferences
 
