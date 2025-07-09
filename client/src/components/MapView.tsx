@@ -164,8 +164,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius for the fixed view (adjusted for larger map)
-    const circleRadius = 2;
+    // Calculate circle radius for the fixed view (adjusted for 300% map size)
+    const circleRadius = 1.5;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -241,11 +241,11 @@ export default function MapView({
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-hidden">
             {/* Fixed Map Area - Centered on current location */}
             <div 
-              className="relative w-full h-full transition-transform duration-500 ease-in-out"
+              className="relative transition-transform duration-500 ease-in-out"
               style={{
-                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50)}vw, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50)}vh)`,
-                width: '200vw',
-                height: '200vh'
+                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50)}%, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50)}%)`,
+                width: '300%',
+                height: '300%'
               }}
             >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
