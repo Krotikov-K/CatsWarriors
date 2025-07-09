@@ -647,29 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health regeneration routes
-  app.post("/api/health/regenerate", async (req, res) => {
-    try {
-      const { characterId } = req.body;
-      
-      if (!characterId) {
-        return res.status(400).json({ message: "Character ID required" });
-      }
-
-      console.log(`*** Manual regen test for character ${characterId} ***`);
-      const character = await storage.processHealthRegeneration(characterId);
-      console.log(`*** Manual regen result: ${character ? character.currentHp : 'undefined'} HP ***`);
-      
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
-      }
-
-      res.json({ character });
-    } catch (error) {
-      console.error("Health regeneration error:", error);
-      res.status(500).json({ message: "Failed to process health regeneration" });
-    }
-  });
+  // Health regeneration routes - temporarily disabled
 
   app.post("/api/health/use-poultice", async (req, res) => {
     try {
@@ -692,23 +670,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Game state routes
-  app.get("/api/game-state/:characterId", async (req, res) => {
+  app.get("/api/game-state", async (req, res) => {
     try {
-      const characterId = parseInt(req.params.characterId);
-      console.log(`*** Game state request for character ${characterId} ***`);
-      let character = await storage.getCharacter(characterId);
+      const userId = parseInt(req.query.userId as string);
+      console.log(`*** Game state request for user ${userId} ***`);
       
-      if (!character) {
-        return res.status(404).json({ message: "Character not found" });
+      // Get user's character
+      const characters = await storage.getCharactersByUserId(userId);
+      if (!characters || characters.length === 0) {
+        return res.status(404).json({ message: "No character found for user" });
       }
-
-      // Process health regeneration automatically
-      console.log(`*** About to call processHealthRegeneration for character ${characterId} ***`);
-      const regenCharacter = await storage.processHealthRegeneration(characterId);
-      console.log(`*** processHealthRegeneration returned:`, regenCharacter ? `character with ${regenCharacter.currentHp} HP` : 'undefined');
-      if (regenCharacter) {
-        character = regenCharacter;
-      }
+      
+      const character = characters[0]; // Use first character
+      
+      // Health regeneration temporarily disabled
 
       const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
       const location = await storage.getLocation(character.currentLocationId);
@@ -716,11 +691,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeCombats: any[] = []; // Empty for now since combat system uses in-memory
       const currentCombat = null; // Empty for now since combat system uses in-memory
       
-      const currentGroup = await storage.getCharacterGroup(characterId);
+      const currentGroup = await storage.getCharacterGroup(character.id);
       const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
 
-      console.log(`Game state for character ${characterId}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
-      console.log(`Current group for character ${characterId}:`, currentGroup);
+      console.log(`Game state for character ${character.id}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
+      console.log(`Current group for character ${character.id}:`, currentGroup);
       console.log(`Groups in location ${character.currentLocationId}:`, groupsInLocation);
 
       res.json({

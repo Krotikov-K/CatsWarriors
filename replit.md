@@ -151,6 +151,11 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added health tracking with lastHpRegeneration field in database
   * Healing items only work in character's own clan camp (Thunderclan/Riverclan)
   * Automatic regeneration triggers on every game state request
+- July 09, 2025. Health system cleanup:
+  * Removed automatic health regeneration system per user request
+  * Kept only healing poultices as health restoration method
+  * Cleaned up interface to remove regeneration mentions
+  * Healing poultices remain functional in clan camps (+100 HP)
 - July 08, 2025. Telegram Stars monetization system (hidden):
   * Implemented complete Telegram Stars payment system for future use
   * Created TelegramPayments service and ShopPanel component (disabled)

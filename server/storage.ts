@@ -1060,33 +1060,8 @@ export class DatabaseStorage implements IStorage {
   }
   
   async processHealthRegeneration(characterId: number): Promise<Character | undefined> {
+    // Health regeneration temporarily disabled - using only healing poultices
     const [character] = await db.select().from(characters).where(eq(characters.id, characterId));
-    if (!character) return undefined;
-    
-    const now = new Date();
-    const lastRegen = character.lastHpRegeneration ? new Date(character.lastHpRegeneration) : new Date(0);
-    const timeSinceRegen = (now.getTime() - lastRegen.getTime()) / 1000 / 60; // minutes
-    
-    console.log(`Health regen check for character ${characterId}: timeSinceRegen=${timeSinceRegen.toFixed(2)} minutes, currentHp=${character.currentHp}/${character.maxHp}`);
-    
-    if (timeSinceRegen >= 1 && character.currentHp < character.maxHp) {
-      const minutesPassed = Math.floor(timeSinceRegen);
-      const hpToRegenerate = Math.min(minutesPassed, character.maxHp - character.currentHp);
-      
-      console.log(`Regenerating ${hpToRegenerate} HP for character ${characterId} (${minutesPassed} minutes passed)`);
-      
-      const [updatedCharacter] = await db
-        .update(characters)
-        .set({ 
-          currentHp: character.currentHp + hpToRegenerate,
-          lastHpRegeneration: now
-        })
-        .where(eq(characters.id, characterId))
-        .returning();
-      
-      return updatedCharacter;
-    }
-    
     return character;
   }
   

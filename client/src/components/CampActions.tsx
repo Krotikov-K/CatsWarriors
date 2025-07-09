@@ -67,9 +67,7 @@ export default function CampActions({ character, location }: CampActionsProps) {
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground p-3 bg-accent/50 rounded border">
-          💡 Здоровье восстанавливается автоматически по 1 HP в минуту
-        </div>
+
 
         <Button
           onClick={() => usePoultice.mutate()}
