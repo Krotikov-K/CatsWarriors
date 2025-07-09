@@ -302,28 +302,20 @@ export class GameEngine {
 
     // Calculate what level character should be based on experience
     // Level 1: 0-999 exp, Level 2: 1000-1999 exp, Level 3: 2000-2999 exp, etc.
+    // So level = Math.floor(experience / 1000) + 1
     const correctLevel = Math.floor(character.experience / 1000) + 1;
     
+    console.log(`Level up check for ${character.name}: current level=${character.level}, exp=${character.experience}, should be level=${correctLevel}`);
+    
     if (correctLevel > character.level) {
-      console.log(`Character ${character.name} should be level ${correctLevel} with ${character.experience} exp, currently level ${character.level}`);
-      return true;
-    }
-    
-    // Old logic for incremental level ups
-    const requiredExp = character.level * 1000;
-    
-    console.log(`Level up check for ${character.name}: level=${character.level}, exp=${character.experience}, required=${requiredExp}`);
-    
-    if (character.experience >= requiredExp || correctLevel > character.level) {
-      const newLevel = Math.max(character.level + 1, correctLevel);
-      console.log(`Character ${character.name} leveling up! Exp: ${character.experience}/${requiredExp} -> Level ${newLevel}`);
+      console.log(`Character ${character.name} leveling up from ${character.level} to ${correctLevel}!`);
       
       // Level up the character to the correct level and give stat points
-      const levelsGained = newLevel - character.level;
+      const levelsGained = correctLevel - character.level;
       const statPointsGained = levelsGained * 5; // 5 stat points per level
       
       await storage.updateCharacter(characterId, {
-        level: newLevel,
+        level: correctLevel,
         unspentStatPoints: character.unspentStatPoints + statPointsGained
       });
 
@@ -334,16 +326,17 @@ export class GameEngine {
         locationId: character.currentLocationId,
         data: { 
           characterName: character.name, 
-          newLevel: newLevel,
-          experience: character.experience
+          newLevel: correctLevel,
+          experience: character.experience,
+          levelsGained
         }
       });
 
-      console.log(`Character ${character.name} leveled up to level ${newLevel}!`);
+      console.log(`Character ${character.name} leveled up to level ${correctLevel}! Gained ${levelsGained} levels and ${statPointsGained} stat points.`);
       return true;
     }
 
-    console.log(`Character ${character.name} does not need level up yet: ${character.experience}/${requiredExp}`);
+    console.log(`Character ${character.name} does not need level up yet. Level ${character.level} is correct for ${character.experience} exp.`);
     return false;
   }
 

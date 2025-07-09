@@ -752,18 +752,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let character = characters[0];
 
       // Check if character should level up (for existing characters with enough exp)
-      const GameEngine = (await import("../services/gameEngine")).GameEngine;
-      console.log(`Checking level up for character ${character.name}: level=${character.level}, exp=${character.experience}`);
-      const leveledUp = await GameEngine.checkAndProcessLevelUp(character.id);
-      console.log(`Level up result for ${character.name}: ${leveledUp}`);
-      if (leveledUp) {
-        // Refresh character data after level up
-        const updatedCharacter = await storage.getCharacter(character.id);
-        if (updatedCharacter) {
-          console.log(`Character ${character.name} leveled up from ${character.level} to ${updatedCharacter.level}`);
-          character = updatedCharacter;
+      try {
+        const GameEngine = (await import("./services/gameEngine")).GameEngine;
+        console.log(`Checking level up for character ${character.name}: level=${character.level}, exp=${character.experience}`);
+        const leveledUp = await GameEngine.checkAndProcessLevelUp(character.id);
+        console.log(`Level up result for ${character.name}: ${leveledUp}`);
+        if (leveledUp) {
+          // Refresh character data after level up
+          const updatedCharacter = await storage.getCharacter(character.id);
+          if (updatedCharacter) {
+            console.log(`Character ${character.name} leveled up from ${character.level} to ${updatedCharacter.level}`);
+            character = updatedCharacter;
+          }
         }
-      } // Use first character
+      } catch (error) {
+        console.error('Level up check failed:', error);
+      }
       
       // Health regeneration temporarily disabled
 
