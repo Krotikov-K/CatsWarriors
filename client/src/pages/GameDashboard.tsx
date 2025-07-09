@@ -105,80 +105,18 @@ export default function GameDashboard() {
   useEffect(() => {
     const isCurrentlyInCombat = gameState?.isInCombat;
     const lastCombat = gameState?.lastCompletedCombat;
-    const currentCombatId = lastCombat?.id;
     
-    // Add visual debug info
-    if (typeof window !== 'undefined') {
-      const debugEl = document.getElementById('debug-combat') || document.createElement('div');
-      debugEl.id = 'debug-combat';
-      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;background:black;color:white;padding:10px;font-size:12px;z-index:9999;max-width:300px;';
-      debugEl.innerHTML = `
-        <div>Combat ID: ${currentCombatId || 'none'}</div>
-        <div>Processed: ${lastProcessedCombatId || 'none'}</div>
-        <div>In Combat: ${isCurrentlyInCombat}</div>
-        <div>Was In Combat: ${wasInCombat}</div>
-        <div>Has Last Combat: ${!!lastCombat}</div>
-        <div>Log Length: ${lastCombat?.combatLog?.length || 0}</div>
-      `;
-      if (!document.getElementById('debug-combat')) {
-        document.body.appendChild(debugEl);
-      }
-    }
-    
-    console.log('Combat tracking:', { 
-      wasInCombat, 
-      isCurrentlyInCombat, 
-      lastCompletedCombat: lastCombat,
-      combatEndDetected: wasInCombat && !isCurrentlyInCombat,
-      hasLastCombat: !!lastCombat,
-      lastCombatId: currentCombatId,
-      lastProcessedCombatId,
-      lastCombatLogLength: lastCombat?.combatLog?.length
-    });
-    
-    // Method 1: Traditional combat end detection
-    if (wasInCombat && !isCurrentlyInCombat) {
-      console.log('*** COMBAT ENDED (Traditional) ***');
-      processCompletedCombat(lastCombat);
-    } 
-    // Method 2: New completed combat detection (when there's a new combat result we haven't processed)
-    else if (lastCombat && currentCombatId && currentCombatId !== lastProcessedCombatId && !isCurrentlyInCombat) {
-      console.log('*** NEW COMPLETED COMBAT DETECTED ***', { currentCombatId, lastProcessedCombatId });
-      alert(`NEW COMBAT DETECTED! ID: ${currentCombatId}, Was processed: ${lastProcessedCombatId}`);
-      processCompletedCombat(lastCombat);
-      setLastProcessedCombatId(currentCombatId);
-    }
-    
-    // Track combat state changes
-    if (isCurrentlyInCombat && !wasInCombat) {
-      console.log('*** COMBAT STARTED ***');
-      setWasInCombat(true);
-      setActiveTab('combat'); // Auto-switch to combat tab
-    }
-    
-    function processCompletedCombat(combat: any) {
-      if (!combat || !combat.combatLog || !Array.isArray(combat.combatLog)) {
-        console.log('No valid combat data to process');
-        return;
-      }
-      
-      console.log('Processing completed combat:', combat);
-      
-      let result = {
-        victory: false,
-        experienceGained: 0,
-        damageDealt: 0,
-        damageTaken: 0,
-        enemyName: "Противник",
-        survivedTurns: 1
-      };
+    // Simple approach: if there's a completed combat and we're not in combat, show results
+    if (lastCombat && lastCombat.combatLog && !isCurrentlyInCombat && !showCombatResult) {
+      console.log('*** COMPLETED COMBAT FOUND - SHOWING RESULTS ***');
       
       let experienceGained = 0;
       let damageDealt = 0;
       let damageTaken = 0;
       let enemyName = "Противник";
       
-      combat.combatLog.forEach((entry: any) => {
+      // Parse combat log for statistics
+      lastCombat.combatLog.forEach((entry: any) => {
         if (entry.type === "attack" && entry.damage) {
           if (entry.actorId === gameState?.character?.id) {
             damageDealt += entry.damage || 0;
@@ -203,21 +141,30 @@ export default function GameDashboard() {
       });
       
       const isVictory = (gameState?.character?.currentHp || 0) > 0;
-      result = {
+      const result = {
         victory: isVictory,
         experienceGained: isVictory ? (experienceGained || 0) : 0,
         damageDealt,
         damageTaken,
         enemyName,
-        survivedTurns: combat.currentTurn || 1
+        survivedTurns: lastCombat.currentTurn || 1
       };
       
-      console.log('Combat result calculated:', result);
+      console.log('Showing combat result:', result);
       setCombatResult(result);
       setShowCombatResult(true);
+    }
+    
+    // Track combat state changes for UI
+    if (isCurrentlyInCombat && !wasInCombat) {
+      console.log('*** COMBAT STARTED ***');
+      setWasInCombat(true);
+      setActiveTab('combat');
+    } else if (!isCurrentlyInCombat && wasInCombat) {
+      console.log('*** COMBAT ENDED ***');
       setWasInCombat(false);
     }
-  }, [gameState?.isInCombat, gameState?.currentCombat?.id, gameState?.lastCompletedCombat?.id, lastProcessedCombatId]);
+  }, [gameState?.isInCombat, gameState?.lastCompletedCombat, showCombatResult]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
