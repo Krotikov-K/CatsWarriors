@@ -1098,8 +1098,8 @@ export class DatabaseStorage implements IStorage {
     
     // Check if it's the right clan camp
     const isRightCamp = 
-      (character.clan === "Thunderclan" && location.name === "Лагерь Грозового Племени") ||
-      (character.clan === "Riverclan" && location.name === "Лагерь Речного Племени");
+      (character.clan === "thunder" && location.name === "Лагерь Грозового Племени") ||
+      (character.clan === "river" && location.name === "Лагерь Речного Племени");
     
     if (!isRightCamp) {
       return undefined;
