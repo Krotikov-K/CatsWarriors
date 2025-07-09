@@ -888,6 +888,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined> {
+    console.log(`Looking for completed combats for character ${characterId}`);
+    console.log(`Total combats in memory:`, this.combatsMap.size);
+    
     const completedCombats = Array.from(this.combatsMap.values())
       .filter(combat => 
         combat.status === "finished" && 
@@ -896,7 +899,16 @@ export class DatabaseStorage implements IStorage {
       )
       .sort((a, b) => (b.finishedAt?.getTime() || 0) - (a.finishedAt?.getTime() || 0));
     
-    return completedCombats[0]; // Most recent completed combat
+    console.log(`Found ${completedCombats.length} completed combats for character ${characterId}`);
+    const lastCombat = completedCombats[0];
+    
+    if (lastCombat) {
+      console.log(`Returning combat ${lastCombat.id} with ${lastCombat.combatLog?.length || 0} log entries`);
+    } else {
+      console.log(`No completed combat found for character ${characterId}`);
+    }
+    
+    return lastCombat;
   }
 
   async createCombat(locationId: number, participants: number[]): Promise<Combat> {
