@@ -107,6 +107,24 @@ export default function GameDashboard() {
     const lastCombat = gameState?.lastCompletedCombat;
     const currentCombatId = lastCombat?.id;
     
+    // Add visual debug info
+    if (typeof window !== 'undefined') {
+      const debugEl = document.getElementById('debug-combat') || document.createElement('div');
+      debugEl.id = 'debug-combat';
+      debugEl.style.cssText = 'position:fixed;top:10px;right:10px;background:black;color:white;padding:10px;font-size:12px;z-index:9999;max-width:300px;';
+      debugEl.innerHTML = `
+        <div>Combat ID: ${currentCombatId || 'none'}</div>
+        <div>Processed: ${lastProcessedCombatId || 'none'}</div>
+        <div>In Combat: ${isCurrentlyInCombat}</div>
+        <div>Was In Combat: ${wasInCombat}</div>
+        <div>Has Last Combat: ${!!lastCombat}</div>
+        <div>Log Length: ${lastCombat?.combatLog?.length || 0}</div>
+      `;
+      if (!document.getElementById('debug-combat')) {
+        document.body.appendChild(debugEl);
+      }
+    }
+    
     console.log('Combat tracking:', { 
       wasInCombat, 
       isCurrentlyInCombat, 
@@ -126,6 +144,7 @@ export default function GameDashboard() {
     // Method 2: New completed combat detection (when there's a new combat result we haven't processed)
     else if (lastCombat && currentCombatId && currentCombatId !== lastProcessedCombatId && !isCurrentlyInCombat) {
       console.log('*** NEW COMPLETED COMBAT DETECTED ***', { currentCombatId, lastProcessedCombatId });
+      alert(`NEW COMBAT DETECTED! ID: ${currentCombatId}, Was processed: ${lastProcessedCombatId}`);
       processCompletedCombat(lastCombat);
       setLastProcessedCombatId(currentCombatId);
     }
