@@ -194,13 +194,14 @@ export class GameEngine {
             // Only give experience if character is still alive (won the fight)
             if (character && character.currentHp > 0) {
               const expGain = target.experienceReward;
-              const newExp = character.experience + expGain;
-              const newLevel = Math.floor(newExp / GameEngine.calculateLevelUpRequirement(character.level)) + 1;
-              
-              await storage.updateCharacter(characterId, { 
-                experience: newExp,
-                level: Math.max(character.level, newLevel)
+              await storage.updateCharacter(characterId, {
+                experience: character.experience + expGain
               });
+
+              console.log(`${character.name} gained ${expGain} experience (${character.experience} -> ${character.experience + expGain})`);
+
+              // Check for level up after gaining experience
+              await this.checkAndProcessLevelUp(characterId);
 
               const expEntry: CombatLogEntry = {
                 timestamp: new Date().toISOString(),
@@ -288,7 +289,59 @@ export class GameEngine {
     return Math.floor(basExp * multiplier);
   }
 
+  static getRequiredExperienceForLevel(level: number): number {
+    return level * 1000;
+  }
+
+  static async checkAndProcessLevelUp(characterId: number): Promise<boolean> {
+    const character = await storage.getCharacter(characterId);
+    if (!character) return false;
+
+    const requiredExp = this.getRequiredExperienceForLevel(character.level + 1);
+    
+    if (character.experience >= requiredExp) {
+      console.log(`Character ${character.name} leveling up! Exp: ${character.experience}/${requiredExp}`);
+      
+      // Level up the character
+      await storage.updateCharacter(characterId, {
+        level: character.level + 1
+      });
+
+      // Create level up event
+      await storage.createGameEvent({
+        type: "level_up",
+        characterId: character.id,
+        locationId: character.currentLocationId,
+        data: { 
+          characterName: character.name, 
+          newLevel: character.level + 1,
+          experience: character.experience
+        }
+      });
+
+      console.log(`Character ${character.name} leveled up to level ${character.level + 1}!`);
+      return true;
+    }
+
+    return false;
+  }
+
   static calculateLevelUpRequirement(level: number): number {
     return level * 1000;
+  }
+
+  // Check multiple level ups at once
+  static async checkMultipleLevelUps(characterId: number): Promise<number> {
+    let levelsGained = 0;
+    let leveledUp = true;
+    
+    while (leveledUp) {
+      leveledUp = await this.checkAndProcessLevelUp(characterId);
+      if (leveledUp) {
+        levelsGained++;
+      }
+    }
+    
+    return levelsGained;
   }
 }

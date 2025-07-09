@@ -743,7 +743,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No character found for user" });
       }
       
-      const character = characters[0]; // Use first character
+      let character = characters[0];
+
+      // Check if character should level up (for existing characters with enough exp)
+      const GameEngine = (await import("../services/gameEngine")).GameEngine;
+      const leveledUp = await GameEngine.checkAndProcessLevelUp(character.id);
+      if (leveledUp) {
+        // Refresh character data after level up
+        const updatedCharacter = await storage.getCharacter(character.id);
+        if (updatedCharacter) {
+          character = updatedCharacter;
+        }
+      } // Use first character
       
       // Health regeneration temporarily disabled
 
