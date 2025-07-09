@@ -670,10 +670,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/health/use-poultice", async (req, res) => {
     try {
-      const characterId = req.userId;
+      const { characterId } = req.body;
       
       if (!characterId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(400).json({ message: "Character ID required" });
       }
 
       const character = await storage.useHealingPoultice(characterId);

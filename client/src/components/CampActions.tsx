@@ -16,7 +16,9 @@ export default function CampActions({ character, location }: CampActionsProps) {
 
   const usePoultice = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/health/use-poultice", {});
+      const response = await apiRequest("POST", "/api/health/use-poultice", {
+        characterId: character.id
+      });
       return response.json();
     },
     onSuccess: (data) => {
