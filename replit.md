@@ -209,8 +209,10 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Removed scroll functionality to prevent interface issues on mobile devices
   * Optimized touch interactions with larger touch targets (56px minimum)
   * Reduced header sizes and improved text truncation for mobile screens
-  * Map size optimized to 250% for better mobile visibility without scrolling
-  * Enhanced mobile-specific animations and transitions
+  * Map size increased to 400% with proper centering calculation for better overview
+  * Reduced location icon sizes to accommodate zoomed-out view
+  * Enhanced centering algorithm using calc() for precise player location positioning
+  * Optimized connection lines and text sizes for distant view perspective
 
 ## User Preferences
 
