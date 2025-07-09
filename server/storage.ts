@@ -1088,13 +1088,19 @@ export class DatabaseStorage implements IStorage {
   
   async useHealingPoultice(characterId: number): Promise<Character | undefined> {
     const [character] = await db.select().from(characters).where(eq(characters.id, characterId));
-    if (!character) return undefined;
-    
-    // Check if character is in their clan's camp
-    const [location] = await db.select().from(locations).where(eq(locations.id, character.currentLocationId));
-    if (!location || location.type !== "camp") {
+    if (!character) {
+      console.log(`Character ${characterId} not found`);
       return undefined;
     }
+    
+    // Get location from static data since locations aren't in DB
+    const location = LOCATIONS_DATA.find(loc => loc.id === character.currentLocationId);
+    if (!location || location.type !== "camp") {
+      console.log(`Character ${characterId} not in camp. Location: ${location?.name}, type: ${location?.type}`);
+      return undefined;
+    }
+    
+    console.log(`Character ${characterId} is in ${location.name}, clan: ${character.clan}`);
     
     // Check if it's the right clan camp
     const isRightCamp = 
@@ -1102,12 +1108,18 @@ export class DatabaseStorage implements IStorage {
       (character.clan === "river" && location.name === "Лагерь Речного Племени");
     
     if (!isRightCamp) {
+      console.log(`Wrong camp for character ${characterId}. In: ${location.name}, clan: ${character.clan}`);
       return undefined;
     }
     
     // Heal 100 HP, up to max HP
     const healAmount = Math.min(100, character.maxHp - character.currentHp);
-    if (healAmount <= 0) return character;
+    if (healAmount <= 0) {
+      console.log(`Character ${characterId} already at full health`);
+      return character;
+    }
+    
+    console.log(`Healing character ${characterId} for ${healAmount} HP`);
     
     const [updatedCharacter] = await db
       .update(characters)
