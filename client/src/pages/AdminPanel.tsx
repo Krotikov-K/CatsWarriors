@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { navigate } from "wouter/use-browser-location";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,26 @@ import { Character, Location, NPC, User } from "@shared/schema";
 export default function AdminPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check admin authentication
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    const timestamp = localStorage.getItem("adminTimestamp");
+    
+    if (!isAuthenticated || !timestamp) {
+      navigate("/admin-login");
+      return;
+    }
+
+    // Check if session expired (30 minutes)
+    const sessionAge = Date.now() - parseInt(timestamp);
+    if (sessionAge > 30 * 60 * 1000) {
+      localStorage.removeItem("adminAuthenticated");
+      localStorage.removeItem("adminTimestamp");
+      navigate("/admin-login");
+      return;
+    }
+  }, []);
   
   // Fetch all data
   const { data: characters = [] } = useQuery<Character[]>({
@@ -200,11 +221,25 @@ export default function AdminPanel() {
     });
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("adminAuthenticated");
+    localStorage.removeItem("adminTimestamp");
+    navigate("/");
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
-        <p className="text-muted-foreground">Управление игровым миром Cats War</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
+          <p className="text-muted-foreground">Управление игровым миром Cats War</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">Админ-режим</Badge>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            Выйти
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="characters" className="w-full">

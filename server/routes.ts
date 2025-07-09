@@ -887,8 +887,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin authentication middleware
+  const adminAuth = (req: Request, res: Response, next: Function) => {
+    const telegramUserId = req.headers['x-telegram-user-id'];
+    
+    if (!telegramUserId) {
+      return res.status(401).json({ message: "Admin access denied - no Telegram user ID" });
+    }
+
+    // Import admin bot service to check authentication
+    import("./services/adminBot").then(({ adminBot }) => {
+      if (!adminBot.isAuthenticated(Number(telegramUserId))) {
+        return res.status(401).json({ message: "Admin access denied - not authenticated" });
+      }
+      next();
+    }).catch(() => {
+      return res.status(500).json({ message: "Admin authentication error" });
+    });
+  };
+
   // Admin routes
-  app.get("/api/admin/characters", async (req, res) => {
+  app.get("/api/admin/characters", adminAuth, async (req, res) => {
     try {
       // Direct database query for all characters
       const { db } = await import("./db");
@@ -904,7 +923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/users", async (req, res) => {
+  app.get("/api/admin/users", adminAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -914,7 +933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/characters/:id", async (req, res) => {
+  app.patch("/api/admin/characters/:id", adminAuth, async (req, res) => {
     try {
       const characterId = parseInt(req.params.id);
       const updates = req.body;
@@ -931,7 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/locations/:id", async (req, res) => {
+  app.patch("/api/admin/locations/:id", adminAuth, async (req, res) => {
     try {
       const locationId = parseInt(req.params.id);
       const updates = req.body;
@@ -948,7 +967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/npcs/:id", async (req, res) => {
+  app.patch("/api/admin/npcs/:id", adminAuth, async (req, res) => {
     try {
       const npcId = parseInt(req.params.id);
       const updates = req.body;
@@ -965,7 +984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/npcs/:id/respawn", async (req, res) => {
+  app.post("/api/admin/npcs/:id/respawn", adminAuth, async (req, res) => {
     try {
       const npcId = parseInt(req.params.id);
       

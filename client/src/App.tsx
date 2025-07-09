@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import GameDashboard from "@/pages/GameDashboard";
 import CharacterCreation from "@/pages/CharacterCreation";
 import AdminPanel from "@/pages/AdminPanel";
+import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -15,7 +16,8 @@ function App() {
       <div className="min-h-screen bg-background text-foreground">
         <Switch>
           <Route path="/create-character" component={CharacterCreation} />
-          <Route path="/admin" component={AdminPanel} />
+          <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/admin" component={AdminPanel} />
           <Route path="/" component={GameDashboard} />
           <Route component={NotFound} />
         </Switch>
