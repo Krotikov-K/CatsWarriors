@@ -21,7 +21,7 @@ export default function AdminLogin() {
       // Store admin session
       localStorage.setItem("adminAuthenticated", "true");
       localStorage.setItem("adminTimestamp", Date.now().toString());
-      navigate("/admin");
+      navigate("/admin-panel");
     } else {
       setError("Неверный пароль администратора");
     }
