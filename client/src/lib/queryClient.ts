@@ -19,6 +19,14 @@ export async function apiRequest(
     },
   };
 
+  // Add admin authentication for admin endpoints
+  if (url.includes('/api/admin/')) {
+    const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    if (isAuthenticated) {
+      (options.headers as any)['x-admin-password'] = '3138';
+    }
+  }
+
   if (body) {
     options.body = JSON.stringify(body);
   }
@@ -37,7 +45,19 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const [url] = queryKey;
     try {
-      const res = await fetch(url);
+      const options: RequestInit = {
+        headers: {}
+      };
+
+      // Add admin authentication for admin endpoints
+      if (url.includes('/api/admin/')) {
+        const isAuthenticated = localStorage.getItem("adminAuthenticated");
+        if (isAuthenticated) {
+          (options.headers as any)['x-admin-password'] = '3138';
+        }
+      }
+
+      const res = await fetch(url, options);
       
       if (res.status === 401) {
         if (on401 === "returnNull") {

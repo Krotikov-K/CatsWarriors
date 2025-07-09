@@ -889,21 +889,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin authentication middleware
   const adminAuth = (req: Request, res: Response, next: Function) => {
-    const telegramUserId = req.headers['x-telegram-user-id'];
-    
-    if (!telegramUserId) {
-      return res.status(401).json({ message: "Admin access denied - no Telegram user ID" });
+    // Check for web-based admin access with simple password
+    const adminPassword = req.headers['x-admin-password'];
+    if (adminPassword === "3138") {
+      return next();
     }
 
-    // Import admin bot service to check authentication
-    import("./services/adminBot").then(({ adminBot }) => {
-      if (!adminBot.isAuthenticated(Number(telegramUserId))) {
-        return res.status(401).json({ message: "Admin access denied - not authenticated" });
-      }
-      next();
-    }).catch(() => {
-      return res.status(500).json({ message: "Admin authentication error" });
-    });
+    // Check for Telegram bot authentication
+    const telegramUserId = req.headers['x-telegram-user-id'];
+    if (telegramUserId) {
+      import("./services/adminBot").then(({ adminBot }) => {
+        if (adminBot.isAuthenticated(Number(telegramUserId))) {
+          return next();
+        }
+        return res.status(401).json({ message: "Admin access denied - not authenticated via bot" });
+      }).catch(() => {
+        return res.status(500).json({ message: "Admin authentication error" });
+      });
+      return;
+    }
+
+    return res.status(401).json({ message: "Admin access denied - no valid authentication" });
   };
 
   // Admin routes

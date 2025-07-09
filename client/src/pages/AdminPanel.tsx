@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Character, Location, NPC, User } from "@shared/schema";
@@ -56,9 +57,11 @@ export default function AdminPanel() {
 
   // Character management
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [characterDialogOpen, setCharacterDialogOpen] = useState(false);
   const [characterForm, setCharacterForm] = useState({
     name: '',
     clan: 'thunder',
+    gender: 'male',
     level: 1,
     experience: 0,
     strength: 10,
@@ -113,6 +116,7 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/characters'] });
       toast({ title: "Персонаж обновлен", description: "Изменения сохранены успешно" });
       setEditingCharacter(null);
+      setCharacterDialogOpen(false);
     },
     onError: (error: any) => {
       toast({ title: "Ошибка", description: error.message, variant: "destructive" });
@@ -172,6 +176,7 @@ export default function AdminPanel() {
     setCharacterForm({
       name: character.name,
       clan: character.clan,
+      gender: character.gender || 'male',
       level: character.level,
       experience: character.experience,
       strength: character.strength,
@@ -181,6 +186,16 @@ export default function AdminPanel() {
       currentHp: character.currentHp,
       maxHp: character.maxHp,
       currentLocationId: character.currentLocationId
+    });
+    setCharacterDialogOpen(true);
+  };
+
+  const handleSaveCharacter = () => {
+    if (!editingCharacter) return;
+    
+    updateCharacterMutation.mutate({
+      id: editingCharacter.id,
+      updates: characterForm
     });
   };
 
@@ -259,7 +274,7 @@ export default function AdminPanel() {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2">
-                        {character.name}
+                        {character.name} {character.gender === 'female' ? '🐈' : '🐱'}
                         <Badge variant={character.clan === 'thunder' ? 'default' : 'secondary'}>
                           {character.clan === 'thunder' ? 'Грозовое' : 'Речное'} Племя
                         </Badge>
@@ -302,142 +317,184 @@ export default function AdminPanel() {
             ))}
           </div>
 
-          {/* Character Edit Modal */}
-          {editingCharacter && (
-            <Card className="fixed inset-4 z-50 bg-background border shadow-lg overflow-auto">
-              <CardHeader>
-                <CardTitle>Редактирование персонажа: {editingCharacter.name}</CardTitle>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setEditingCharacter(null)}
-                  className="absolute top-4 right-4"
-                >
-                  ✕
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Имя</Label>
-                    <Input
-                      id="name"
-                      value={characterForm.name}
-                      onChange={(e) => setCharacterForm({...characterForm, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="clan">Племя</Label>
-                    <Select value={characterForm.clan} onValueChange={(value) => setCharacterForm({...characterForm, clan: value as any})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="thunder">Грозовое Племя</SelectItem>
-                        <SelectItem value="river">Речное Племя</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="level">Уровень</Label>
-                    <Input
-                      id="level"
-                      type="number"
-                      value={characterForm.level}
-                      onChange={(e) => setCharacterForm({...characterForm, level: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="experience">Опыт</Label>
-                    <Input
-                      id="experience"
-                      type="number"
-                      value={characterForm.experience}
-                      onChange={(e) => setCharacterForm({...characterForm, experience: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="strength">Сила</Label>
-                    <Input
-                      id="strength"
-                      type="number"
-                      value={characterForm.strength}
-                      onChange={(e) => setCharacterForm({...characterForm, strength: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="agility">Ловкость</Label>
-                    <Input
-                      id="agility"
-                      type="number"
-                      value={characterForm.agility}
-                      onChange={(e) => setCharacterForm({...characterForm, agility: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="intelligence">Интеллект</Label>
-                    <Input
-                      id="intelligence"
-                      type="number"
-                      value={characterForm.intelligence}
-                      onChange={(e) => setCharacterForm({...characterForm, intelligence: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="endurance">Выносливость</Label>
-                    <Input
-                      id="endurance"
-                      type="number"
-                      value={characterForm.endurance}
-                      onChange={(e) => setCharacterForm({...characterForm, endurance: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="currentHp">Текущее HP</Label>
-                    <Input
-                      id="currentHp"
-                      type="number"
-                      value={characterForm.currentHp}
-                      onChange={(e) => setCharacterForm({...characterForm, currentHp: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="maxHp">Максимальное HP</Label>
-                    <Input
-                      id="maxHp"
-                      type="number"
-                      value={characterForm.maxHp}
-                      onChange={(e) => setCharacterForm({...characterForm, maxHp: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="currentLocationId">ID локации</Label>
-                    <Input
-                      id="currentLocationId"
-                      type="number"
-                      value={characterForm.currentLocationId}
-                      onChange={(e) => setCharacterForm({...characterForm, currentLocationId: parseInt(e.target.value)})}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => updateCharacterMutation.mutate({
-                      id: editingCharacter.id,
-                      updates: characterForm
-                    })}
-                    disabled={updateCharacterMutation.isPending}
-                  >
-                    {updateCharacterMutation.isPending ? 'Сохранение...' : 'Сохранить'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditingCharacter(null)}>
-                    Отменить
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
+
+        {/* Character Edit Dialog */}
+        <Dialog open={characterDialogOpen} onOpenChange={setCharacterDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Редактирование персонажа: {editingCharacter?.name}</DialogTitle>
+              <DialogDescription>
+                Изменение характеристик и параметров персонажа
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Имя</Label>
+                <Input
+                  id="name"
+                  value={characterForm.name}
+                  onChange={(e) => setCharacterForm({...characterForm, name: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="gender">Пол</Label>
+                <Select value={characterForm.gender} onValueChange={(value) => setCharacterForm({...characterForm, gender: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Самец</SelectItem>
+                    <SelectItem value="female">Самка</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="clan">Племя</Label>
+                <Select value={characterForm.clan} onValueChange={(value) => setCharacterForm({...characterForm, clan: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="thunder">Грозовое Племя</SelectItem>
+                    <SelectItem value="river">Речное Племя</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="currentLocationId">Локация</Label>
+                <Select 
+                  value={characterForm.currentLocationId.toString()} 
+                  onValueChange={(value) => setCharacterForm({...characterForm, currentLocationId: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id.toString()}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="level">Уровень</Label>
+                <Input
+                  id="level"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={characterForm.level}
+                  onChange={(e) => setCharacterForm({...characterForm, level: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="experience">Опыт</Label>
+                <Input
+                  id="experience"
+                  type="number"
+                  min="0"
+                  value={characterForm.experience}
+                  onChange={(e) => setCharacterForm({...characterForm, experience: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="currentHp">Текущее здоровье</Label>
+                <Input
+                  id="currentHp"
+                  type="number"
+                  min="0"
+                  max={characterForm.maxHp}
+                  value={characterForm.currentHp}
+                  onChange={(e) => setCharacterForm({...characterForm, currentHp: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="maxHp">Максимальное здоровье</Label>
+                <Input
+                  id="maxHp"
+                  type="number"
+                  min="1"
+                  value={characterForm.maxHp}
+                  onChange={(e) => setCharacterForm({...characterForm, maxHp: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="strength">Сила</Label>
+                <Input
+                  id="strength"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={characterForm.strength}
+                  onChange={(e) => setCharacterForm({...characterForm, strength: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="agility">Ловкость</Label>
+                <Input
+                  id="agility"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={characterForm.agility}
+                  onChange={(e) => setCharacterForm({...characterForm, agility: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="intelligence">Интеллект</Label>
+                <Input
+                  id="intelligence"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={characterForm.intelligence}
+                  onChange={(e) => setCharacterForm({...characterForm, intelligence: parseInt(e.target.value) || 1})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="endurance">Выносливость</Label>
+                <Input
+                  id="endurance"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={characterForm.endurance}
+                  onChange={(e) => setCharacterForm({...characterForm, endurance: parseInt(e.target.value) || 1})}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setCharacterDialogOpen(false)}
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={handleSaveCharacter}
+                disabled={updateCharacterMutation.isPending}
+              >
+                {updateCharacterMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Locations Tab */}
         <TabsContent value="locations" className="space-y-4">
@@ -445,39 +502,9 @@ export default function AdminPanel() {
             {locations.map((location) => (
               <Card key={location.id}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {location.emoji} {location.name}
-                        <Badge variant={location.type === 'camp' ? 'default' : 'secondary'}>
-                          {location.type}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>
-                        Опасность: {location.dangerLevel} • Позиция: ({location.x}, {location.y})
-                      </CardDescription>
-                    </div>
-                    <Button onClick={() => handleEditLocation(location)} size="sm">
-                      Редактировать
-                    </Button>
-                  </div>
+                  <CardTitle>{location.name}</CardTitle>
+                  <CardDescription>{location.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Тип:</span> {location.type}
-                    </div>
-                    <div>
-                      <span className="font-medium">Племя:</span> {location.clan || 'Нейтральная'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Макс. игроков:</span> {location.maxPlayers || 50}
-                    </div>
-                    <div>
-                      <span className="font-medium">Связи:</span> {location.connectedTo?.join(', ') || 'Нет'}
-                    </div>
-                  </div>
-                </CardContent>
               </Card>
             ))}
           </div>
@@ -489,63 +516,9 @@ export default function AdminPanel() {
             {npcs.map((npc) => (
               <Card key={npc.id}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {npc.emoji} {npc.name}
-                        <Badge variant={npc.type === 'boss' ? 'destructive' : 'secondary'}>
-                          {npc.type}
-                        </Badge>
-                        {npc.isDead && (
-                          <Badge variant="outline">Мертв</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription>
-                        Уровень {npc.level} • {npc.currentHp}/{npc.maxHp} HP
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      {npc.isDead && (
-                        <Button 
-                          onClick={() => respawnNPCMutation.mutate(npc.id)}
-                          disabled={respawnNPCMutation.isPending}
-                          size="sm"
-                          variant="outline"
-                        >
-                          Возродить
-                        </Button>
-                      )}
-                      <Button onClick={() => handleEditNPC(npc)} size="sm">
-                        Редактировать
-                      </Button>
-                    </div>
-                  </div>
+                  <CardTitle>{npc.name}</CardTitle>
+                  <CardDescription>Уровень {npc.level}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Сила:</span> {npc.strength}
-                    </div>
-                    <div>
-                      <span className="font-medium">Ловкость:</span> {npc.agility}
-                    </div>
-                    <div>
-                      <span className="font-medium">Интеллект:</span> {npc.intelligence}
-                    </div>
-                    <div>
-                      <span className="font-medium">Выносливость:</span> {npc.endurance}
-                    </div>
-                    <div>
-                      <span className="font-medium">Награда:</span> {npc.experienceReward} опыта
-                    </div>
-                    <div>
-                      <span className="font-medium">Возрождение:</span> {npc.respawnTime}с
-                    </div>
-                    <div>
-                      <span className="font-medium">Локации:</span> {npc.spawnsInLocation.join(', ')}
-                    </div>
-                  </div>
-                </CardContent>
               </Card>
             ))}
           </div>
@@ -557,19 +530,51 @@ export default function AdminPanel() {
             {users.map((user) => (
               <Card key={user.id}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {user.username}
-                    {user.isAdmin && <Badge variant="destructive">Админ</Badge>}
-                  </CardTitle>
-                  <CardDescription>
-                    ID: {user.id} • Telegram: {user.telegramId || 'Не связан'}
-                  </CardDescription>
+                  <CardTitle>{user.username}</CardTitle>
+                  <CardDescription>ID: {user.id}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Создан: {new Date(user.createdAt).toLocaleDateString()}
-                  </div>
-                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Locations Tab */}
+        <TabsContent value="locations" className="space-y-4">
+          <div className="grid gap-4">
+            {locations.map((location) => (
+              <Card key={location.id}>
+                <CardHeader>
+                  <CardTitle>{location.name}</CardTitle>
+                  <CardDescription>{location.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* NPCs Tab */}
+        <TabsContent value="npcs" className="space-y-4">
+          <div className="grid gap-4">
+            {npcs.map((npc) => (
+              <Card key={npc.id}>
+                <CardHeader>
+                  <CardTitle>{npc.name}</CardTitle>
+                  <CardDescription>Уровень {npc.level}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-4">
+          <div className="grid gap-4">
+            {users.map((user) => (
+              <Card key={user.id}>
+                <CardHeader>
+                  <CardTitle>{user.username}</CardTitle>
+                  <CardDescription>ID: {user.id} • Telegram: {user.telegramId || 'Не связан'}</CardDescription>
+                </CardHeader>
               </Card>
             ))}
           </div>
