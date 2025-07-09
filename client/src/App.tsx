@@ -17,7 +17,7 @@ function App() {
         <Switch>
           <Route path="/create-character" component={CharacterCreation} />
           <Route path="/admin-login" component={AdminLogin} />
-        <Route path="/admin-panel" component={AdminPanel} />
+          <Route path="/admin-panel" component={AdminPanel} />
           <Route path="/" component={GameDashboard} />
           <Route component={NotFound} />
         </Switch>
