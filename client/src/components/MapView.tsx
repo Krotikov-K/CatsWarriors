@@ -168,8 +168,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius for zoomed out view
-    const circleRadius = 1.5;
+    // Calculate circle radius for scaled view
+    const circleRadius = 2.5;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -252,13 +252,16 @@ export default function MapView({
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[45vh] mb-3 overflow-hidden">
             {/* Fixed Map Area - Centered on current location */}
             <div 
-              className="relative transition-transform duration-700 ease-in-out"
+              className="relative w-full h-full transition-transform duration-700 ease-in-out"
               style={{
                 transform: character.currentLocationId 
-                  ? `translate(${50 - (LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50)}%, ${50 - (LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50)}%)`
-                  : 'translate(0%, 0%)',
-                width: '300%',
-                height: '300%',
+                  ? (() => {
+                      const currentLoc = LOCATIONS_DATA.find(l => l.id === character.currentLocationId);
+                      const x = currentLoc?.x || 50;
+                      const y = currentLoc?.y || 50;
+                      return `translate(${50 - x}%, ${50 - y}%) scale(2.5)`;
+                    })()
+                  : 'translate(0%, 0%) scale(2.5)',
                 transformOrigin: 'center center'
               }}
             >
