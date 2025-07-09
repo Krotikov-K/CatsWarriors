@@ -215,35 +215,38 @@ export default function MapView({
             </p>
           </div>
 
-          {/* Map Container */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4">
-            {/* Render paths between connected locations */}
-            {LOCATIONS_DATA.map(loc => 
-              loc.connectedTo.map(connectedId => {
-                const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
-                if (!connectedLoc || connectedLoc.id < loc.id) return null; // Avoid duplicate paths
-                return renderPath(loc, connectedLoc);
-              })
-            ).flat()}
+          {/* Map Container with Scroll */}
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+            {/* Scrollable Map Area - Extended for new locations */}
+            <div className="relative min-w-[200vw] min-h-[180vh]">
+              {/* Render paths between connected locations */}
+              {LOCATIONS_DATA.map(loc => 
+                loc.connectedTo.map(connectedId => {
+                  const connectedLoc = LOCATIONS_DATA.find(l => l.id === connectedId);
+                  if (!connectedLoc || connectedLoc.id < loc.id) return null; // Avoid duplicate paths
+                  return renderPath(loc, connectedLoc);
+                })
+              ).flat()}
 
-            {/* Render locations */}
-            {LOCATIONS_DATA.map((loc) => (
-              <MapLocation
-                key={loc.id}
-                id={loc.id}
-                name={loc.name}
-                type={loc.type}
-                clan={loc.clan}
-                x={loc.x}
-                y={loc.y}
-                emoji={loc.emoji}
-                connectedTo={loc.connectedTo as readonly number[]}
-                isCurrentLocation={loc.id === character.currentLocationId}
-                canMoveTo={canMoveToLocation(loc.id)}
-                playerCount={getPlayerCountForLocation(loc.id)}
-                onClick={() => handleLocationClick(loc.id)}
-              />
-            ))}
+              {/* Render locations */}
+              {LOCATIONS_DATA.map((loc) => (
+                <MapLocation
+                  key={loc.id}
+                  id={loc.id}
+                  name={loc.name}
+                  type={loc.type}
+                  clan={loc.clan}
+                  x={loc.x}
+                  y={loc.y}
+                  emoji={loc.emoji}
+                  connectedTo={loc.connectedTo as readonly number[]}
+                  isCurrentLocation={loc.id === character.currentLocationId}
+                  canMoveTo={canMoveToLocation(loc.id)}
+                  playerCount={getPlayerCountForLocation(loc.id)}
+                  onClick={() => handleLocationClick(loc.id)}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Map Legend and Info - Collapsible on mobile */}

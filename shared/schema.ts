@@ -254,19 +254,31 @@ export const CLANS = {
 } as const;
 
 export const LOCATIONS_DATA = [
-  // Племенные лагеря
-  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 15, y: 20, connectedTo: [3], emoji: "🏠" },
-  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 85, y: 80, connectedTo: [6], emoji: "🏕️" },
+  // Племенные лагеря (левая часть карты)
+  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 10, y: 15, connectedTo: [3], emoji: "🏠" },
+  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 80, y: 75, connectedTo: [6], emoji: "🏕️" },
   
-  // Нейтральные локации для охоты и сражений
-  { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2, x: 50, y: 50, connectedTo: [1, 4, 5], emoji: "🌳" },
-  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 30, y: 70, connectedTo: [3, 7], emoji: "🌻" },
-  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3, x: 70, y: 30, connectedTo: [3, 6, 8], emoji: "🌲" },
-  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3, x: 85, y: 50, connectedTo: [2, 5, 9], emoji: "🕳️" },
-  { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4, x: 20, y: 85, connectedTo: [4, 10], emoji: "🛤️" },
-  { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 75, y: 15, connectedTo: [5, 9], emoji: "⚔️" },
-  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4, x: 90, y: 25, connectedTo: [6, 8, 10], emoji: "⛰️" },
-  { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1, x: 50, y: 85, connectedTo: [7, 9], emoji: "🌙" },
+  // Центральные локации
+  { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2, x: 35, y: 40, connectedTo: [1, 4, 5], emoji: "🌳" },
+  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 25, y: 65, connectedTo: [3, 7], emoji: "🌻" },
+  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3, x: 55, y: 25, connectedTo: [3, 6, 8], emoji: "🌲" },
+  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3, x: 75, y: 45, connectedTo: [2, 5, 9], emoji: "🕳️" },
+  { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4, x: 15, y: 80, connectedTo: [4, 10], emoji: "🛤️" },
+  { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 65, y: 10, connectedTo: [5, 9, 11], emoji: "⚔️" },
+  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4, x: 85, y: 20, connectedTo: [6, 8, 10, 12], emoji: "⛰️" },
+  { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1, x: 45, y: 80, connectedTo: [7, 9], emoji: "🌙" },
+  
+  // Расширенная область карты (правая часть для прокрутки)
+  { id: 11, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 6, x: 110, y: 5, connectedTo: [8, 12], emoji: "🌿" },
+  { id: 12, name: "Горный Пик", type: "combat", clan: null, dangerLevel: 7, x: 125, y: 30, connectedTo: [9, 11, 13], emoji: "🏔️" },
+  { id: 13, name: "Заброшенная Пещера", type: "neutral", clan: null, dangerLevel: 5, x: 140, y: 50, connectedTo: [12, 14], emoji: "🕳️" },
+  { id: 14, name: "Древний Храм", type: "sacred", clan: null, dangerLevel: 3, x: 155, y: 70, connectedTo: [13, 15], emoji: "🏛️" },
+  { id: 15, name: "Мистический Водопад", type: "special", clan: null, dangerLevel: 4, x: 170, y: 90, connectedTo: [14], emoji: "💧" },
+  
+  // Нижняя область карты для вертикальной прокрутки
+  { id: 16, name: "Болотистая Низина", type: "hunting", clan: null, dangerLevel: 4, x: 20, y: 120, connectedTo: [7, 17], emoji: "🌾" },
+  { id: 17, name: "Туманные Холмы", type: "neutral", clan: null, dangerLevel: 5, x: 50, y: 140, connectedTo: [10, 16, 18], emoji: "🌫️" },
+  { id: 18, name: "Край Света", type: "special", clan: null, dangerLevel: 8, x: 80, y: 160, connectedTo: [17], emoji: "🌌" },
 ] as const;
 
 export const NPCS_DATA = [
@@ -282,9 +294,16 @@ export const NPCS_DATA = [
   
   // Сильные враги и боссы
   { id: 7, name: "Взрослый Барсук", type: "enemy", level: 5, maxHp: 120, strength: 20, agility: 10, intelligence: 8, endurance: 20, description: "Огромный барсук-охранник территории", emoji: "🦡", experienceReward: 120, spawnsInLocation: [8, 9], respawnTime: 450 },
-  { id: 8, name: "Горный Орел", type: "boss", level: 6, maxHp: 150, strength: 18, agility: 22, intelligence: 15, endurance: 12, description: "Властелин небес с острыми когтями", emoji: "🦅", experienceReward: 200, spawnsInLocation: [9], respawnTime: 600 },
-  { id: 9, name: "Лесной Волк", type: "boss", level: 7, maxHp: 180, strength: 25, agility: 16, intelligence: 12, endurance: 18, description: "Одинокий волк, защищающий свою территорию", emoji: "🐺", experienceReward: 250, spawnsInLocation: [8, 9], respawnTime: 900 },
+  { id: 8, name: "Горный Орел", type: "boss", level: 6, maxHp: 150, strength: 18, agility: 22, intelligence: 15, endurance: 12, description: "Властелин небес с острыми когтями", emoji: "🦅", experienceReward: 200, spawnsInLocation: [9, 12], respawnTime: 600 },
+  { id: 9, name: "Лесной Волк", type: "boss", level: 7, maxHp: 180, strength: 25, agility: 16, intelligence: 12, endurance: 18, description: "Одинокий волк, защищающий свою территорию", emoji: "🐺", experienceReward: 250, spawnsInLocation: [8, 9, 11], respawnTime: 900 },
+  
+  // Расширенная область - новые враги
+  { id: 11, name: "Теневой Рысь", type: "boss", level: 8, maxHp: 220, strength: 22, agility: 25, intelligence: 18, endurance: 15, description: "Загадочная рысь из дальнего леса", emoji: "🐈‍⬛", experienceReward: 300, spawnsInLocation: [11, 13], respawnTime: 720 },
+  { id: 12, name: "Древний Дракон", type: "boss", level: 10, maxHp: 350, strength: 35, agility: 15, intelligence: 20, endurance: 25, description: "Легендарный дракон горного пика", emoji: "🐉", experienceReward: 500, spawnsInLocation: [12], respawnTime: 1800 },
+  { id: 13, name: "Болотный Тролль", type: "enemy", level: 6, maxHp: 160, strength: 28, agility: 8, intelligence: 6, endurance: 22, description: "Медлительный но очень сильный тролль", emoji: "👹", experienceReward: 180, spawnsInLocation: [16, 17], respawnTime: 540 },
+  { id: 14, name: "Призрачный Кот", type: "enemy", level: 9, maxHp: 200, strength: 20, agility: 30, intelligence: 25, endurance: 12, description: "Мистическое существо из другого мира", emoji: "👻", experienceReward: 400, spawnsInLocation: [18], respawnTime: 1200 },
   
   // Нейтральные и квестовые NPC
   { id: 10, name: "Старый Мудрец", type: "neutral", level: 10, maxHp: 200, strength: 15, agility: 10, intelligence: 25, endurance: 20, description: "Древний кот-отшельник, хранитель знаний", emoji: "🧙", experienceReward: 0, spawnsInLocation: [10], respawnTime: 0 },
+  { id: 15, name: "Храмовый Страж", type: "neutral", level: 12, maxHp: 300, strength: 20, agility: 15, intelligence: 30, endurance: 25, description: "Защитник древнего храма", emoji: "🛡️", experienceReward: 0, spawnsInLocation: [14], respawnTime: 0 },
 ] as const;
