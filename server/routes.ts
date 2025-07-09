@@ -299,6 +299,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
       const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
       const currentCombat = await storage.getCharacterActiveCombat(character.id);
+      
+      // Get groups information
+      const currentGroup = await storage.getCharacterGroup(character.id);
+      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
+      
+      // Get last completed combat for results
+      const lastCompletedCombat = await storage.getCharacterLastCompletedCombat(character.id);
 
       const gameState = {
         character,
@@ -307,7 +314,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         npcsInLocation,
         activeCombats,
         isInCombat: !!currentCombat,
-        currentCombat
+        currentCombat,
+        currentGroup,
+        groupsInLocation,
+        lastCompletedCombat
       };
 
       res.json(gameState);
@@ -332,6 +342,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeCombats = await storage.getActiveCombatsInLocation(character.currentLocationId);
       const currentCombat = await storage.getCharacterActiveCombat(characterId);
 
+      // Get groups information
+      const currentGroup = await storage.getCharacterGroup(characterId);
+      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
+      
+      // Get last completed combat for results
+      const lastCompletedCombat = await storage.getCharacterLastCompletedCombat(characterId);
+
       const gameState = {
         character,
         location,
@@ -339,7 +356,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         npcsInLocation,
         activeCombats,
         isInCombat: !!currentCombat,
-        currentCombat
+        currentCombat,
+        currentGroup,
+        groupsInLocation,
+        lastCompletedCombat
       };
 
       res.json(gameState);
