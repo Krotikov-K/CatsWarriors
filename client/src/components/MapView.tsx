@@ -168,8 +168,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius in viewport units
-    const circleRadius = 3;
+    // Calculate circle radius for mobile fixed view
+    const circleRadius = 2;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -204,9 +204,9 @@ export default function MapView({
           x2={`${endX}%`}
           y2={`${endY}%`}
           stroke="#9CA3AF"
-          strokeWidth="2"
+          strokeWidth="3"
           strokeDasharray="8,4"
-          opacity="0.6"
+          opacity="0.7"
         />
       </svg>
     );
@@ -252,11 +252,11 @@ export default function MapView({
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[45vh] mb-3 overflow-hidden">
             {/* Fixed Map Area - Centered on current location */}
             <div 
-              className="relative transition-transform duration-700 ease-in-out"
+              className="relative w-full h-full transition-transform duration-700 ease-in-out"
               style={{
-                transform: `translate(calc(50vw - ${character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50}%), calc(50vh - ${character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50}%))`,
-                width: '150vw',
-                height: '140vh'
+                transform: `translate(${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.x || 50 : 50)}%, ${50 - (character.currentLocationId ? LOCATIONS_DATA.find(l => l.id === character.currentLocationId)?.y || 50 : 50)}%)`,
+                width: '250%',
+                height: '250%'
               }}
             >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
