@@ -960,6 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const locationId = parseInt(req.params.id);
       const updates = req.body;
+      console.log(`Admin updating location ${locationId} with:`, updates);
       
       const updatedLocation = await storage.updateLocation(locationId, updates);
       if (!updatedLocation) {

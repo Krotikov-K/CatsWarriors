@@ -988,12 +988,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined> {
-    const [updatedLocation] = await db
-      .update(locations)
-      .set(updates)
-      .where(eq(locations.id, id))
-      .returning();
-    return updatedLocation || undefined;
+    // In DatabaseStorage, locations are still stored in memory, not in database
+    // Find the location in static data first
+    const staticLocation = LOCATIONS_DATA.find(loc => loc.id === id);
+    if (!staticLocation) {
+      console.log(`Location ${id} not found in static data`);
+      return undefined;
+    }
+    
+    // Update the static location data
+    const locationIndex = LOCATIONS_DATA.findIndex(loc => loc.id === id);
+    if (locationIndex !== -1) {
+      LOCATIONS_DATA[locationIndex] = { ...staticLocation, ...updates };
+      console.log(`Updated location ${id} in static data:`, LOCATIONS_DATA[locationIndex]);
+      return LOCATIONS_DATA[locationIndex];
+    }
+    
+    return undefined;
   }
 
   // Group methods - store in database
