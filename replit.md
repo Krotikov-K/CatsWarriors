@@ -183,6 +183,14 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Removed async/await issue in modal onClose handler
   * Modal now properly closes and clears server-side combat results
   * Combat system fully functional with proper UI feedback
+- July 09, 2025. Expanded map system with scrollable interface:
+  * Extended coordinate plane to support 2-3x larger playable area
+  * Added smooth scrolling functionality with custom scrollbar styling
+  * Created 8 new locations spanning extended coordinates (up to 170% range)
+  * Added new high-level NPCs and bosses for distant areas
+  * Map now spans multiple screen sizes and supports touch scrolling
+  * Character authentication works correctly with unique Telegram user IDs
+  * All existing characters preserved and functional in expanded map system
 
 ## User Preferences
 
