@@ -890,14 +890,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get("/api/admin/characters", async (req, res) => {
     try {
-      // Get all characters from all users
-      const users = await storage.getAllUsers();
-      const allCharacters = [];
+      // Direct database query for all characters
+      const { db } = await import("./db");
+      const { characters } = await import("@shared/schema");
       
-      for (const user of users) {
-        const userCharacters = await storage.getCharactersByUserId(user.id);
-        allCharacters.push(...userCharacters);
-      }
+      const allCharacters = await db.select().from(characters);
+      console.log(`Admin panel: Found ${allCharacters.length} characters in database`);
       
       res.json(allCharacters);
     } catch (error) {
