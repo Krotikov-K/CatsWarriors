@@ -71,28 +71,28 @@ function MapLocation({
       {/* Location Circle - Mobile Optimized */}
       <div 
         className={`
-          w-14 h-14 rounded-full border-3 ${getBorderColor()} ${getLocationColor()}
-          flex items-center justify-center text-xl
+          w-16 h-16 rounded-full border-4 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-2xl
           ${canMoveTo ? 'active:scale-95 touch-manipulation' : ''}
-          ${isCurrentLocation ? 'scale-125 animate-pulse shadow-lg ring-2 ring-white ring-opacity-50' : ''}
+          ${isCurrentLocation ? 'scale-110 animate-pulse shadow-lg ring-4 ring-white ring-opacity-70' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
           transition-all duration-300 relative z-10
         `}
         style={{
-          minWidth: '3.5rem',
-          minHeight: '3.5rem'
+          minWidth: '4rem',
+          minHeight: '4rem'
         }}
       >
         {emoji}
       </div>
       
       {/* Location Name - Mobile Optimized */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-center z-10">
-        <div className={`bg-black bg-opacity-90 text-white text-sm px-2 py-1 rounded whitespace-nowrap shadow-lg ${isCurrentLocation ? 'bg-blue-600 bg-opacity-90' : ''}`}>
-          <span className="font-medium">{name}</span>
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 text-center z-10">
+        <div className={`bg-black bg-opacity-90 text-white text-base px-3 py-1 rounded whitespace-nowrap shadow-lg ${isCurrentLocation ? 'bg-blue-600 bg-opacity-90 font-bold' : 'font-medium'}`}>
+          <span>{name}</span>
         </div>
         {playerCount > 0 && (
-          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded mt-1 shadow-md">
+          <div className="bg-blue-500 text-white text-sm px-2 py-1 rounded mt-1 shadow-md">
             {playerCount} 🐱
           </div>
         )}
@@ -168,8 +168,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius for scaled view
-    const circleRadius = 2.5;
+    // Calculate circle radius for normal view
+    const circleRadius = 4;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -204,9 +204,9 @@ export default function MapView({
           x2={`${endX}%`}
           y2={`${endY}%`}
           stroke="#9CA3AF"
-          strokeWidth="2"
-          strokeDasharray="6,3"
-          opacity="0.6"
+          strokeWidth="3"
+          strokeDasharray="8,4"
+          opacity="0.8"
         />
       </svg>
     );
@@ -252,16 +252,18 @@ export default function MapView({
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[45vh] mb-3 overflow-hidden">
             {/* Fixed Map Area - Centered on current location */}
             <div 
-              className="relative w-full h-full transition-transform duration-700 ease-in-out"
+              className="relative transition-transform duration-700 ease-in-out"
               style={{
+                width: '200%',
+                height: '200%',
                 transform: character.currentLocationId 
                   ? (() => {
                       const currentLoc = LOCATIONS_DATA.find(l => l.id === character.currentLocationId);
                       const x = currentLoc?.x || 50;
                       const y = currentLoc?.y || 50;
-                      return `translate(${50 - x}%, ${50 - y}%) scale(2.5)`;
+                      return `translate(${50 - x}%, ${50 - y}%)`;
                     })()
-                  : 'translate(0%, 0%) scale(2.5)',
+                  : 'translate(0%, 0%)',
                 transformOrigin: 'center center'
               }}
             >
