@@ -19,6 +19,7 @@ import { useUser } from "@/hooks/useUser";
 const characterSchema = z.object({
   name: z.string().min(2, "Имя должно содержать минимум 2 символа").max(20, "Имя не должно превышать 20 символов"),
   clan: z.enum(["thunder", "shadow", "wind", "river"]),
+  gender: z.enum(["male", "female"]),
   strength: z.number().min(10).max(20),
   agility: z.number().min(10).max(20),
   intelligence: z.number().min(10).max(20),
@@ -39,6 +40,7 @@ export default function CharacterCreation() {
     defaultValues: {
       name: "",
       clan: "thunder",
+      gender: "male",
       strength: 10,
       agility: 10,
       intelligence: 10,
@@ -178,6 +180,36 @@ export default function CharacterCreation() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {getClanDescription(field.value)}
                     </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Gender Selection */}
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">Пол</FormLabel>
+                    <Select value={field.value} onValueChange={(value) => {
+                      hapticFeedback('light');
+                      field.onChange(value);
+                    }}>
+                      <FormControl>
+                        <SelectTrigger className="bg-input border-border text-foreground">
+                          <SelectValue placeholder="Выберите пол" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="male" className="text-popover-foreground">
+                          🐱 Кот
+                        </SelectItem>
+                        <SelectItem value="female" className="text-popover-foreground">
+                          🐈 Кошка
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

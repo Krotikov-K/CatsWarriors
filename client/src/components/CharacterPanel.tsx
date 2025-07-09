@@ -33,6 +33,8 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
             {character.name}
           </h3>
           <div className="flex items-center text-sm text-muted-foreground">
+            <span>{character.gender === 'male' ? '🐱' : '🐈'} {character.gender === 'male' ? 'Кот' : 'Кошка'}</span>
+            <span className="mx-2">•</span>
             <span>{clan?.name || character.clan}</span>
             <span className="mx-2">•</span>
             <span>Уровень {character.level}</span>

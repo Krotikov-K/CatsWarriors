@@ -16,6 +16,7 @@ export const characters = pgTable("characters", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   clan: text("clan").notNull(),
+  gender: text("gender").notNull().default("male"), // "male", "female"
   level: integer("level").notNull().default(1),
   experience: integer("experience").notNull().default(0),
   currentHp: integer("current_hp").notNull(),
@@ -114,6 +115,7 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
   userId: true,
   name: true,
   clan: true,
+  gender: true,
   strength: true,
   agility: true,
   intelligence: true,
@@ -121,6 +123,7 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
 }).extend({
   name: z.string().min(2).max(20),
   clan: z.enum(["thunder", "shadow", "wind", "river"]),
+  gender: z.enum(["male", "female"]),
   strength: z.number().min(10).max(25),
   agility: z.number().min(10).max(25),
   intelligence: z.number().min(10).max(25),
