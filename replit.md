@@ -213,6 +213,11 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Returned location icon sizes to original responsive dimensions
   * Maintained scrollable interface with proper touch interaction
   * Map interface optimized for mobile devices with standard sizing
+- July 10, 2025. NPC content update per user request:
+  * Replaced all trolls with foxes in game data
+  * "Болотный Тролль" (👹) became "Хитрая Лисица" (🦊)
+  * Adjusted stats: reduced HP and strength, increased agility and intelligence
+  * Maintains same level 6 difficulty and spawning locations (Болотистая Низина, Туманные Холмы)
 
 ## User Preferences
 
