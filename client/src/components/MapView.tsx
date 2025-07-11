@@ -84,8 +84,8 @@ function MapLocation({
       
       {/* Location Name */}
       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
-        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-32 md:max-w-none">
-          <span className="text-xs">{name}</span>
+        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-28 md:max-w-36 overflow-hidden">
+          <span className="text-xs block truncate">{name}</span>
         </div>
         {playerCount > 0 && (
           <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
@@ -247,7 +247,7 @@ export default function MapView({
           {/* Map Container - Scrollable */}
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border min-h-[400px] mb-4 overflow-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Scrollable Map Area */}
-            <div className="relative min-w-[150vw] min-h-[140vh]">
+            <div className="relative min-w-[120vw] min-h-[110vh]">
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
