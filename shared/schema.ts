@@ -262,10 +262,10 @@ export const LOCATIONS_DATA = [
   { id: 3, name: "Четыре Дерева", type: "neutral", clan: null, dangerLevel: 2, x: 45, y: 40, connectedTo: [1, 4, 5], emoji: "🌳" },
   { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 35, y: 55, connectedTo: [3, 7], emoji: "🌻" },
   { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 3, x: 60, y: 35, connectedTo: [3, 6, 8], emoji: "🌲" },
-  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3, x: 70, y: 50, connectedTo: [2, 5, 9], emoji: "🕳️" },
+  { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 3, x: 80, y: 50, connectedTo: [2, 5, 9], emoji: "🕳️" },
   { id: 7, name: "Старая Дорога", type: "neutral", clan: null, dangerLevel: 4, x: 30, y: 70, connectedTo: [4, 10, 16], emoji: "🛤️" },
   { id: 8, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 70, y: 25, connectedTo: [5, 9, 11], emoji: "⚔️" },
-  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4, x: 80, y: 35, connectedTo: [6, 8, 10, 12], emoji: "⛰️" },
+  { id: 9, name: "Каменистая Гора", type: "combat", clan: null, dangerLevel: 4, x: 85, y: 35, connectedTo: [6, 8, 10, 12], emoji: "⛰️" },
   { id: 10, name: "Лунный Камень", type: "sacred", clan: null, dangerLevel: 1, x: 55, y: 65, connectedTo: [7, 9], emoji: "🌙" },
   
   // Расширенная область карты (дальние локации)
