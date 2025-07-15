@@ -48,7 +48,7 @@ function MapLocation({
     }
     
     switch (type) {
-      case "hunting": return "bg-gradient-to-br from-emerald-400 to-emerald-600";
+      case "hunting": return "bg-gradient-to-br from-green-400 to-green-600";
       case "combat": return "bg-gradient-to-br from-red-400 to-red-600";
       case "sacred": return "bg-gradient-to-br from-indigo-400 to-indigo-600";
       case "neutral": return "bg-gradient-to-br from-yellow-400 to-yellow-600";
@@ -82,17 +82,20 @@ function MapLocation({
         {emoji}
       </div>
       
-      {/* Location Name */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
-        <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-28 md:max-w-36 overflow-hidden">
-          <span className="text-xs block truncate">{name}</span>
-        </div>
-        {playerCount > 0 && (
-          <div className="bg-blue-500 text-white text-xs px-1 py-0.5 rounded mt-1">
-            {playerCount} 🐱
+      {/* Location Name - Only for camps */}
+      {(type === "camp") && (
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
+          <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-28 md:max-w-36 overflow-hidden">
+            <span className="text-xs block truncate">{name}</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+      {/* Player count for all locations */}
+      {playerCount > 0 && (
+        <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-full z-10">
+          {playerCount}
+        </div>
+      )}
     </div>
   );
 }
