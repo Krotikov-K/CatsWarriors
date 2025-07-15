@@ -1229,6 +1229,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/tribe-members/:clan", async (req: Request, res: Response) => {
+    try {
+      const { clan } = req.params;
+      
+      if (!["thunder", "river"].includes(clan)) {
+        return res.status(400).json({ error: "Недопустимое племя" });
+      }
+
+      // Get all characters from the specified clan
+      const allCharacters = await storage.getOnlineCharacters();
+      const tribeMembers = allCharacters.filter(char => char.clan === clan);
+
+      // Sort by rank hierarchy (leaders first, then deputies, etc.)
+      const rankOrder = ["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"];
+      
+      tribeMembers.sort((a, b) => {
+        const aRankIndex = rankOrder.indexOf(a.rank);
+        const bRankIndex = rankOrder.indexOf(b.rank);
+        
+        if (aRankIndex !== bRankIndex) {
+          return aRankIndex - bRankIndex;
+        }
+        
+        // If same rank, sort by level (higher first)
+        return b.level - a.level;
+      });
+
+      res.json({ tribeMembers });
+    } catch (error) {
+      console.error("Error getting tribe members:", error);
+      res.status(500).json({ error: "Внутренняя ошибка сервера" });
+    }
+  });
+
   return httpServer;
 }
 

@@ -20,6 +20,7 @@ import TopBar from "@/components/TopBar";
 import CombatModal from "@/components/CombatModal";
 import CombatResultModal from "@/components/CombatResultModal";
 import RankManagement from "@/components/RankManagement";
+import TribeMembers from "@/components/TribeMembers";
 
 import type { Combat } from "@shared/schema";
 import { RANKS } from "@shared/schema";
@@ -567,6 +568,9 @@ export default function GameDashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Tribe Members List */}
+            <TribeMembers clan={character.clan} currentCharacter={character} />
           </div>
         );
 
