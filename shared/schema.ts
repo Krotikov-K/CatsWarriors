@@ -254,9 +254,9 @@ export const CLANS = {
 } as const;
 
 export const LOCATIONS_DATA = [
-  // Племенные лагеря (слева и справа)
-  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 10, y: 50, connectedTo: [3], emoji: "🏠" },
-  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 90, y: 50, connectedTo: [7], emoji: "🏕️" },
+  // Племенные лагеря (далеко слева и справа)
+  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 5, y: 50, connectedTo: [3], emoji: "🏠" },
+  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 95, y: 50, connectedTo: [7], emoji: "🏕️" },
   
   // Зелёные локации (внешний круг)
   { id: 3, name: "Четыре Дерева", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 15, connectedTo: [1, 4, 10], emoji: "🌳" },
