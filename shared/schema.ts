@@ -260,19 +260,19 @@ export const LOCATIONS_DATA = [
   
   // Зелёные локации (замкнутый внешний круг)
   { id: 3, name: "Четыре Дерева", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 10, connectedTo: [4, 10], emoji: "🌳" },
-  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 25, connectedTo: [3, 5], emoji: "🌻" },
-  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 90, y: 50, connectedTo: [2, 6], emoji: "🌲" },
+  { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 25, connectedTo: [3, 5, 11], emoji: "🌻" },
+  { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 90, y: 50, connectedTo: [2, 4, 6], emoji: "🌲" },
   { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 75, connectedTo: [5, 7], emoji: "🕳️" },
-  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8], emoji: "🛤️" },
+  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8, 13], emoji: "🛤️" },
   { id: 8, name: "Болотистая Низина", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 75, connectedTo: [7, 9], emoji: "🌾" },
   { id: 9, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 2, x: 10, y: 50, connectedTo: [1, 8, 10], emoji: "🌿" },
   { id: 10, name: "Горная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 25, connectedTo: [9, 3], emoji: "🗻" },
   
   // Жёлтые локации (средний круг с связями к зелёному)
   { id: 11, name: "Поляна Встреч", type: "neutral", clan: null, dangerLevel: 3, x: 65, y: 30, connectedTo: [4, 12, 16], emoji: "🌼" },
-  { id: 12, name: "Лунная Поляна", type: "neutral", clan: null, dangerLevel: 3, x: 70, y: 60, connectedTo: [11, 13], emoji: "🌙" },
+  { id: 12, name: "Лунная Поляна", type: "neutral", clan: null, dangerLevel: 3, x: 70, y: 60, connectedTo: [11, 13, 18], emoji: "🌙" },
   { id: 13, name: "Древний Пень", type: "neutral", clan: null, dangerLevel: 3, x: 50, y: 70, connectedTo: [7, 12, 14], emoji: "🪵" },
-  { id: 14, name: "Каменный Круг", type: "neutral", clan: null, dangerLevel: 3, x: 30, y: 60, connectedTo: [13, 15], emoji: "⭕" },
+  { id: 14, name: "Каменный Круг", type: "neutral", clan: null, dangerLevel: 3, x: 30, y: 60, connectedTo: [13, 15, 17], emoji: "⭕" },
   { id: 15, name: "Священная Роща", type: "neutral", clan: null, dangerLevel: 3, x: 30, y: 40, connectedTo: [14, 16], emoji: "🌳" },
   { id: 16, name: "Источник", type: "neutral", clan: null, dangerLevel: 3, x: 50, y: 30, connectedTo: [15, 11], emoji: "💧" },
   
