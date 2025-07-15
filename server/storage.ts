@@ -700,7 +700,7 @@ export class MemStorage implements IStorage {
   }
 
   private calculateMaxHp(endurance: number): number {
-    return 80 + (endurance * 2);
+    return 80 + (endurance * 5);
   }
 }
 
@@ -1242,7 +1242,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   private calculateMaxHp(endurance: number): number {
-    return 80 + (endurance * 2);
+    return 80 + (endurance * 5);
   }
   
   async processHealthRegeneration(characterId: number): Promise<Character | undefined> {
