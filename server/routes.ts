@@ -1234,6 +1234,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to force delete a group
+  app.delete("/api/admin/groups/:id", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      await storage.disbandGroup(groupId);
+      res.json({ message: "Group deleted successfully" });
+    } catch (error) {
+      console.error("Delete group error:", error);
+      res.status(500).json({ message: "Failed to delete group" });
+    }
+  });
+
   app.get("/api/tribe-members/:clan", async (req: Request, res: Response) => {
     try {
       const { clan } = req.params;

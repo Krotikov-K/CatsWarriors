@@ -587,9 +587,27 @@ export class MemStorage implements IStorage {
   }
 
   async getGroupsInLocation(locationId: number): Promise<Group[]> {
+    // Clean up empty groups first
+    await this.cleanupEmptyGroups();
+    
     return Array.from(this.groups.values()).filter(
       group => group.locationId === locationId && group.isActive
     );
+  }
+
+  private async cleanupEmptyGroups(): Promise<void> {
+    for (const group of this.groups.values()) {
+      if (group.isActive) {
+        const members = Array.from(this.groupMembers.values()).filter(
+          member => member.groupId === group.id
+        );
+        
+        // If group has no members, disband it
+        if (members.length === 0) {
+          await this.disbandGroup(group.id);
+        }
+      }
+    }
   }
 
   async getCharacterGroup(characterId: number): Promise<Group | undefined> {
@@ -635,10 +653,17 @@ export class MemStorage implements IStorage {
 
     this.groupMembers.delete(membership.id);
 
-    // If leader leaves, disband group
+    // Check if group is now empty or if leader left
     const group = this.groups.get(membership.groupId);
-    if (group && group.leaderId === characterId) {
-      await this.disbandGroup(membership.groupId);
+    if (group) {
+      const remainingMembers = Array.from(this.groupMembers.values()).filter(
+        member => member.groupId === membership.groupId
+      );
+      
+      // If no members left or leader left, disband group
+      if (remainingMembers.length === 0 || group.leaderId === characterId) {
+        await this.disbandGroup(membership.groupId);
+      }
     }
   }
 
@@ -1084,6 +1109,9 @@ export class DatabaseStorage implements IStorage {
   async getGroupsInLocation(locationId: number): Promise<Group[]> {
     console.log(`Getting groups for location ${locationId}`);
     try {
+      // Clean up empty groups first
+      await this.cleanupEmptyGroups();
+      
       const result = await db
         .select()
         .from(groups)
@@ -1094,6 +1122,32 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Error getting groups for location ${locationId}:`, error);
       return [];
+    }
+  }
+
+  private async cleanupEmptyGroups(): Promise<void> {
+    try {
+      // Get all active groups
+      const activeGroups = await db
+        .select()
+        .from(groups)
+        .where(eq(groups.isActive, true));
+
+      for (const group of activeGroups) {
+        // Check if group has any members
+        const members = await db
+          .select()
+          .from(groupMembers)
+          .where(eq(groupMembers.groupId, group.id));
+
+        // If no members, disband the group
+        if (members.length === 0) {
+          console.log(`Disbanding empty group: ${group.name} (ID: ${group.id})`);
+          await this.disbandGroup(group.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up empty groups:', error);
     }
   }
 
@@ -1147,8 +1201,14 @@ export class DatabaseStorage implements IStorage {
       .delete(groupMembers)
       .where(eq(groupMembers.characterId, characterId));
 
-    // If leader leaves, disband group
-    if (currentGroup.leaderId === characterId) {
+    // Check remaining members
+    const remainingMembers = await db
+      .select()
+      .from(groupMembers)
+      .where(eq(groupMembers.groupId, currentGroup.id));
+
+    // If no members left or leader left, disband group
+    if (remainingMembers.length === 0 || currentGroup.leaderId === characterId) {
       await this.disbandGroup(currentGroup.id);
     }
   }
