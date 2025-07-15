@@ -1,4 +1,4 @@
-import { type Character, CLANS } from "@shared/schema";
+import { type Character, CLANS, RANKS } from "@shared/schema";
 
 interface CharacterPanelProps {
   character: Character;
@@ -6,6 +6,7 @@ interface CharacterPanelProps {
 
 export default function CharacterPanel({ character }: CharacterPanelProps) {
   const clan = CLANS[character.clan as keyof typeof CLANS];
+  const rank = RANKS[character.rank as keyof typeof RANKS];
   const hpPercentage = (character.currentHp / character.maxHp) * 100;
   const expPercentage = (character.experience / (character.level * 1000)) * 100;
 
@@ -29,12 +30,15 @@ export default function CharacterPanel({ character }: CharacterPanelProps) {
         
         {/* Character Info */}
         <div>
-          <h3 className="font-semibold text-lg text-foreground">
-            {character.name}
+          <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
+            {rank?.emoji} {character.name}
           </h3>
           <div className="flex items-center text-sm text-muted-foreground">
             <span>{character.gender === 'male' ? '🐱' : '🐈'} {character.gender === 'male' ? 'Кот' : 'Кошка'}</span>
             <span className="mx-2">•</span>
+            <span>{rank?.name || character.rank}</span>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground">
             <span>{clan?.name || character.clan}</span>
             <span className="mx-2">•</span>
             <span>Уровень {character.level}</span>

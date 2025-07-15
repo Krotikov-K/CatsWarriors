@@ -16,7 +16,7 @@ export const characters = pgTable("characters", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   clan: text("clan").notNull(),
-  characterClass: text("character_class").notNull(), // "warrior", "hunter", "healer", "scout"
+  rank: text("rank").notNull().default("warrior"), // "leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"
   gender: text("gender").notNull().default("male"), // "male", "female"
   level: integer("level").notNull().default(1),
   experience: integer("experience").notNull().default(0),
@@ -116,6 +116,7 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
   userId: true,
   name: true,
   clan: true,
+  rank: true,
   gender: true,
   strength: true,
   agility: true,
@@ -123,12 +124,18 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
   endurance: true,
 }).extend({
   name: z.string().min(2).max(20),
-  clan: z.enum(["thunder", "shadow", "wind", "river"]),
+  clan: z.enum(["thunder", "river"]),
+  rank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"]).default("warrior"),
   gender: z.enum(["male", "female"]),
   strength: z.number().min(10).max(25),
   agility: z.number().min(10).max(25),
   intelligence: z.number().min(10).max(25),
   endurance: z.number().min(10).max(25),
+});
+
+export const changeRankSchema = z.object({
+  characterId: z.number(),
+  newRank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"]),
 });
 
 export const insertLocationSchema = createInsertSchema(locations).pick({
@@ -252,6 +259,57 @@ export interface WebSocketMessage {
 export const CLANS = {
   thunder: { name: "Грозовое Племя", color: "green" },
   river: { name: "Речное Племя", color: "cyan" },
+} as const;
+
+export const RANKS = {
+  leader: { 
+    name: "Предводитель", 
+    emoji: "👑", 
+    canPromote: ["deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"],
+    adminOnly: true 
+  },
+  deputy: { 
+    name: "Глашатай", 
+    emoji: "⚔️", 
+    canPromote: ["senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"],
+    canBePromotedBy: ["admin", "leader"]
+  },
+  senior_healer: { 
+    name: "Старший целитель", 
+    emoji: "🌿", 
+    canPromote: ["healer", "healer_apprentice"],
+    canBePromotedBy: ["admin", "leader", "deputy"]
+  },
+  healer: { 
+    name: "Целитель", 
+    emoji: "🍃", 
+    canPromote: ["healer_apprentice"],
+    canBePromotedBy: ["admin", "leader", "deputy", "senior_healer"]
+  },
+  healer_apprentice: { 
+    name: "Ученик целителя", 
+    emoji: "🌱", 
+    canPromote: [],
+    canBePromotedBy: ["admin", "leader", "deputy", "senior_healer"]
+  },
+  senior_warrior: { 
+    name: "Старший воитель", 
+    emoji: "🗡️", 
+    canPromote: ["warrior", "apprentice"],
+    canBePromotedBy: ["admin", "leader", "deputy"]
+  },
+  warrior: { 
+    name: "Воитель", 
+    emoji: "⚡", 
+    canPromote: [],
+    canBePromotedBy: ["admin", "leader", "deputy", "senior_warrior"]
+  },
+  apprentice: { 
+    name: "Оруженосец", 
+    emoji: "🔰", 
+    canPromote: [],
+    canBePromotedBy: ["admin", "leader", "deputy", "senior_warrior"]
+  },
 } as const;
 
 export const LOCATIONS_DATA = [

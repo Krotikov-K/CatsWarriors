@@ -690,6 +690,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Level up endpoints
+  app.post("/api/character/change-rank", async (req: Request, res: Response) => {
+    try {
+      const { characterId, newRank } = req.body;
+      const requesterId = (req as AuthenticatedRequest).userId;
+
+      if (!requesterId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Get requester character to check permissions
+      const requesterCharacter = await storage.getCharactersByUserId(requesterId);
+      if (!requesterCharacter.length) {
+        return res.status(404).json({ error: "Requester character not found" });
+      }
+
+      const requester = requesterCharacter[0];
+      const targetCharacter = await storage.getCharacter(characterId);
+
+      if (!targetCharacter) {
+        return res.status(404).json({ error: "Target character not found" });
+      }
+
+      // Check if same clan
+      if (requester.clan !== targetCharacter.clan) {
+        return res.status(403).json({ error: "Can only promote characters from your own clan" });
+      }
+
+      // Import RANKS from schema
+      const { RANKS } = await import("@shared/schema");
+      
+      // Check permissions
+      const requesterRank = RANKS[requester.rank as keyof typeof RANKS];
+      const canPromote = requesterRank?.canPromote.includes(newRank) || false;
+      
+      if (!canPromote) {
+        return res.status(403).json({ error: "You don't have permission to assign this rank" });
+      }
+
+      // Update character rank
+      const updatedCharacter = await storage.updateCharacter(characterId, { rank: newRank });
+      
+      if (!updatedCharacter) {
+        return res.status(500).json({ error: "Failed to update character rank" });
+      }
+
+      // Create game event
+      await storage.createGameEvent({
+        type: "rank_change",
+        message: `${requester.name} назначил ${targetCharacter.name} на должность ${RANKS[newRank as keyof typeof RANKS].name}`,
+        locationId: requester.currentLocationId,
+        characterId: targetCharacter.id,
+      });
+
+      res.json({ character: updatedCharacter });
+    } catch (error) {
+      console.error("Error changing character rank:", error);
+      res.status(500).json({ error: "Failed to change character rank" });
+    }
+  });
+
   app.post("/api/character/apply-level-up", async (req: Request, res: Response) => {
     try {
       const { statBoosts, userId } = req.body;

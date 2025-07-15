@@ -230,6 +230,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Fixed all bidirectional connections throughout the map system
   * Renamed "Арена" to "Логово Волка" and made it exclusive boss location for Лесной Волк
   * Removed Древний Дракон from game as it doesn't fit the Warriors Cats setting
+- July 15, 2025. Tribal hierarchy system implementation:
+  * Added comprehensive rank system with 8 tribal positions: Предводитель, Глашатай, Старший целитель, Целитель, Ученик целителя, Старший воитель, Воитель, Оруженосец
+  * Implemented promotion permissions: admins can assign any rank, leaders can promote to all lower ranks, deputies can promote healers and warriors
+  * Added rank display with emojis in character panel (👑 Предводитель, ⚔️ Глашатай, 🌿 Старший целитель, etc.)
+  * Created API endpoint `/api/character/change-rank` for rank management with permission validation
+  * Added rank field to character schema and updated character creation flow
+  * Ranks are clan-specific - can only promote characters from same clan
 
 ## User Preferences
 
