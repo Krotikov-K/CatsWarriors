@@ -16,7 +16,7 @@ export const characters = pgTable("characters", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   clan: text("clan").notNull(),
-  rank: text("rank").notNull().default("warrior"), // "leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"
+  rank: text("rank").notNull().default("kitten"), // "leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"
   gender: text("gender").notNull().default("male"), // "male", "female"
   level: integer("level").notNull().default(1),
   experience: integer("experience").notNull().default(0),
@@ -125,7 +125,7 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
 }).extend({
   name: z.string().min(2).max(20),
   clan: z.enum(["thunder", "river"]),
-  rank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"]).default("warrior"),
+  rank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"]).default("kitten"),
   gender: z.enum(["male", "female"]),
   strength: z.number().min(10).max(25),
   agility: z.number().min(10).max(25),
@@ -135,7 +135,7 @@ export const insertCharacterSchema = createInsertSchema(characters).pick({
 
 export const changeRankSchema = z.object({
   characterId: z.number(),
-  newRank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"]),
+  newRank: z.enum(["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"]),
 });
 
 export const insertLocationSchema = createInsertSchema(locations).pick({
@@ -265,13 +265,13 @@ export const RANKS = {
   leader: { 
     name: "Предводитель", 
     emoji: "👑", 
-    canPromote: ["deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"],
+    canPromote: ["deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"],
     adminOnly: true 
   },
   deputy: { 
     name: "Глашатай", 
     emoji: "⚔️", 
-    canPromote: ["senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice"],
+    canPromote: ["senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"],
     canBePromotedBy: ["admin", "leader"]
   },
   senior_healer: { 
@@ -309,6 +309,12 @@ export const RANKS = {
     emoji: "🔰", 
     canPromote: [],
     canBePromotedBy: ["admin", "leader", "deputy", "senior_warrior"]
+  },
+  kitten: { 
+    name: "Котёнок", 
+    emoji: "🐾", 
+    canPromote: [],
+    canBePromotedBy: ["admin", "leader", "deputy", "senior_warrior", "warrior"]
   },
 } as const;
 
