@@ -278,7 +278,7 @@ export const LOCATIONS_DATA = [
   
   // Красные локации (центр с связями к жёлтому)
   { id: 17, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 45, y: 50, connectedTo: [14, 18], emoji: "⚔️" },
-  { id: 18, name: "Арена", type: "combat", clan: null, dangerLevel: 5, x: 55, y: 50, connectedTo: [12, 17], emoji: "🏟️" },
+  { id: 18, name: "Логово Волка", type: "combat", clan: null, dangerLevel: 5, x: 55, y: 50, connectedTo: [12, 17], emoji: "🐺" },
 ] as const;
 
 export const NPCS_DATA = [
@@ -290,16 +290,16 @@ export const NPCS_DATA = [
   // Средние враги
   { id: 4, name: "Дикий Кролик", type: "enemy", level: 3, maxHp: 60, strength: 10, agility: 18, intelligence: 9, endurance: 10, description: "Большой кролик с мощными задними лапами", emoji: "🐰", experienceReward: 60, spawnsInLocation: [11, 12, 13], respawnTime: 240 },
   { id: 5, name: "Лесной Енот", type: "enemy", level: 4, maxHp: 80, strength: 15, agility: 13, intelligence: 12, endurance: 15, description: "Хитрый енот-разбойник", emoji: "🦝", experienceReward: 80, spawnsInLocation: [14, 15, 16], respawnTime: 300 },
-  { id: 6, name: "Степная Змея", type: "enemy", level: 3, maxHp: 50, strength: 13, agility: 16, intelligence: 10, endurance: 8, description: "Ядовитая змея с быстрым ударом", emoji: "🐍", experienceReward: 70, spawnsInLocation: [17, 18], respawnTime: 360 },
+  { id: 6, name: "Степная Змея", type: "enemy", level: 3, maxHp: 50, strength: 13, agility: 16, intelligence: 10, endurance: 8, description: "Ядовитая змея с быстрым ударом", emoji: "🐍", experienceReward: 70, spawnsInLocation: [17], respawnTime: 360 },
   
   // Сильные враги и боссы
-  { id: 7, name: "Взрослый Барсук", type: "enemy", level: 5, maxHp: 120, strength: 20, agility: 10, intelligence: 8, endurance: 20, description: "Огромный барсук-охранник территории", emoji: "🦡", experienceReward: 120, spawnsInLocation: [17, 18], respawnTime: 450 },
-  { id: 8, name: "Горный Орел", type: "boss", level: 6, maxHp: 150, strength: 18, agility: 22, intelligence: 15, endurance: 12, description: "Властелин небес с острыми когтями", emoji: "🦅", experienceReward: 200, spawnsInLocation: [18], respawnTime: 600 },
-  { id: 9, name: "Лесной Волк", type: "boss", level: 7, maxHp: 180, strength: 25, agility: 16, intelligence: 12, endurance: 18, description: "Одинокий волк, защищающий свою территорию", emoji: "🐺", experienceReward: 250, spawnsInLocation: [17, 18], respawnTime: 900 },
+  { id: 7, name: "Взрослый Барсук", type: "enemy", level: 5, maxHp: 120, strength: 20, agility: 10, intelligence: 8, endurance: 20, description: "Огромный барсук-охранник территории", emoji: "🦡", experienceReward: 120, spawnsInLocation: [17], respawnTime: 450 },
+  { id: 8, name: "Горный Орел", type: "boss", level: 6, maxHp: 150, strength: 18, agility: 22, intelligence: 15, endurance: 12, description: "Властелин небес с острыми когтями", emoji: "🦅", experienceReward: 200, spawnsInLocation: [17], respawnTime: 600 },
+  { id: 9, name: "Лесной Волк", type: "boss", level: 7, maxHp: 180, strength: 25, agility: 16, intelligence: 12, endurance: 18, description: "Одинокий волк, защищающий свою территорию", emoji: "🐺", experienceReward: 250, spawnsInLocation: [18], respawnTime: 900 },
   
   // Расширенная область - новые враги
   { id: 11, name: "Теневой Рысь", type: "boss", level: 8, maxHp: 220, strength: 22, agility: 25, intelligence: 18, endurance: 15, description: "Загадочная рысь из дальнего леса", emoji: "🐈‍⬛", experienceReward: 300, spawnsInLocation: [18], respawnTime: 720 },
-  { id: 12, name: "Древний Дракон", type: "boss", level: 10, maxHp: 350, strength: 35, agility: 15, intelligence: 20, endurance: 25, description: "Легендарный дракон горного пика", emoji: "🐉", experienceReward: 500, spawnsInLocation: [18], respawnTime: 1800 },
+  { id: 12, name: "Древний Дракон", type: "boss", level: 10, maxHp: 350, strength: 35, agility: 15, intelligence: 20, endurance: 25, description: "Легендарный дракон горного пика", emoji: "🐉", experienceReward: 500, spawnsInLocation: [17], respawnTime: 1800 },
   { id: 15, name: "Хитрая Лисица", type: "enemy", level: 6, maxHp: 140, strength: 20, agility: 24, intelligence: 18, endurance: 16, description: "Умная и проворная рыжая лисица", emoji: "🦊", experienceReward: 180, spawnsInLocation: [8, 9], respawnTime: 540 },
   
   // Нейтральные и квестовые NPC
