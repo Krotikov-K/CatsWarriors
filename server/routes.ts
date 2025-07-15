@@ -750,6 +750,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/character/promote-kitten", async (req: Request, res: Response) => {
+    try {
+      const { characterId, newRank } = req.body;
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      // Get character
+      const character = await storage.getCharacter(characterId);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
+
+      // Check if character belongs to user
+      if (character.userId !== userId) {
+        return res.status(403).json({ error: "Not your character" });
+      }
+
+      // Check if character is a kitten
+      if (character.rank !== "kitten") {
+        return res.status(400).json({ error: "Only kittens can be promoted through this ceremony" });
+      }
+
+      // Check if character is in their clan camp
+      const location = await storage.getLocation(character.currentLocationId);
+      if (!location || location.clan !== character.clan) {
+        return res.status(400).json({ error: "You must be in your clan camp for the promotion ceremony" });
+      }
+
+      // Validate new rank (can only become apprentice or healer_apprentice)
+      if (newRank !== "apprentice" && newRank !== "healer_apprentice") {
+        return res.status(400).json({ error: "Kittens can only become apprentices or healer apprentices" });
+      }
+
+      // Update character rank
+      const updatedCharacter = await storage.updateCharacter(characterId, { rank: newRank });
+      
+      if (!updatedCharacter) {
+        return res.status(500).json({ error: "Failed to promote character" });
+      }
+
+      // Import RANKS from schema
+      const { RANKS } = await import("@shared/schema");
+
+      // Create game event
+      await storage.createGameEvent({
+        type: "rank_change",
+        message: `${character.name} был посвящён в ${RANKS[newRank as keyof typeof RANKS].name} старейшиной племени`,
+        locationId: character.currentLocationId,
+        characterId: character.id,
+      });
+
+      res.json({ character: updatedCharacter });
+    } catch (error) {
+      console.error("Error promoting kitten:", error);
+      res.status(500).json({ error: "Failed to promote kitten" });
+    }
+  });
+
   app.post("/api/character/apply-level-up", async (req: Request, res: Response) => {
     try {
       const { statBoosts, userId } = req.body;

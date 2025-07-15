@@ -368,4 +368,8 @@ export const NPCS_DATA = [
   
   // Нейтральные и квестовые NPC
   { id: 10, name: "Старый Мудрец", type: "neutral", level: 10, maxHp: 200, strength: 15, agility: 10, intelligence: 25, endurance: 20, description: "Древний кот-отшельник, хранитель знаний", emoji: "🧙", experienceReward: 0, spawnsInLocation: [16], respawnTime: 0 },
+  
+  // Старейшины в племенных лагерях для повышения котят
+  { id: 12, name: "Старейшина Грозового Племени", type: "elder", level: 15, maxHp: 300, strength: 20, agility: 15, intelligence: 30, endurance: 25, description: "Мудрый старейшина, проводящий обряды посвящения", emoji: "👴", experienceReward: 0, spawnsInLocation: [1], respawnTime: 0 },
+  { id: 13, name: "Старейшина Речного Племени", type: "elder", level: 15, maxHp: 300, strength: 20, agility: 15, intelligence: 30, endurance: 25, description: "Мудрый старейшина, проводящий обряды посвящения", emoji: "👴", experienceReward: 0, spawnsInLocation: [2], respawnTime: 0 },
 ] as const;

@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, Zap } from "lucide-react";
+import { Heart, Crown, Zap } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { type Character, type Location } from "@shared/schema";
+import ElderPromotionDialog from "./ElderPromotionDialog";
 
 interface CampActionsProps {
   character: Character;
@@ -13,6 +15,7 @@ interface CampActionsProps {
 
 export default function CampActions({ character, location }: CampActionsProps) {
   const { toast } = useToast();
+  const [showElderDialog, setShowElderDialog] = useState(false);
 
   const usePoultice = useMutation({
     mutationFn: async () => {
@@ -40,6 +43,8 @@ export default function CampActions({ character, location }: CampActionsProps) {
   // Check if character is in any camp (for testing, show in all camps)
   const isInCamp = location.type === "camp";
   const canUsePoultice = isInCamp && character.currentHp < character.maxHp;
+  const isKitten = character.rank === "kitten";
+  const isInOwnCamp = isInCamp && location.clan === character.clan;
 
   // Show camp actions in any camp for now
   if (!isInCamp) {
@@ -47,11 +52,34 @@ export default function CampActions({ character, location }: CampActionsProps) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Heart className="h-5 w-5 text-red-500" />
-        <h3 className="font-semibold">Лечение в лагере</h3>
-      </div>
+    <>
+      <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        {/* Elder promotion section for kittens */}
+        {isKitten && isInOwnCamp && (
+          <div className="border-b border-border pb-4 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              <h3 className="font-semibold">Обряд посвящения</h3>
+            </div>
+            <div className="text-sm text-muted-foreground mb-3">
+              Старейшина племени готов провести обряд посвящения. 
+              Пришло время выбрать свой путь!
+            </div>
+            <Button
+              onClick={() => setShowElderDialog(true)}
+              className="w-full"
+              variant="default"
+            >
+              👴 Подойти к старейшине
+            </Button>
+          </div>
+        )}
+
+        {/* Healing section */}
+        <div className="flex items-center gap-2 mb-3">
+          <Heart className="h-5 w-5 text-red-500" />
+          <h3 className="font-semibold">Лечение в лагере</h3>
+        </div>
       
       <div className="space-y-3">
         <div className="text-sm">
@@ -84,6 +112,13 @@ export default function CampActions({ character, location }: CampActionsProps) {
           }
         </Button>
       </div>
-    </div>
+      </div>
+
+      <ElderPromotionDialog
+        isOpen={showElderDialog}
+        onClose={() => setShowElderDialog(false)}
+        character={character}
+      />
+    </>
   );
 }

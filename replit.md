@@ -239,6 +239,10 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added rank field to character schema and updated character creation flow
   * Ranks are clan-specific - can only promote characters from same clan
   * Fixed database compatibility issues by clearing all existing characters and updating schema
+  * Added Elder NPCs in tribal camps for kitten promotion ceremonies
+  * Created promotion system where kittens can choose between apprentice (🔰) or healer apprentice (🌱) paths
+  * Added `/api/character/promote-kitten` endpoint for ceremony-based promotions
+  * Elders only appear to kittens in their own clan camp for authentic role-playing experience
 
 ## User Preferences
 

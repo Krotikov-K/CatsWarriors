@@ -142,9 +142,9 @@ export class MemStorage implements IStorage {
   }
 
   private spawnInitialNPCs() {
-    // Spawn initial NPCs in hunting and combat locations
+    // Spawn initial NPCs in hunting and combat locations, plus elders
     NPCS_DATA.forEach(npcData => {
-      if (npcData.type === 'enemy' || npcData.type === 'boss') {
+      if (npcData.type === 'enemy' || npcData.type === 'boss' || npcData.type === 'neutral' || npcData.type === 'elder') {
         const npc: NPC = {
           id: npcData.id,
           name: npcData.name,
