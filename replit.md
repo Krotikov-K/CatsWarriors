@@ -221,10 +221,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
 - July 15, 2025. Complete map interface redesign:
   * Implemented circular map layout with tribal camps outside main circle
   * Redesigned location connections: each camp has one exit to ring
-  * Created color-coded zones: green (outer ring), yellow (middle), red (center)
+  * Created color-coded zones: green (outer ring), yellow (middle), red (center)  
   * Added horizontal scrolling with tribal camps positioned far from center
   * Tribal camp labels preserved while other locations show only emojis
-  * Map width extended to 150vw with smooth horizontal scroll for better navigation
+  * Map width extended to 170vw with smooth horizontal scroll for better navigation
+  * Fixed camp positioning to prevent icon clipping and added proper inter-zone connections
+  * Connected yellow locations to green ring and red locations to yellow ring for proper progression
 
 ## User Preferences
 

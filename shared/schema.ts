@@ -255,8 +255,8 @@ export const CLANS = {
 
 export const LOCATIONS_DATA = [
   // Племенные лагеря (очень далеко по краям)
-  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 1, y: 50, connectedTo: [9], emoji: "🏠" },
-  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 98, y: 50, connectedTo: [5], emoji: "🏕️" },
+  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 3, y: 50, connectedTo: [9], emoji: "🏠" },
+  { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 97, y: 50, connectedTo: [5], emoji: "🏕️" },
   
   // Зелёные локации (замкнутый внешний круг)
   { id: 3, name: "Четыре Дерева", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 10, connectedTo: [4, 10], emoji: "🌳" },
@@ -269,9 +269,9 @@ export const LOCATIONS_DATA = [
   { id: 10, name: "Горная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 25, connectedTo: [9, 3], emoji: "🗻" },
   
   // Жёлтые локации (средний круг с связями к зелёному)
-  { id: 11, name: "Поляна Встреч", type: "neutral", clan: null, dangerLevel: 3, x: 65, y: 30, connectedTo: [4, 12], emoji: "🌼" },
+  { id: 11, name: "Поляна Встреч", type: "neutral", clan: null, dangerLevel: 3, x: 65, y: 30, connectedTo: [4, 12, 16], emoji: "🌼" },
   { id: 12, name: "Лунная Поляна", type: "neutral", clan: null, dangerLevel: 3, x: 70, y: 60, connectedTo: [11, 13], emoji: "🌙" },
-  { id: 13, name: "Древний Пень", type: "neutral", clan: null, dangerLevel: 3, x: 50, y: 70, connectedTo: [7, 14], emoji: "🪵" },
+  { id: 13, name: "Древний Пень", type: "neutral", clan: null, dangerLevel: 3, x: 50, y: 70, connectedTo: [7, 12, 14], emoji: "🪵" },
   { id: 14, name: "Каменный Круг", type: "neutral", clan: null, dangerLevel: 3, x: 30, y: 60, connectedTo: [13, 15], emoji: "⭕" },
   { id: 15, name: "Священная Роща", type: "neutral", clan: null, dangerLevel: 3, x: 30, y: 40, connectedTo: [14, 16], emoji: "🌳" },
   { id: 16, name: "Источник", type: "neutral", clan: null, dangerLevel: 3, x: 50, y: 30, connectedTo: [15, 11], emoji: "💧" },
