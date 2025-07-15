@@ -265,7 +265,7 @@ export const LOCATIONS_DATA = [
   { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 75, connectedTo: [5, 7], emoji: "🕳️" },
   { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8], emoji: "🛤️" },
   { id: 8, name: "Болотистая Низина", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 75, connectedTo: [7, 9], emoji: "🌾" },
-  { id: 9, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 2, x: 10, y: 50, connectedTo: [1, 10], emoji: "🌿" },
+  { id: 9, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 2, x: 10, y: 50, connectedTo: [1, 8, 10], emoji: "🌿" },
   { id: 10, name: "Горная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 25, connectedTo: [9, 3], emoji: "🗻" },
   
   // Жёлтые локации (средний круг с связями к зелёному)
