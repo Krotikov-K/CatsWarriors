@@ -24,7 +24,7 @@ import {
   NPCS_DATA
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -218,10 +218,32 @@ export class MemStorage implements IStorage {
   }
 
   async getCharactersByLocation(locationId: number): Promise<Character[]> {
-    return Array.from(this.characters.values()).filter(char => char.currentLocationId === locationId);
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    
+    // Auto-logout inactive characters
+    for (const character of this.characters.values()) {
+      if (character.isOnline && character.lastActivity && new Date(character.lastActivity) < fiveMinutesAgo) {
+        await this.setCharacterOnline(character.id, false);
+      }
+    }
+    
+    return Array.from(this.characters.values()).filter(char => 
+      char.currentLocationId === locationId && char.isOnline
+    );
   }
 
   async getOnlineCharacters(): Promise<Character[]> {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    
+    // Auto-logout characters that haven't been active for 5 minutes
+    for (const character of this.characters.values()) {
+      if (character.isOnline && character.lastActivity && new Date(character.lastActivity) < fiveMinutesAgo) {
+        await this.setCharacterOnline(character.id, false);
+      }
+    }
+    
     return Array.from(this.characters.values()).filter(char => char.isOnline);
   }
 
@@ -696,10 +718,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCharactersByLocation(locationId: number): Promise<Character[]> {
-    return await db.select().from(characters).where(eq(characters.currentLocationId, locationId));
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    
+    // Auto-logout inactive characters
+    await db
+      .update(characters)
+      .set({ isOnline: false })
+      .where(and(
+        eq(characters.isOnline, true),
+        lt(characters.lastActivity, fiveMinutesAgo)
+      ));
+    
+    return await db.select().from(characters).where(
+      and(
+        eq(characters.currentLocationId, locationId),
+        eq(characters.isOnline, true)
+      )
+    );
   }
 
   async getOnlineCharacters(): Promise<Character[]> {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+    
+    // Auto-logout characters that haven't been active for 5 minutes
+    await db
+      .update(characters)
+      .set({ isOnline: false })
+      .where(and(
+        eq(characters.isOnline, true),
+        lt(characters.lastActivity, fiveMinutesAgo)
+      ));
+    
     return await db.select().from(characters).where(eq(characters.isOnline, true));
   }
 
@@ -742,7 +793,7 @@ export class DatabaseStorage implements IStorage {
   async setCharacterOnline(id: number, online: boolean): Promise<void> {
     await db
       .update(characters)
-      .set({ isOnline: online })
+      .set({ isOnline: online, lastActivity: new Date() })
       .where(eq(characters.id, id));
   }
 

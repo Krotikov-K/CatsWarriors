@@ -294,6 +294,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use the first character for now
       const character = characters[0];
+      
+      // Update character's activity timestamp and set online
+      await storage.setCharacterOnline(character.id, true);
+      await storage.updateCharacter(character.id, { lastActivity: new Date() });
+      
       const location = await storage.getLocation(character.currentLocationId);
       const playersInLocation = await storage.getCharactersByLocation(character.currentLocationId);
       const npcsInLocation = await storage.getNPCsByLocation(character.currentLocationId);
@@ -1237,8 +1242,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Недопустимое племя" });
       }
 
-      // Get all characters from the specified clan
-      const allCharacters = await storage.getOnlineCharacters();
+      // Get all characters from the specified clan (both online and offline for complete roster)
+      const allUsers = await storage.getAllUsers();
+      const allCharacters: Character[] = [];
+      
+      for (const user of allUsers) {
+        const userCharacters = await storage.getCharactersByUserId(user.id);
+        allCharacters.push(...userCharacters);
+      }
+      
       const tribeMembers = allCharacters.filter(char => char.clan === clan);
 
       // Sort by rank hierarchy (leaders first, then deputies, etc.)
