@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/combat/start", async (req, res) => {
     try {
       const { characterId, targetId, locationId } = startCombatSchema.parse(req.body);
-      const npcId = req.body.npcId || req.body.targetId; // Support both npcId and targetId for NPC combat
+      const npcId = req.body.npcId; // Only use explicit npcId for NPC combat
       
       const character = await storage.getCharacter(characterId);
       if (!character) {
@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           GameEngine.startAutoCombat(combat.id);
         }, 100);
         
-      } else if (targetId && !npcId) {
+      } else if (targetId) {
         // PVP combat with another character
         combatType = "pvp";
         const target = await storage.getCharacter(targetId);
