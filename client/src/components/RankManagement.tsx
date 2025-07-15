@@ -23,7 +23,8 @@ export default function RankManagement({ character, playersInLocation }: RankMan
     mutationFn: async ({ characterId, newRank }: { characterId: number; newRank: string }) => {
       const response = await apiRequest("POST", "/api/character/change-rank", {
         characterId,
-        newRank
+        newRank,
+        requesterId: character.userId
       });
       return response.json();
     },

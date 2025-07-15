@@ -746,11 +746,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Level up endpoints
   app.post("/api/character/change-rank", async (req: Request, res: Response) => {
     try {
-      const { characterId, newRank } = req.body;
-      const requesterId = (req as AuthenticatedRequest).userId;
+      const { characterId, newRank, requesterId } = req.body;
 
       if (!requesterId) {
-        return res.status(401).json({ error: "Not authenticated" });
+        return res.status(401).json({ error: "Requester ID required" });
       }
 
       // Get requester character to check permissions
