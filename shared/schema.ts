@@ -299,7 +299,6 @@ export const NPCS_DATA = [
   
   // Расширенная область - новые враги
   { id: 11, name: "Теневой Рысь", type: "boss", level: 8, maxHp: 220, strength: 22, agility: 25, intelligence: 18, endurance: 15, description: "Загадочная рысь из дальнего леса", emoji: "🐈‍⬛", experienceReward: 300, spawnsInLocation: [18], respawnTime: 720 },
-  { id: 12, name: "Древний Дракон", type: "boss", level: 10, maxHp: 350, strength: 35, agility: 15, intelligence: 20, endurance: 25, description: "Легендарный дракон горного пика", emoji: "🐉", experienceReward: 500, spawnsInLocation: [17], respawnTime: 1800 },
   { id: 15, name: "Хитрая Лисица", type: "enemy", level: 6, maxHp: 140, strength: 20, agility: 24, intelligence: 18, endurance: 16, description: "Умная и проворная рыжая лисица", emoji: "🦊", experienceReward: 180, spawnsInLocation: [8, 9], respawnTime: 540 },
   
   // Нейтральные и квестовые NPC

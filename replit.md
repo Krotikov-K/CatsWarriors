@@ -229,6 +229,7 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Connected yellow locations to green ring and red locations to yellow ring for proper progression
   * Fixed all bidirectional connections throughout the map system
   * Renamed "Арена" to "Логово Волка" and made it exclusive boss location for Лесной Волк
+  * Removed Древний Дракон from game as it doesn't fit the Warriors Cats setting
 
 ## User Preferences
 
