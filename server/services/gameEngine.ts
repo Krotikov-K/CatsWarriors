@@ -327,8 +327,9 @@ export class GameEngine {
       combat.participants.map(id => storage.getCharacter(id))
     );
 
-    const winner = survivors[0]; // Last character standing
-    const losers = allParticipants.filter(char => char && !survivors.find(s => s.id === char.id));
+    // Winner is the one with HP > 1, loser is the one with HP = 1
+    const winner = allParticipants.find(char => char && char.currentHp > 1);
+    const losers = allParticipants.filter(char => char && char.currentHp <= 1);
 
     if (winner) {
       console.log(`${winner.name} won PvP combat (no experience reward)`);

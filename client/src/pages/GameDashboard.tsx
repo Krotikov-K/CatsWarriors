@@ -153,7 +153,9 @@ export default function GameDashboard() {
         }
       });
       
-      const isVictory = (gameState?.character?.currentHp || 0) > 0;
+      // For PvP, victory requires more than 1 HP (since 1 HP means defeat)
+      const currentHp = gameState?.character?.currentHp || 0;
+      const isVictory = lastCombat.type === "pvp" ? currentHp > 1 : currentHp > 0;
       const result = {
         victory: isVictory,
         experienceGained: isVictory ? (experienceGained || 0) : 0,

@@ -276,6 +276,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added clear UI indicators when characters are too weak to fight
   * Server-side validation prevents 1 HP characters from attacking any targets
   * Fixed invincibility exploit where 1 HP characters could fight indefinitely
+- July 15, 2025. PvP combat system fixes:
+  * Fixed beinfinite PvP combat loop - battles now properly end when player reaches 1 HP
+  * Corrected victory logic - player with 1 HP is now correctly identified as defeated
+  * Fixed victory modal display - now shows to actual winner instead of loser
+  * Updated HP formula to 80 + (endurance * 5) for better combat balance
+  * Both server and client logic now properly handle PvP defeat conditions
 
 ## User Preferences
 
