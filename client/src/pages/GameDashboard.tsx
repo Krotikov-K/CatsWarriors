@@ -392,7 +392,11 @@ export default function GameDashboard() {
             <GroupPanel gameState={gameState} />
             
             {location && character && location.type === "camp" && (
-              <CampActions character={character} location={location} />
+              <CampActions 
+                character={character} 
+                location={location} 
+                playersInLocation={playersInLocation}
+              />
             )}
             
             {npcsInLocation.length > 0 && (

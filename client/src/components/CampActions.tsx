@@ -5,15 +5,17 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { type Character, type Location } from "@shared/schema";
+import { type Character, type Location, RANKS } from "@shared/schema";
 import ElderPromotionDialog from "./ElderPromotionDialog";
+import RankManagement from "./RankManagement";
 
 interface CampActionsProps {
   character: Character;
   location: Location;
+  playersInLocation: Character[];
 }
 
-export default function CampActions({ character, location }: CampActionsProps) {
+export default function CampActions({ character, location, playersInLocation }: CampActionsProps) {
   const { toast } = useToast();
   const [showElderDialog, setShowElderDialog] = useState(false);
 
@@ -45,6 +47,8 @@ export default function CampActions({ character, location }: CampActionsProps) {
   const canUsePoultice = isInCamp && character.currentHp < character.maxHp;
   const isKitten = character.rank === "kitten";
   const isInOwnCamp = isInCamp && location.clan === character.clan;
+  const currentRank = RANKS[character.rank as keyof typeof RANKS];
+  const canManageRanks = currentRank?.canPromote?.length > 0;
 
   // Show camp actions in any camp for now
   if (!isInCamp) {
@@ -72,6 +76,23 @@ export default function CampActions({ character, location }: CampActionsProps) {
             >
               👴 Подойти к старейшине
             </Button>
+          </div>
+        )}
+
+        {/* Rank Management section for leaders/deputies */}
+        {canManageRanks && isInOwnCamp && (
+          <div className="border-b border-border pb-4 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              <h3 className="font-semibold">Управление племенем</h3>
+            </div>
+            <div className="text-sm text-muted-foreground mb-3">
+              Назначайте соплеменников на должности в племени
+            </div>
+            <RankManagement 
+              character={character} 
+              playersInLocation={playersInLocation}
+            />
           </div>
         )}
 
