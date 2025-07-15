@@ -16,6 +16,7 @@ export const characters = pgTable("characters", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   clan: text("clan").notNull(),
+  characterClass: text("character_class").notNull(), // "warrior", "hunter", "healer", "scout"
   gender: text("gender").notNull().default("male"), // "male", "female"
   level: integer("level").notNull().default(1),
   experience: integer("experience").notNull().default(0),
