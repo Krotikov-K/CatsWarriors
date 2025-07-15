@@ -268,6 +268,8 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * PvP winners receive 150 experience points (higher than NPC rewards)
   * Added dramatic combat messages for tribal warfare scenarios
   * Integrated PvP interface into main game dashboard for seamless tribal conflicts
+  * Removed experience rewards for PvP victories per user request - duels now for honor only
+  * Fixed critical combat system bug causing server errors during battle processing
 
 ## User Preferences
 

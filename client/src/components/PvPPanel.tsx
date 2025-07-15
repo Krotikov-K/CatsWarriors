@@ -150,8 +150,8 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
         <div className="text-xs text-muted-foreground mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800">
           <strong>⚠️ Правила PvP:</strong><br />
           • Дуэли возможны только между разными племенами<br />
-          • Победитель получает опыт и славу<br />
-          • Проигравший временно ослабевает
+          • Сражения ведутся за честь и славу племени<br />
+          • Проигравший остается с 1 HP (честная дуэль)
         </div>
       </CardContent>
     </Card>
