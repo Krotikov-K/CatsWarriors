@@ -42,8 +42,9 @@ export class GameEngine {
       combat.npcParticipants.map(id => storage.getNPC(id))
     );
 
+    // For PvP, characters with 1 HP are considered defeated
     const aliveCharacters = characters.filter(char => 
-      char && char.currentHp > 0
+      char && (combat.type === "pvp" ? char.currentHp > 1 : char.currentHp > 0)
     ) as Character[];
     
     const aliveNPCs = npcs.filter(npc => 
@@ -96,9 +97,10 @@ export class GameEngine {
     
     console.log(`Turn ${combat.currentTurn}: ${attacker.name} (${currentTurnIndex}/${sortedCombatants.length})`);
     
-    // Make sure attacker is still alive
-    if (attacker.currentHp <= 0) {
-      console.log(`Attacker ${attacker.name} is dead, skipping turn`);
+    // Make sure attacker is still alive (check for 1 HP in PvP)
+    const isDefeated = combat.type === "pvp" ? attacker.currentHp <= 1 : attacker.currentHp <= 0;
+    if (isDefeated) {
+      console.log(`Attacker ${attacker.name} is defeated, skipping turn`);
       await storage.updateCombat(combatId, {
         currentTurn: combat.currentTurn + 1
       });
