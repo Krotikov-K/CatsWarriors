@@ -22,6 +22,7 @@ import CombatModal from "@/components/CombatModal";
 import CombatResultModal from "@/components/CombatResultModal";
 import RankManagement from "@/components/RankManagement";
 import TribeMembers from "@/components/TribeMembers";
+import PvPPanel from "@/components/PvPPanel";
 
 import type { Combat } from "@shared/schema";
 import { RANKS } from "@shared/schema";
@@ -433,6 +434,13 @@ export default function GameDashboard() {
                 </div>
               </div>
             )}
+
+            {/* PvP Panel - показывать только если есть игроки из других племён */}
+            <PvPPanel 
+              character={character}
+              playersInLocation={playersInLocation}
+              locationId={location.id}
+            />
 
             {playersInLocation.length > 1 && (
               <div>

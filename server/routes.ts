@@ -604,6 +604,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Target character must be in the same location" });
         }
 
+        // Check if both characters are from different clans (PvP only between enemy clans)
+        if (character.clan === target.clan) {
+          return res.status(400).json({ message: "Cannot attack clanmates! PvP is only allowed between different tribes" });
+        }
+
         // Check if target is already in combat
         const targetCombat = await storage.getCharacterActiveCombat(targetId);
         if (targetCombat) {
@@ -642,6 +647,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (combatType === "pve" && npcId) {
         const npc = await storage.getNPC(npcId);
         startMessage = `${character.name} вступает в бой с ${npc?.name || 'неизвестным существом'}!`;
+      } else if (combatType === "pvp" && targetId) {
+        const target = await storage.getCharacter(targetId);
+        startMessage = `⚔️ Племенная война! ${character.name} (${character.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя) вызывает на бой ${target?.name} (${target?.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя)!`;
       }
         
       await storage.addCombatLogEntry(combat.id, {

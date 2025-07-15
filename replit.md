@@ -259,6 +259,15 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added WebSocket broadcasting for real-time rank change notifications
   * Improved cache invalidation to update UI immediately after rank changes
   * Added delayed refresh mechanism to ensure consistent UI updates across all components
+- July 15, 2025. Inter-tribal PvP combat system implementation:
+  * Created comprehensive PvP system allowing combat only between different tribes
+  * Added tribal warfare restrictions: Thunder vs River clans only
+  * Implemented PvPPanel component with enemy player detection and duel challenges
+  * Enhanced GameEngine with PvP-specific combat logic and non-lethal outcomes
+  * Players defeated in PvP retain 1 HP (honorable defeat, no permanent death)
+  * PvP winners receive 150 experience points (higher than NPC rewards)
+  * Added dramatic combat messages for tribal warfare scenarios
+  * Integrated PvP interface into main game dashboard for seamless tribal conflicts
 
 ## User Preferences
 

@@ -67,6 +67,14 @@ export class GameEngine {
         await this.endCombat(combatId);
         return;
       }
+    } else if (combat.type === "pvp") {
+      // PvP combat ends when only one character is left alive
+      if (aliveCharacters.length <= 1) {
+        console.log(`PvP combat ${combatId} ending: ${aliveCharacters.length} characters remaining`);
+        await this.handlePvPCombatEnd(combatId, aliveCharacters);
+        await this.endCombat(combatId);
+        return;
+      }
     } else if (allCombatants.length < 2) {
       console.log(`Combat ${combatId} ending: not enough participants (${allCombatants.length})`);
       await this.endCombat(combatId);
@@ -176,10 +184,26 @@ export class GameEngine {
     // Apply damage
     const newHp = Math.max(0, target.currentHp - damage);
     
-    // Update character or NPC health
-    if ('userId' in target) { // Character
-      await storage.updateCharacter(target.id, { currentHp: newHp });
-    } else { // NPC
+    // Update character or NPC health based on target type
+    if ('userId' in target) { 
+      // Target is a character (PvP)
+      const characterTarget = target as Character;
+      
+      // If character is defeated in PvP, leave them at 1 HP (no permanent death)
+      if (newHp === 0) {
+        newHp = 1;
+        const defeatEntry: CombatLogEntry = {
+          timestamp: new Date().toISOString(),
+          type: "damage",
+          actorId: characterTarget.id,
+          message: `${characterTarget.name} поражен в честном бою и отступает!`
+        };
+        await storage.addCombatLogEntry(combatId, defeatEntry);
+      }
+      
+      await storage.updateCharacter(characterTarget.id, { currentHp: newHp });
+    } else { 
+      // Target is an NPC
       await storage.updateNPC(target.id, { currentHp: newHp });
       
       // If NPC is killed, handle death and experience gain
@@ -291,6 +315,53 @@ export class GameEngine {
 
   static getRequiredExperienceForLevel(level: number): number {
     return level * 1000;
+  }
+
+  private static async handlePvPCombatEnd(combatId: number, survivors: Character[]): Promise<void> {
+    const combat = await storage.getCombat(combatId);
+    if (!combat) return;
+
+    // Get all participants to identify winners and losers
+    const allParticipants = await Promise.all(
+      combat.participants.map(id => storage.getCharacter(id))
+    );
+
+    const winner = survivors[0]; // Last character standing
+    const losers = allParticipants.filter(char => char && !survivors.find(s => s.id === char.id));
+
+    if (winner) {
+      // Award PvP experience to winner (higher than NPC exp)
+      const pvpExpGain = 150; // Base PvP experience
+      
+      await storage.updateCharacter(winner.id, {
+        experience: winner.experience + pvpExpGain
+      });
+
+      console.log(`${winner.name} won PvP and gained ${pvpExpGain} experience`);
+      
+      // Check for level up
+      await this.checkAndProcessLevelUp(winner.id);
+
+      const victoryEntry: CombatLogEntry = {
+        timestamp: new Date().toISOString(),
+        type: "join",
+        actorId: winner.id,
+        message: `🏆 ${winner.name} одерживает победу в племенной дуэли и получает ${pvpExpGain} опыта!`
+      };
+      await storage.addCombatLogEntry(combatId, victoryEntry);
+    }
+
+    // Create game event for PvP result
+    await storage.createGameEvent({
+      type: "pvp_victory",
+      characterId: winner?.id || null,
+      locationId: combat.locationId,
+      data: { 
+        winnerId: winner?.id,
+        loserIds: losers.map(l => l?.id).filter(Boolean),
+        expGained: 150
+      }
+    });
   }
 
   static async checkAndProcessLevelUp(characterId: number): Promise<boolean> {
