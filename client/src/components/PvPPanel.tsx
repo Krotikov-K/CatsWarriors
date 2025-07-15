@@ -54,7 +54,7 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
   const enemyPlayers = playersInLocation.filter(player => 
     player.id !== character.id && 
     player.clan !== character.clan &&
-    player.currentHp > 0 // Only alive players
+    player.currentHp > 1 // Only players with more than 1 HP
   );
 
   const getClanColor = (clan: string) => {
@@ -64,6 +64,9 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
   const getClanEmoji = (clan: string) => {
     return clan === 'thunder' ? '⚡' : '🌊';
   };
+
+  // Check if current character can attack (has more than 1 HP)
+  const canAttack = character.currentHp > 1;
 
   if (enemyPlayers.length === 0) {
     return (
@@ -78,7 +81,12 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
           <div className="text-center py-8 text-muted-foreground">
             <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Нет врагов поблизости</p>
-            <p className="text-sm">Найдите игроков из другого племени для дуэли</p>
+            <p className="text-sm">
+              {character.currentHp <= 1 
+                ? "Ваш персонаж слишком слаб для дуэлей (1 HP)"
+                : "Найдите игроков из другого племени для дуэли"
+              }
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -131,10 +139,12 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
                 variant="destructive"
                 size="sm"
                 onClick={() => handleAttack(player.id)}
-                disabled={isAttacking || attackPlayerMutation.isPending}
+                disabled={isAttacking || attackPlayerMutation.isPending || !canAttack}
                 className="min-w-[100px]"
               >
-                {isAttacking ? (
+                {!canAttack ? (
+                  "Слаб (1 HP)"
+                ) : isAttacking ? (
                   "Атакую..."
                 ) : (
                   <>
@@ -150,7 +160,7 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
         <div className="text-xs text-muted-foreground mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800">
           <strong>⚠️ Правила PvP:</strong><br />
           • Дуэли возможны только между разными племенами<br />
-          • Сражения ведутся за честь и славу племени<br />
+          • Персонажи с 1 HP не могут драться (слишком слабы)<br />
           • Проигравший остается с 1 HP (честная дуэль)
         </div>
       </CardContent>

@@ -270,6 +270,12 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Integrated PvP interface into main game dashboard for seamless tribal conflicts
   * Removed experience rewards for PvP victories per user request - duels now for honor only
   * Fixed critical combat system bug causing server errors during battle processing
+- July 15, 2025. Combat restrictions for low HP characters:
+  * Added HP restrictions: characters with 1 HP cannot start any combat (PvE or PvP)
+  * Characters with 1 HP are excluded from PvP target lists (cannot be attacked)
+  * Added clear UI indicators when characters are too weak to fight
+  * Server-side validation prevents 1 HP characters from attacking any targets
+  * Fixed invincibility exploit where 1 HP characters could fight indefinitely
 
 ## User Preferences
 

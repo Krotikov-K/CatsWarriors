@@ -71,6 +71,14 @@ export default function NPCPanel({ npcs, onAttackNPC, canAttack, character, curr
     <div className="space-y-3">
       <h3 className="text-lg font-semibold mb-3">Существа в локации ({npcs.length})</h3>
       
+      {!canAttack && character.currentHp <= 1 && (
+        <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <p className="text-sm text-yellow-600 dark:text-yellow-400">
+            ⚠️ Ваш персонаж слишком слаб для боя (1 HP). Найдите способ восстановить здоровье.
+          </p>
+        </div>
+      )}
+      
       {npcs.map((npc) => (
         <div key={npc.id} className="bg-card border border-border rounded-lg p-4">
           <div className="flex items-start justify-between mb-3">
@@ -146,7 +154,9 @@ export default function NPCPanel({ npcs, onAttackNPC, canAttack, character, curr
                 size="sm"
                 className="w-full"
               >
-                {npc.isDead ? (
+                {!canAttack && character.currentHp <= 1 ? (
+                  "Слишком слаб (1 HP)"
+                ) : npc.isDead ? (
                   (() => {
                     const timeRemaining = getRespawnTimeRemaining(npc);
                     return timeRemaining > 0 ? 

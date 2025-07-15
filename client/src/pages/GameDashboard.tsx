@@ -407,7 +407,7 @@ export default function GameDashboard() {
               <NPCPanel 
                 npcs={npcsInLocation}
                 onAttackNPC={handleAttackNPC}
-                canAttack={!gameState.isInCombat}
+                canAttack={!gameState.isInCombat && character.currentHp > 1}
                 character={character}
                 currentGroup={gameState.currentGroup}
               />

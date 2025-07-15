@@ -557,6 +557,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Character is already in combat" });
       }
 
+      // For all combat types, check if character has at least 2 HP to engage
+      if (character.currentHp <= 1) {
+        return res.status(400).json({ message: "Cannot start combat with 1 HP! Your character is too weak to fight" });
+      }
+
       let combat;
       let combatType: "pvp" | "pve" = "pve"; // Default to PVE for NPC combat
       let participants: number[] = [characterId];
@@ -607,6 +612,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if both characters are from different clans (PvP only between enemy clans)
         if (character.clan === target.clan) {
           return res.status(400).json({ message: "Cannot attack clanmates! PvP is only allowed between different tribes" });
+        }
+
+        // Check if attacker has only 1 HP
+        if (character.currentHp <= 1) {
+          return res.status(400).json({ message: "Cannot attack with 1 HP! Your character is too weak to fight" });
+        }
+
+        // Check if target has only 1 HP
+        if (target.currentHp <= 1) {
+          return res.status(400).json({ message: "Cannot attack an already defeated character! Target has 1 HP" });
         }
 
         // Check if target is already in combat
