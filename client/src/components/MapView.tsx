@@ -71,8 +71,8 @@ function MapLocation({
       {/* Location Circle */}
       <div 
         className={`
-          w-12 h-12 md:w-16 md:h-16 rounded-full border-2 md:border-3 ${getBorderColor()} ${getLocationColor()}
-          flex items-center justify-center text-lg md:text-2xl
+          w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-2 md:border-3 ${getBorderColor()} ${getLocationColor()}
+          flex items-center justify-center text-lg md:text-2xl lg:text-3xl
           ${canMoveTo ? 'hover:scale-110 hover:shadow-xl active:scale-95' : ''}
           ${isCurrentLocation ? 'scale-110 md:scale-125 animate-pulse' : ''}
           ${!canMoveTo && !isCurrentLocation ? 'opacity-60' : ''}
@@ -85,14 +85,14 @@ function MapLocation({
       {/* Location Name - Only for camps */}
       {(type === "camp") && (
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 md:mt-2 text-center z-10">
-          <div className="bg-black bg-opacity-90 text-white text-xs px-2 py-1 rounded whitespace-nowrap max-w-28 md:max-w-36 overflow-hidden">
-            <span className="text-xs block truncate">{name}</span>
+          <div className="bg-black bg-opacity-90 text-white text-xs md:text-sm lg:text-base px-2 py-1 rounded whitespace-nowrap max-w-28 md:max-w-36 lg:max-w-48 overflow-hidden">
+            <span className="text-xs md:text-sm lg:text-base block truncate">{name}</span>
           </div>
         </div>
       )}
       {/* Player count for all locations */}
       {playerCount > 0 && (
-        <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-full z-10">
+        <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs md:text-sm lg:text-base px-1 md:px-2 py-0.5 md:py-1 rounded-full z-10 min-w-[1.25rem] md:min-w-[1.5rem] lg:min-w-[2rem] text-center">
           {playerCount}
         </div>
       )}
@@ -248,9 +248,9 @@ export default function MapView({
           </div>
 
           {/* Map Container - Horizontal Scroll */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border h-[400px] mb-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border h-[400px] md:h-[500px] lg:h-[600px] mb-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Extended Map Area */}
-            <div className="relative w-[170vw] h-full">
+            <div className="relative w-[170vw] md:w-[140vw] lg:w-[120vw] h-full">
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
