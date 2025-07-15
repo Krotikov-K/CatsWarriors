@@ -1384,6 +1384,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Diplomacy endpoints
+  app.get("/api/diplomacy", async (req: Request, res: Response) => {
+    try {
+      const relations = await storage.getAllDiplomacyRelations();
+      res.json({ relations });
+    } catch (error) {
+      console.error("Get diplomacy relations error:", error);
+      res.status(500).json({ message: "Failed to get diplomacy relations" });
+    }
+  });
+
+  app.post("/api/diplomacy/change", async (req: Request, res: Response) => {
+    try {
+      const { changeDiplomacySchema } = await import("@shared/schema");
+      const { fromClan, toClan, status } = changeDiplomacySchema.parse(req.body);
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      // Get user's character
+      const characters = await storage.getCharactersByUserId(userId);
+      if (!characters.length) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const character = characters[0];
+
+      // Only leaders can change diplomacy
+      if (character.rank !== "leader") {
+        return res.status(403).json({ message: "Only leaders can change diplomacy" });
+      }
+
+      // Check if changing diplomacy of own clan
+      if (character.clan !== fromClan) {
+        return res.status(403).json({ message: "You can only change diplomacy for your own clan" });
+      }
+
+      // Change diplomacy status
+      await storage.changeDiplomacyStatus(fromClan, toClan, status, character.id);
+
+      // Create game event
+      await storage.createGameEvent({
+        type: "diplomacy_change",
+        message: `${character.name} изменил отношения с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем на ${status === "war" ? "войну" : "мир"}`,
+        locationId: character.currentLocationId,
+        characterId: character.id,
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Change diplomacy error:", error);
+      res.status(500).json({ message: "Failed to change diplomacy" });
+    }
+  });
+
   return httpServer;
 }
 

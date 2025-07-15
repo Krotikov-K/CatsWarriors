@@ -113,6 +113,16 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const diplomacy = pgTable("diplomacy", {
+  id: serial("id").primaryKey(),
+  fromClan: text("from_clan").notNull(), // "thunder", "river"
+  toClan: text("to_clan").notNull(), // "thunder", "river"
+  status: text("status").notNull().default("peace"), // "peace", "war"
+  changedBy: integer("changed_by").references(() => characters.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -205,6 +215,19 @@ export const insertChatMessageSchema = z.object({
   message: z.string().min(1).max(200),
 });
 
+export const insertDiplomacySchema = createInsertSchema(diplomacy).pick({
+  fromClan: true,
+  toClan: true,
+  status: true,
+  changedBy: true,
+});
+
+export const changeDiplomacySchema = z.object({
+  fromClan: z.enum(["thunder", "river"]),
+  toClan: z.enum(["thunder", "river"]),
+  status: z.enum(["peace", "war"]),
+});
+
 // Types
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -234,6 +257,8 @@ export type GameEvent = typeof gameEvents.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type Diplomacy = typeof diplomacy.$inferSelect;
+export type InsertDiplomacy = z.infer<typeof insertDiplomacySchema>;
 
 export interface CombatLogEntry {
   timestamp: string;

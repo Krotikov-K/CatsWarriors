@@ -8,6 +8,7 @@ import {
   groups,
   groupMembers,
   chatMessages,
+  diplomacy,
   type User,
   type Character,
   type Location,
@@ -17,6 +18,7 @@ import {
   type Group,
   type GroupMember,
   type ChatMessage,
+  type Diplomacy,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
@@ -98,6 +100,11 @@ export interface IStorage {
   getChatMessages(locationId: number, limit?: number): Promise<ChatMessage[]>;
   createChatMessage(locationId: number, characterId: number, message: string): Promise<ChatMessage>;
   cleanupOldChatMessages(locationId: number): Promise<void>;
+
+  // Diplomacy methods
+  getDiplomacyStatus(fromClan: string, toClan: string): Promise<string>;
+  getAllDiplomacyRelations(): Promise<Record<string, Record<string, string>>>;
+  changeDiplomacyStatus(fromClan: string, toClan: string, status: string, changedBy: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1331,6 +1338,86 @@ export class DatabaseStorage implements IStorage {
           lt(chatMessages.createdAt, oneDayAgo)
         )
       );
+  }
+
+  // Diplomacy methods
+  async getDiplomacyStatus(fromClan: string, toClan: string): Promise<string> {
+    const [relation] = await db
+      .select()
+      .from(diplomacy)
+      .where(and(
+        eq(diplomacy.fromClan, fromClan),
+        eq(diplomacy.toClan, toClan)
+      ));
+    return relation?.status || "peace";
+  }
+
+  async getAllDiplomacyRelations(): Promise<Record<string, Record<string, string>>> {
+    const relations = await db.select().from(diplomacy);
+    
+    const result: Record<string, Record<string, string>> = {
+      thunder: {},
+      river: {}
+    };
+
+    for (const relation of relations) {
+      result[relation.fromClan] = result[relation.fromClan] || {};
+      result[relation.fromClan][relation.toClan] = relation.status;
+    }
+
+    // Default to peace if no relation exists
+    if (!result.thunder.river) result.thunder.river = "peace";
+    if (!result.river.thunder) result.river.thunder = "peace";
+
+    return result;
+  }
+
+  async changeDiplomacyStatus(fromClan: string, toClan: string, status: string, changedBy: number): Promise<void> {
+    // Update or insert diplomacy relation
+    const existing = await db
+      .select()
+      .from(diplomacy)
+      .where(and(
+        eq(diplomacy.fromClan, fromClan),
+        eq(diplomacy.toClan, toClan)
+      ));
+
+    if (existing.length > 0) {
+      await db
+        .update(diplomacy)
+        .set({ status, changedBy, updatedAt: new Date() })
+        .where(and(
+          eq(diplomacy.fromClan, fromClan),
+          eq(diplomacy.toClan, toClan)
+        ));
+    } else {
+      await db
+        .insert(diplomacy)
+        .values({ fromClan, toClan, status, changedBy });
+    }
+
+    // Also update the reverse relation for consistency
+    const existingReverse = await db
+      .select()
+      .from(diplomacy)
+      .where(and(
+        eq(diplomacy.fromClan, toClan),
+        eq(diplomacy.toClan, fromClan)
+      ));
+
+    if (existingReverse.length > 0) {
+      await db
+        .update(diplomacy)
+        .set({ status, changedBy, updatedAt: new Date() })
+        .where(and(
+          eq(diplomacy.fromClan, toClan),
+          eq(diplomacy.toClan, fromClan)
+        ));
+    } else {
+      await db
+        .insert(diplomacy)
+        .values({ fromClan: toClan, toClan: fromClan, status, changedBy });
+    }
   }
 }
 

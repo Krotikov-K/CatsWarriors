@@ -23,6 +23,7 @@ import CombatResultModal from "@/components/CombatResultModal";
 import RankManagement from "@/components/RankManagement";
 import TribeMembers from "@/components/TribeMembers";
 import PvPPanel from "@/components/PvPPanel";
+import DiplomacyPanel from "@/components/DiplomacyPanel";
 
 import type { Combat } from "@shared/schema";
 import { RANKS } from "@shared/schema";
@@ -589,6 +590,11 @@ export default function GameDashboard() {
 
             {/* Tribe Members List */}
             <TribeMembers clan={character.clan} currentCharacter={character} />
+            
+            {/* Diplomacy Panel - только для лидеров */}
+            {character.rank === "leader" && (
+              <DiplomacyPanel character={character} />
+            )}
           </div>
         );
 
