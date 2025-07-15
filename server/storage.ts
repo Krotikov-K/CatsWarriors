@@ -1242,7 +1242,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   private calculateMaxHp(endurance: number): number {
-    return Math.floor(endurance * 4.5) + 50;
+    return 80 + (endurance * 2);
   }
   
   async processHealthRegeneration(characterId: number): Promise<Character | undefined> {

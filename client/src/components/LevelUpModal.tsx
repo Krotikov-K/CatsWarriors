@@ -45,7 +45,7 @@ export function LevelUpModal({
   };
 
   const calculateMaxHp = (endurance: number) => {
-    return 100 + (endurance * 10);
+    return 80 + (endurance * 2);
   };
 
   const finalStats = {
