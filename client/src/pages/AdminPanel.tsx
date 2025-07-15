@@ -88,6 +88,7 @@ export default function AdminPanel() {
     name: '',
     clan: 'thunder',
     gender: 'male',
+    rank: 'kitten',
     level: 1,
     experience: 0,
     strength: 10,
@@ -203,6 +204,7 @@ export default function AdminPanel() {
       name: character.name,
       clan: character.clan,
       gender: character.gender || 'male',
+      rank: character.rank || 'kitten',
       level: character.level,
       experience: character.experience,
       strength: character.strength,
@@ -343,7 +345,7 @@ export default function AdminPanel() {
                         </Badge>
                       </CardTitle>
                       <CardDescription>
-                        Уровень {character.level} • {character.experience} опыта
+                        Уровень {character.level} • {character.experience} опыта • Ранг: {character.rank || 'kitten'}
                       </CardDescription>
                     </div>
                     <Button onClick={() => handleEditCharacter(character)} size="sm">
@@ -424,6 +426,26 @@ export default function AdminPanel() {
                   <SelectContent>
                     <SelectItem value="thunder">Грозовое Племя</SelectItem>
                     <SelectItem value="river">Речное Племя</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="rank">Ранг в племени</Label>
+                <Select value={characterForm.rank} onValueChange={(value) => setCharacterForm({...characterForm, rank: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="leader">👑 Предводитель</SelectItem>
+                    <SelectItem value="deputy">⚔️ Глашатай</SelectItem>
+                    <SelectItem value="senior_healer">🌿 Старший целитель</SelectItem>
+                    <SelectItem value="healer">🌿 Целитель</SelectItem>
+                    <SelectItem value="healer_apprentice">🌱 Ученик целителя</SelectItem>
+                    <SelectItem value="senior_warrior">⚔️ Старший воитель</SelectItem>
+                    <SelectItem value="warrior">⚔️ Воитель</SelectItem>
+                    <SelectItem value="apprentice">🔰 Оруженосец</SelectItem>
+                    <SelectItem value="kitten">🐾 Котёнок</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

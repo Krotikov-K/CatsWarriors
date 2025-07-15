@@ -230,7 +230,7 @@ export default function SimpleAdminPanel() {
                         {character.name} {character.gender === 'female' ? '🐈' : '🐱'}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        ID: {character.id} • Уровень {character.level} • HP: {character.currentHp}/{character.maxHp}
+                        ID: {character.id} • Уровень {character.level} • HP: {character.currentHp}/{character.maxHp} • Ранг: {character.rank || 'kitten'}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Сила: {character.strength} • Ловкость: {character.agility} • Интеллект: {character.intelligence} • Выносливость: {character.endurance}
@@ -436,6 +436,7 @@ function CharacterEditForm({ character, onUpdate, onCancel }: any) {
     intelligence: character.intelligence,
     endurance: character.endurance,
     clan: character.clan,
+    rank: character.rank || 'kitten',
     locationId: character.locationId
   });
 
@@ -542,6 +543,28 @@ function CharacterEditForm({ character, onUpdate, onCancel }: any) {
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label htmlFor="rank">Ранг в племени</Label>
+          <Select value={formData.rank} onValueChange={(value) => setFormData(prev => ({ ...prev, rank: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="leader">👑 Предводитель</SelectItem>
+              <SelectItem value="deputy">⚔️ Глашатай</SelectItem>
+              <SelectItem value="senior_healer">🌿 Старший целитель</SelectItem>
+              <SelectItem value="healer">🌿 Целитель</SelectItem>
+              <SelectItem value="healer_apprentice">🌱 Ученик целителя</SelectItem>
+              <SelectItem value="senior_warrior">⚔️ Старший воитель</SelectItem>
+              <SelectItem value="warrior">⚔️ Воитель</SelectItem>
+              <SelectItem value="apprentice">🔰 Оруженосец</SelectItem>
+              <SelectItem value="kitten">🐾 Котёнок</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="locationId">Локация ID</Label>
           <Input
