@@ -212,8 +212,8 @@ export default function MapView({
   };
 
   return (
-    <div className="w-full h-full">
-      <div className="bg-card rounded-xl p-3 md:p-6 relative overflow-hidden h-full flex flex-col">
+    <div className="w-full h-full min-h-[600px]">
+      <div className="bg-card rounded-xl p-3 md:p-6 relative overflow-hidden flex flex-col min-h-[600px]">
         {/* Background */}
         <div className="absolute inset-0 opacity-30">
           <div 
@@ -229,7 +229,7 @@ export default function MapView({
         </div>
 
         {/* Content */}
-        <div className="relative z-10 h-full flex flex-col">
+        <div className="relative z-10 flex flex-col h-full min-h-[600px]">
           {/* Header - Mobile Optimized */}
           <div className="mb-3 flex-shrink-0">
             <h3 className="text-lg font-bold mb-2 text-foreground">
@@ -248,9 +248,16 @@ export default function MapView({
           </div>
 
           {/* Map Container - Horizontal Scroll */}
-          <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border h-[400px] md:h-[500px] lg:h-[600px] mb-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+          <div className="relative w-full flex-1 bg-gradient-to-br from-green-900/20 via-yellow-900/20 to-cyan-900/20 rounded-lg border border-border min-h-[400px] md:min-h-[500px] lg:min-h-[600px] mb-4 overflow-x-auto overflow-y-hidden">
             {/* Extended Map Area */}
-            <div className="relative min-w-[800px] md:min-w-[1000px] lg:min-w-[1200px] h-full">
+            <div 
+              className="relative h-full bg-red-500/10 border border-red-500" 
+              style={{ 
+                width: '800px',
+                minWidth: '800px',
+                height: '400px'
+              }}
+            >
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
@@ -260,6 +267,11 @@ export default function MapView({
                 })
               ).flat()}
 
+              {/* Debug info */}
+              <div className="absolute top-2 left-2 bg-black bg-opacity-80 text-white text-xs p-2 rounded z-50">
+                Locations: {LOCATIONS_DATA.length} | Current: {character.currentLocationId}
+              </div>
+              
               {/* Render locations - HIGHER Z-INDEX */}
               {LOCATIONS_DATA.map((loc) => (
                 <MapLocation
