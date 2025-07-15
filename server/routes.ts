@@ -985,6 +985,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`No completed combat found for character ${character.id}`);
       }
       
+      // Get chat messages for current location
+      const chatMessages = await storage.getChatMessages(character.currentLocationId, 50);
+      
       res.json({
         character,
         location,
@@ -995,7 +998,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentCombat,
         currentGroup,
         groupsInLocation,
-        lastCompletedCombat: lastCombat
+        lastCompletedCombat: lastCombat,
+        chatMessages
       });
     } catch (error) {
       console.error("Get game state error:", error);

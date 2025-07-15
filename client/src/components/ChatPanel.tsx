@@ -24,15 +24,19 @@ export function ChatPanel({ gameState }: ChatPanelProps) {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ locationId, characterId, message }: { locationId: number; characterId: number; message: string }) => {
-      return await apiRequest('/api/chat/send', {
-        method: 'POST',
-        body: JSON.stringify({ locationId, characterId, message }),
-      });
+      console.log('Sending chat message:', { locationId, characterId, message });
+      const response = await apiRequest('POST', '/api/chat/send', { locationId, characterId, message });
+      return response.json();
     },
     onSuccess: () => {
+      console.log('Chat message sent successfully');
       setMessage('');
       setIsTyping(false);
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+    },
+    onError: (error: any) => {
+      console.error('Failed to send chat message:', error);
+      setIsTyping(false);
     },
   });
 
