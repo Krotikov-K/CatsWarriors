@@ -131,6 +131,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  async function broadcastRankChange(characterId: number) {
+    const character = await storage.getCharacter(characterId);
+    if (!character) return;
+
+    const updateMessage: WebSocketMessage = {
+      type: 'rank_change',
+      data: { character },
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to all connected clients to update tribe member lists
+    for (const [clientCharacterId, client] of connectedClients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(updateMessage));
+      }
+    }
+  }
+
   // Telegram authentication route
   app.post("/api/auth/telegram", async (req, res) => {
     try {
@@ -795,6 +813,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         locationId: requester.currentLocationId,
         characterId: targetCharacter.id,
       });
+
+      // Broadcast rank change to all players
+      await broadcastRankChange(characterId);
 
       res.json({ character: updatedCharacter });
     } catch (error) {

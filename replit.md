@@ -254,6 +254,11 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Automatic cleanup of messages older than 24 hours for performance
   * Limited to 50 messages per location with optimization for mobile devices
   * Fixed critical location validation bug preventing message sending
+- July 15, 2025. Rank management system fixes:
+  * Fixed HTTP 401 authentication error in rank assignment by adding requesterId to API requests
+  * Added WebSocket broadcasting for real-time rank change notifications
+  * Improved cache invalidation to update UI immediately after rank changes
+  * Added delayed refresh mechanism to ensure consistent UI updates across all components
 
 ## User Preferences
 

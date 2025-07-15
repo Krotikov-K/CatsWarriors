@@ -33,7 +33,16 @@ export default function RankManagement({ character, playersInLocation }: RankMan
         title: "Ранг изменён!",
         description: `Персонаж получил новую должность: ${RANKS[selectedRank as keyof typeof RANKS]?.name}`,
       });
+      // Invalidate both game state and tribe members queries
       queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tribe-members"] });
+      
+      // Force refresh after a short delay to ensure UI updates
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/game-state"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/tribe-members"] });
+      }, 500);
+      
       setIsOpen(false);
       setSelectedCharacter(null);
       setSelectedRank("");
