@@ -114,6 +114,13 @@
     width: 100%;
     overflow-x: hidden;
   }
+  
+  /* Desktop specific fixes */
+  @media (min-width: 1024px) {
+    body {
+      overflow-x: visible;
+    }
+  }
 
   /* Mobile viewport height fix */
   @supports (height: 100dvh) {

@@ -167,8 +167,8 @@ export default function MapView({
   };
 
   const renderPath = (from: any, to: any) => {
-    // Calculate circle radius in viewport units (approximately 3% for mobile, 4% for desktop)
-    const circleRadius = 3;
+    // Calculate circle radius in percentage units (approximately 3% for mobile, 4% for desktop)
+    const circleRadius = 2.5;
     
     // Calculate direction vector
     const dx = to.x - from.x;
@@ -250,7 +250,7 @@ export default function MapView({
           {/* Map Container - Horizontal Scroll */}
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border h-[400px] md:h-[500px] lg:h-[600px] mb-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Extended Map Area */}
-            <div className="relative w-[170vw] md:w-[140vw] lg:w-[120vw] h-full">
+            <div className="relative min-w-[800px] md:min-w-[1000px] lg:min-w-[1200px] h-full">
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
