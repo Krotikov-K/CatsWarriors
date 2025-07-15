@@ -4,7 +4,8 @@ import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Home, Map, Swords, User, Crown } from "lucide-react";
+import { Home, Map, MessageCircle, User, Crown } from "lucide-react";
+import { ChatPanel } from '@/components/ChatPanel';
 import { navigate } from "wouter/use-browser-location";
 
 // Import all game components
@@ -488,6 +489,13 @@ export default function GameDashboard() {
           </div>
         );
 
+      case 'chat':
+        return (
+          <div className="p-4 pb-20 h-full">
+            <ChatPanel gameState={gameState} />
+          </div>
+        );
+
       case 'tribe':
         return (
           <div className="p-4 space-y-6 pb-20">
@@ -628,15 +636,15 @@ export default function GameDashboard() {
           </button>
           
           <button
-            onClick={() => setActiveTab('combat')}
+            onClick={() => setActiveTab('chat')}
             className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
-              activeTab === 'combat'
+              activeTab === 'chat'
                 ? 'text-primary bg-primary/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Swords className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Бой</span>
+            <MessageCircle className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Чат</span>
           </button>
           
           <button

@@ -105,6 +105,14 @@ export const groupMembers = pgTable("group_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  locationId: integer("location_id").notNull(),
+  characterId: integer("character_id").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -191,6 +199,12 @@ export const joinGroupSchema = z.object({
   groupId: z.number(),
 });
 
+export const insertChatMessageSchema = z.object({
+  locationId: z.number(),
+  characterId: z.number(),
+  message: z.string().min(1).max(200),
+});
+
 // Types
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -219,6 +233,7 @@ export type Combat = typeof combats.$inferSelect;
 export type GameEvent = typeof gameEvents.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
 
 export interface CombatLogEntry {
   timestamp: string;
@@ -247,6 +262,7 @@ export interface GameState {
   currentGroup: Group | null;
   groupsInLocation: Group[];
   lastCompletedCombat?: Combat | null;
+  chatMessages: ChatMessage[];
 }
 
 export interface WebSocketMessage {

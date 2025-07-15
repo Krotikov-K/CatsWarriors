@@ -7,6 +7,7 @@ import {
   gameEvents,
   groups,
   groupMembers,
+  chatMessages,
   type User,
   type Character,
   type Location,
@@ -15,6 +16,7 @@ import {
   type GameEvent,
   type Group,
   type GroupMember,
+  type ChatMessage,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
@@ -91,6 +93,11 @@ export interface IStorage {
   // Health regeneration
   processHealthRegeneration(characterId: number): Promise<Character | undefined>;
   useHealingPoultice(characterId: number): Promise<Character | undefined>;
+
+  // Chat methods
+  getChatMessages(locationId: number, limit?: number): Promise<ChatMessage[]>;
+  createChatMessage(locationId: number, characterId: number, message: string): Promise<ChatMessage>;
+  cleanupOldChatMessages(locationId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1286,6 +1293,44 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedCharacter;
+  }
+
+  // Chat methods
+  async getChatMessages(locationId: number, limit: number = 50): Promise<ChatMessage[]> {
+    // Auto-cleanup old messages
+    await this.cleanupOldChatMessages(locationId);
+    
+    const result = await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.locationId, locationId))
+      .orderBy(chatMessages.createdAt)
+      .limit(limit);
+    
+    return result;
+  }
+
+  async createChatMessage(locationId: number, characterId: number, message: string): Promise<ChatMessage> {
+    const [chatMessage] = await db
+      .insert(chatMessages)
+      .values({ locationId, characterId, message })
+      .returning();
+    
+    return chatMessage;
+  }
+
+  async cleanupOldChatMessages(locationId: number): Promise<void> {
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    
+    await db
+      .delete(chatMessages)
+      .where(
+        and(
+          eq(chatMessages.locationId, locationId),
+          lt(chatMessages.createdAt, oneDayAgo)
+        )
+      );
   }
 }
 

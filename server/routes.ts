@@ -311,6 +311,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get last completed combat for results
       const lastCompletedCombat = await storage.getCharacterLastCompletedCombat(character.id);
+      
+      // Get chat messages for current location
+      const chatMessages = await storage.getChatMessages(character.currentLocationId);
 
       const gameState = {
         character,
@@ -322,7 +325,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentCombat,
         currentGroup,
         groupsInLocation,
-        lastCompletedCombat
+        lastCompletedCombat,
+        chatMessages
       };
 
       res.json(gameState);
@@ -466,6 +470,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Move character error:", error);
       res.status(400).json({ message: "Move failed" });
+    }
+  });
+
+  // Chat routes
+  app.post("/api/chat/send", async (req, res) => {
+    try {
+      const { locationId, characterId, message } = req.body;
+      
+      // Validate inputs
+      if (!locationId || !characterId || !message?.trim()) {
+        return res.status(400).json({ message: "Invalid chat message data" });
+      }
+
+      // Check if character exists and is in the specified location
+      const character = await storage.getCharacter(characterId);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      if (character.currentLocationId !== locationId) {
+        return res.status(403).json({ message: "Character not in this location" });
+      }
+
+      // Create chat message
+      const chatMessage = await storage.createChatMessage(locationId, characterId, message.trim());
+      
+      // Broadcast to all players in the location
+      const playersInLocation = await storage.getCharactersByLocation(locationId);
+      const updateMessage = {
+        type: 'chat_message',
+        data: { chatMessage, character: { id: character.id, name: character.name, clan: character.clan } },
+        timestamp: new Date().toISOString()
+      };
+
+      for (const player of playersInLocation) {
+        const client = connectedClients.get(player.id);
+        if (client && client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(updateMessage));
+        }
+      }
+
+      res.json({ success: true, chatMessage });
+    } catch (error) {
+      console.error("Send chat message error:", error);
+      res.status(500).json({ message: "Failed to send chat message" });
     }
   });
 
