@@ -243,6 +243,17 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Created promotion system where kittens can choose between apprentice (🔰) or healer apprentice (🌱) paths
   * Added `/api/character/promote-kitten` endpoint for ceremony-based promotions
   * Elders only appear to kittens in their own clan camp for authentic role-playing experience
+- July 15, 2025. Location-based chat system implementation:
+  * Created comprehensive chat system with persistent message storage in database
+  * Added chat_messages table with locationId, characterId, message, and timestamp fields
+  * Implemented ChatPanel component with real-time messaging interface
+  * Replaced Combat tab with Chat tab in bottom navigation for better UX
+  * Added clan-based visual indicators in chat: ⚡ for Thunder clan, 🌊 for River clan
+  * Created chat API endpoints: /api/chat/send for sending messages
+  * Messages persist between sessions and location changes
+  * Automatic cleanup of messages older than 24 hours for performance
+  * Limited to 50 messages per location with optimization for mobile devices
+  * Fixed critical location validation bug preventing message sending
 
 ## User Preferences
 
