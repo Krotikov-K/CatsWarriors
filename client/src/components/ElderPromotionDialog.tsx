@@ -20,7 +20,8 @@ export default function ElderPromotionDialog({ isOpen, onClose, character }: Eld
     mutationFn: async (newRank: string) => {
       const response = await apiRequest("POST", "/api/character/promote-kitten", {
         characterId: character.id,
-        newRank: newRank
+        newRank: newRank,
+        userId: character.userId
       });
       return response.json();
     },
