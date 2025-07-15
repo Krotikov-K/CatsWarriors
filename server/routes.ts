@@ -757,8 +757,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/character/promote-kitten", async (req: Request, res: Response) => {
     try {
-      const { characterId, newRank } = req.body;
-      const userId = (req as AuthenticatedRequest).userId || 1;
+      const { characterId, newRank, userId } = req.body;
+      const requestUserId = userId || (req as AuthenticatedRequest).userId || 1;
 
       // Get character
       const character = await storage.getCharacter(characterId);
@@ -767,7 +767,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if character belongs to user
-      if (character.userId !== userId) {
+      if (character.userId !== requestUserId) {
+        console.log(`Promotion failed: character userId ${character.userId} !== request userId ${requestUserId}`);
         return res.status(403).json({ error: "Not your character" });
       }
 
