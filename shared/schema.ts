@@ -255,7 +255,7 @@ export const CLANS = {
 
 export const LOCATIONS_DATA = [
   // Племенные лагеря (очень далеко по краям)
-  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 2, y: 50, connectedTo: [9], emoji: "🏠" },
+  { id: 1, name: "Лагерь Грозового Племени", type: "camp", clan: "thunder", dangerLevel: 1, x: 1, y: 50, connectedTo: [9], emoji: "🏠" },
   { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 98, y: 50, connectedTo: [5], emoji: "🏕️" },
   
   // Зелёные локации (замкнутый внешний круг)

@@ -250,7 +250,7 @@ export default function MapView({
           {/* Map Container - Horizontal Scroll */}
           <div className="relative w-full flex-1 bg-black bg-opacity-20 rounded-lg border border-border h-[400px] mb-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
             {/* Extended Map Area */}
-            <div className="relative w-[150vw] h-full">
+            <div className="relative w-[170vw] h-full">
               {/* Render paths between connected locations - LOWER Z-INDEX */}
               {LOCATIONS_DATA.map(loc => 
                 loc.connectedTo.map(connectedId => {
