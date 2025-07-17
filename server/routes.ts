@@ -28,11 +28,8 @@ const connectedClients = new Map<number, WebSocket>(); // characterId -> WebSock
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  // Simple session-based user tracking
-  const userSessions = new Map<string, number>(); // IP -> userId
-
   // Development mode authentication middleware
-  app.use((req, res, next) => {
+  app.use(async (req, res, next) => {
     if (process.env.NODE_ENV === "development") {
       let resolvedUserId = 1; // Default to Кисяо
       
@@ -44,48 +41,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const devUserId = userFromUrl || req.query.devUserId || req.headers['x-dev-user-id'];
       if (devUserId) {
         resolvedUserId = parseInt(devUserId as string);
-        // Store in session for this IP
-        const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-        userSessions.set(clientIP, resolvedUserId);
       } else {
-        // Check session for this IP
-        const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-        const sessionUserId = userSessions.get(clientIP);
-        
-        if (sessionUserId) {
-          resolvedUserId = sessionUserId;
-        } else {
-          // Check Telegram WebApp data for userId
-          const telegramInitData = req.headers['x-telegram-init-data'];
-          if (telegramInitData) {
-            try {
-              const urlParams = new URLSearchParams(telegramInitData as string);
-              const userParam = urlParams.get('user');
-              if (userParam) {
-                const user = JSON.parse(userParam);
-                const telegramId = user.id.toString();
-                // Map Telegram ID to userId (simple mapping for development)
-                if (telegramId === '12345') {
-                  resolvedUserId = 3; // Админ
-                } else {
-                  resolvedUserId = 1; // Default Кисяо
-                }
-                userSessions.set(clientIP, resolvedUserId);
+        // Check Telegram WebApp data for real authentication
+        const telegramInitData = req.headers['x-telegram-init-data'];
+        if (telegramInitData) {
+          try {
+            const urlParams = new URLSearchParams(telegramInitData as string);
+            const userParam = urlParams.get('user');
+            if (userParam) {
+              const telegramUser = JSON.parse(userParam);
+              const telegramId = telegramUser.id.toString();
+              
+              // Find user by Telegram ID in database
+              const user = await storage.getUserByTelegramId(telegramId);
+              if (user) {
+                resolvedUserId = user.id;
+              } else {
+                // Create new user if not exists
+                const newUser = await storage.createUser({
+                  username: telegramUser.username || `user_${telegramId}`,
+                  telegramId: telegramId,
+                  firstName: telegramUser.first_name || "",
+                  lastName: telegramUser.last_name || "",
+                  password: "telegram_auth"
+                });
+                resolvedUserId = newUser.id;
               }
-            } catch (error) {
-              resolvedUserId = 1;
             }
-          } else {
-            // Check browser URL for userid (simple fallback)
-            const refererUrl = req.headers.referer;
-            if (refererUrl && refererUrl.includes('userId=3')) {
-              resolvedUserId = 3;
-              userSessions.set(clientIP, resolvedUserId);
-            } else {
-              resolvedUserId = 1;
-              userSessions.set(clientIP, resolvedUserId);
-            }
+          } catch (error) {
+            console.error("Telegram auth error:", error);
+            resolvedUserId = 1;
           }
+        } else {
+          // Fallback: use default mapping for development
+          resolvedUserId = 1; // Default to Кисяо
         }
       }
       
@@ -93,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log authentication for diplomacy requests only
       if (req.url.includes('/api/diplomacy/')) {
-        console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, referer=${req.headers.referer}, query=${JSON.stringify(req.query)}`);
+        console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, telegramData=${req.headers['x-telegram-init-data'] ? 'present' : 'absent'}`);
         console.log(`DIPLOMACY REQUEST: devUserId=${devUserId}, resolvedUserId=${resolvedUserId}, userFromUrl=${userFromUrl}`);
       }
     }
