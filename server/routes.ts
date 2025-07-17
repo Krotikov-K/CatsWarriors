@@ -74,10 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       (req as AuthenticatedRequest).userId = resolvedUserId;
       
-      // Log authentication for all requests
-      console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, referer=${req.headers.referer}, query=${JSON.stringify(req.query)}`);
-      
+      // Log authentication for diplomacy requests only
       if (req.url.includes('/api/diplomacy/')) {
+        console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, referer=${req.headers.referer}, query=${JSON.stringify(req.query)}`);
         console.log(`DIPLOMACY REQUEST: devUserId=${devUserId}, resolvedUserId=${resolvedUserId}, userFromUrl=${userFromUrl}`);
       }
     }
