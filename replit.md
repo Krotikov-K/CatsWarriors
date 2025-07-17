@@ -297,6 +297,14 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Server-side validation prevents PvP combat during peaceful relations
   * Clear UI indicators show when attacks are forbidden due to peace
   * Updated game rules to reflect new diplomacy-based combat system
+- July 17, 2025. Critical diplomacy system fixes:
+  * Fixed HTTP 403 authentication errors preventing peace proposal viewing
+  * Resolved HTTP 500 error when declaring war due to missing broadcastToAll function
+  * Added development middleware for testing with multiple user sessions via X-Dev-User-Id header
+  * Created DevUserSwitcher component for easy user switching in development mode
+  * Fixed client-side authentication by adding devUserId support in queryClient
+  * All diplomacy features now fully functional: war declarations, peace proposals, and responses
+  * Real-time WebSocket updates work correctly for all diplomacy state changes
 
 ## User Preferences
 

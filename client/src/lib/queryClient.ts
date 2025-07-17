@@ -19,6 +19,14 @@ export async function apiRequest(
     },
   };
 
+  // Add development user ID for testing
+  if (import.meta.env.DEV) {
+    const devUserId = localStorage.getItem('devUserId');
+    if (devUserId) {
+      (options.headers as any)['x-dev-user-id'] = devUserId;
+    }
+  }
+
   // Add admin authentication for admin endpoints
   if (url.includes('/api/admin/')) {
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
@@ -62,6 +70,14 @@ export const getQueryFn: <T>(options: {
       const options: RequestInit = {
         headers: {}
       };
+
+      // Add development user ID for testing
+      if (import.meta.env.DEV) {
+        const devUserId = localStorage.getItem('devUserId');
+        if (devUserId) {
+          (options.headers as any)['x-dev-user-id'] = devUserId;
+        }
+      }
 
       // Add admin authentication for admin endpoints
       if (url.includes('/api/admin/')) {

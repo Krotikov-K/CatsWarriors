@@ -164,6 +164,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  async function broadcastDiplomacyUpdate(relations: any, message: string) {
+    const updateMessage: WebSocketMessage = {
+      type: 'diplomacy_change',
+      data: { relations, message },
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to all connected clients
+    for (const [characterId, client] of connectedClients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(updateMessage));
+      }
+    }
+  }
+
   // Telegram authentication route
   app.post("/api/auth/telegram", async (req, res) => {
     try {
@@ -1475,10 +1490,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast diplomacy change to all connected players
-      broadcastToAll('diplomacy_change', {
-        relations: await storage.getAllDiplomacyRelations(),
-        message: `${character.name} ${status === "war" ? "объявил войну" : "заключил мир"} с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`
-      });
+      await broadcastDiplomacyUpdate(
+        await storage.getAllDiplomacyRelations(),
+        `${character.name} ${status === "war" ? "объявил войну" : "заключил мир"} с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`
+      );
 
       res.json({ success: true, type: "direct" });
     } catch (error) {

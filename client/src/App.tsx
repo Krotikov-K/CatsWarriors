@@ -7,6 +7,7 @@ import CharacterCreation from "@/pages/CharacterCreation";
 import SimpleAdminPanel from "@/pages/SimpleAdminPanel";
 import AdminLogin from "@/pages/AdminLogin";
 import NotFound from "@/pages/not-found";
+import { DevUserSwitcher } from "@/components/DevUserSwitcher";
 
 function App() {
   console.log('App starting...');
@@ -14,6 +15,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background text-foreground">
+        <DevUserSwitcher />
         <Switch>
           <Route path="/create-character" component={CharacterCreation} />
           <Route path="/admin-login" component={AdminLogin} />
