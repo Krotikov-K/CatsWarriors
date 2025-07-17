@@ -24,16 +24,6 @@ export default function TopBar({ location, playersOnline }: TopBarProps) {
         <div className="ml-4 text-sm text-gray-400">
           <i className="fas fa-users mr-1"></i>
           <span>{playersOnline} игроков в локации</span>
-          {import.meta.env.DEV && (
-            <div className="ml-4 space-x-2">
-              <a href="?userId=1" className="underline text-amber-400 hover:text-amber-300">
-                Кисяо
-              </a> | 
-              <a href="?userId=3" className="underline text-blue-400 hover:text-blue-300">
-                Админ
-              </a>
-            </div>
-          )}
         </div>
       </div>
       

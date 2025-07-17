@@ -302,7 +302,7 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Resolved HTTP 500 error when declaring war due to missing broadcastToAll function
   * Added broadcastDiplomacyUpdate function for real-time diplomacy notifications
   * Implemented URL parameter-based user authentication for development testing
-  * Added simple user switcher links in TopBar for development mode only
+  * Removed development user switcher links from TopBar per user request
   * Fixed client-side authentication to work with browser requests (not just curl)
   * All diplomacy features now fully functional: war declarations, peace proposals, and responses
   * Real-time WebSocket updates work correctly for all diplomacy state changes
