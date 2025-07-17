@@ -66,6 +66,8 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
       const fromClan = character.clan;
       const toClan = character.clan === "thunder" ? "river" : "thunder";
       
+      console.log(`DiplomacyPanel: Sending request for ${character.name} (${character.clan}) - fromClan: ${fromClan}, toClan: ${toClan}, status: ${status}`);
+      
       const response = await apiRequest("POST", "/api/diplomacy/change", {
         fromClan,
         toClan,
