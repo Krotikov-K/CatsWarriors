@@ -1419,21 +1419,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only change diplomacy for your own clan" });
       }
 
-      // Change diplomacy status
+      // For peace proposals, create a proposal instead of direct change
+      if (status === "peace") {
+        const currentStatus = await storage.getDiplomacyStatus(fromClan, toClan);
+        if (currentStatus === "war") {
+          // Create peace proposal
+          await storage.createDiplomacyProposal(fromClan, toClan, status, character.id, "Предложение мира");
+          
+          await storage.createGameEvent({
+            type: "diplomacy_proposal",
+            message: `${character.name} предложил мир с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`,
+            locationId: character.currentLocationId,
+            characterId: character.id,
+          });
+
+          return res.json({ success: true, type: "proposal" });
+        }
+      }
+
+      // Direct change for war declaration
       await storage.changeDiplomacyStatus(fromClan, toClan, status, character.id);
 
       // Create game event
       await storage.createGameEvent({
         type: "diplomacy_change",
-        message: `${character.name} изменил отношения с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем на ${status === "war" ? "войну" : "мир"}`,
+        message: `${character.name} ${status === "war" ? "объявил войну" : "заключил мир"} с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`,
+        locationId: character.currentLocationId,
+        characterId: character.id,
+      });
+
+      res.json({ success: true, type: "direct" });
+    } catch (error) {
+      console.error("Change diplomacy error:", error);
+      res.status(500).json({ message: "Failed to change diplomacy" });
+    }
+  });
+
+  app.get("/api/diplomacy/proposals", async (req: Request, res: Response) => {
+    try {
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      // Get user's character
+      const characters = await storage.getCharactersByUserId(userId);
+      if (!characters.length) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const character = characters[0];
+
+      // Only leaders can see proposals
+      if (character.rank !== "leader") {
+        return res.status(403).json({ message: "Only leaders can view diplomacy proposals" });
+      }
+
+      const proposals = await storage.getDiplomacyProposals(character.clan);
+      res.json({ proposals });
+    } catch (error) {
+      console.error("Get diplomacy proposals error:", error);
+      res.status(500).json({ message: "Failed to get diplomacy proposals" });
+    }
+  });
+
+  app.post("/api/diplomacy/respond", async (req: Request, res: Response) => {
+    try {
+      const { respondToProposalSchema } = await import("@shared/schema");
+      const { proposalId, response } = respondToProposalSchema.parse(req.body);
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      // Get user's character
+      const characters = await storage.getCharactersByUserId(userId);
+      if (!characters.length) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const character = characters[0];
+
+      // Only leaders can respond to proposals
+      if (character.rank !== "leader") {
+        return res.status(403).json({ message: "Only leaders can respond to diplomacy proposals" });
+      }
+
+      await storage.respondToProposal(proposalId, response, character.id);
+
+      // Create game event
+      await storage.createGameEvent({
+        type: "diplomacy_response",
+        message: `${character.name} ${response === "accepted" ? "принял" : "отклонил"} предложение мира`,
         locationId: character.currentLocationId,
         characterId: character.id,
       });
 
       res.json({ success: true });
     } catch (error) {
-      console.error("Change diplomacy error:", error);
-      res.status(500).json({ message: "Failed to change diplomacy" });
+      console.error("Respond to diplomacy proposal error:", error);
+      res.status(500).json({ message: "Failed to respond to proposal" });
     }
   });
 

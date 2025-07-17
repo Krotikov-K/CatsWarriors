@@ -123,6 +123,19 @@ export const diplomacy = pgTable("diplomacy", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const diplomacyProposals = pgTable("diplomacy_proposals", {
+  id: serial("id").primaryKey(),
+  fromClan: text("from_clan").notNull(), // "thunder", "river"
+  toClan: text("to_clan").notNull(), // "thunder", "river"
+  proposedStatus: text("proposed_status").notNull(), // "peace", "war"
+  proposedBy: integer("proposed_by").references(() => characters.id),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
+  createdAt: timestamp("created_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+  respondedBy: integer("responded_by").references(() => characters.id),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -228,6 +241,18 @@ export const changeDiplomacySchema = z.object({
   status: z.enum(["peace", "war"]),
 });
 
+export const proposeDiplomacySchema = z.object({
+  fromClan: z.enum(["thunder", "river"]),
+  toClan: z.enum(["thunder", "river"]),
+  proposedStatus: z.enum(["peace", "war"]),
+  message: z.string().max(200).optional(),
+});
+
+export const respondToProposalSchema = z.object({
+  proposalId: z.number(),
+  response: z.enum(["accepted", "rejected"]),
+});
+
 // Types
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -259,6 +284,7 @@ export type GroupMember = typeof groupMembers.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type Diplomacy = typeof diplomacy.$inferSelect;
 export type InsertDiplomacy = z.infer<typeof insertDiplomacySchema>;
+export type DiplomacyProposal = typeof diplomacyProposals.$inferSelect;
 
 export interface CombatLogEntry {
   timestamp: string;

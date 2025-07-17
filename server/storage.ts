@@ -9,6 +9,7 @@ import {
   groupMembers,
   chatMessages,
   diplomacy,
+  diplomacyProposals,
   type User,
   type Character,
   type Location,
@@ -19,6 +20,7 @@ import {
   type GroupMember,
   type ChatMessage,
   type Diplomacy,
+  type DiplomacyProposal,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
@@ -105,6 +107,11 @@ export interface IStorage {
   getDiplomacyStatus(fromClan: string, toClan: string): Promise<string>;
   getAllDiplomacyRelations(): Promise<Record<string, Record<string, string>>>;
   changeDiplomacyStatus(fromClan: string, toClan: string, status: string, changedBy: number): Promise<void>;
+  
+  // Diplomacy proposals
+  createDiplomacyProposal(fromClan: string, toClan: string, proposedStatus: string, proposedBy: number, message?: string): Promise<DiplomacyProposal>;
+  getDiplomacyProposals(clan: string): Promise<DiplomacyProposal[]>;
+  respondToProposal(proposalId: number, response: string, respondedBy: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1417,6 +1424,53 @@ export class DatabaseStorage implements IStorage {
       await db
         .insert(diplomacy)
         .values({ fromClan: toClan, toClan: fromClan, status, changedBy });
+    }
+  }
+
+  // Diplomacy proposals
+  async createDiplomacyProposal(fromClan: string, toClan: string, proposedStatus: string, proposedBy: number, message?: string): Promise<DiplomacyProposal> {
+    const [proposal] = await db
+      .insert(diplomacyProposals)
+      .values({ fromClan, toClan, proposedStatus, proposedBy, message })
+      .returning();
+    return proposal;
+  }
+
+  async getDiplomacyProposals(clan: string): Promise<DiplomacyProposal[]> {
+    // Get proposals for this clan (as receiver)
+    return await db
+      .select()
+      .from(diplomacyProposals)
+      .where(and(
+        eq(diplomacyProposals.toClan, clan),
+        eq(diplomacyProposals.status, "pending")
+      ))
+      .orderBy(diplomacyProposals.createdAt);
+  }
+
+  async respondToProposal(proposalId: number, response: string, respondedBy: number): Promise<void> {
+    const [proposal] = await db
+      .select()
+      .from(diplomacyProposals)
+      .where(eq(diplomacyProposals.id, proposalId));
+
+    if (!proposal) {
+      throw new Error("Proposal not found");
+    }
+
+    // Update proposal status
+    await db
+      .update(diplomacyProposals)
+      .set({ 
+        status: response, 
+        respondedBy, 
+        respondedAt: new Date() 
+      })
+      .where(eq(diplomacyProposals.id, proposalId));
+
+    // If accepted, change diplomacy status
+    if (response === "accepted") {
+      await this.changeDiplomacyStatus(proposal.fromClan, proposal.toClan, proposal.proposedStatus, respondedBy);
     }
   }
 }

@@ -282,6 +282,14 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Fixed victory modal display - now shows to actual winner instead of loser
   * Updated HP formula to 80 + (endurance * 5) for better combat balance
   * Both server and client logic now properly handle PvP defeat conditions
+- July 15, 2025. Advanced diplomacy system with peace proposals:
+  * Added diplomacy_proposals table for managing peace negotiations between tribes
+  * War declarations are immediate, but peace requires bilateral agreement through proposals
+  * Enhanced DiplomacyPanel with proposal management interface showing incoming peace offers
+  * Only tribal leaders can send/respond to diplomacy proposals with accept/reject options
+  * Created comprehensive API endpoints for proposal creation, viewing, and responses
+  * Peace proposals include timestamps, optional messages, and automated status tracking
+  * System prevents unilateral peace declarations during wartime - requires enemy leader approval
 
 ## User Preferences
 
