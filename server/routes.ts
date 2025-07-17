@@ -1600,6 +1600,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to force end all active combats
+  app.post("/api/admin/force-end-combats", async (req, res) => {
+    try {
+      console.log("Force ending all active combats...");
+      
+      // Get all active combats and force end them
+      const allCombats = await storage.getAllActiveCombats();
+      console.log(`Found ${allCombats.length} active combats to end`);
+      
+      for (const combat of allCombats) {
+        console.log(`Force ending combat ${combat.id}`);
+        await storage.finishCombat(combat.id);
+      }
+      
+      res.json({ 
+        message: "All active combats ended successfully", 
+        endedCombats: allCombats.length 
+      });
+    } catch (error) {
+      console.error("Force end combats error:", error);
+      res.status(500).json({ message: "Failed to end combats" });
+    }
+  });
+
   app.get("/api/tribe-members/:clan", async (req: Request, res: Response) => {
     try {
       const { clan } = req.params;

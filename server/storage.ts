@@ -70,6 +70,7 @@ export interface IStorage {
   // Combat methods
   getCombat(id: number): Promise<Combat | undefined>;
   getActiveCombatsInLocation(locationId: number): Promise<Combat[]>;
+  getAllActiveCombats(): Promise<Combat[]>;
   getCharacterActiveCombat(characterId: number): Promise<Combat | undefined>;
   getCharacterLastCompletedCombat(characterId: number): Promise<Combat | undefined>;
   createCombat(locationId: number, participants: number[]): Promise<Combat>;
@@ -1003,6 +1004,12 @@ export class DatabaseStorage implements IStorage {
   async getActiveCombatsInLocation(locationId: number): Promise<Combat[]> {
     return Array.from(this.combatsMap.values()).filter(
       combat => combat.locationId === locationId && combat.status === "active"
+    );
+  }
+
+  async getAllActiveCombats(): Promise<Combat[]> {
+    return Array.from(this.combatsMap.values()).filter(
+      combat => combat.status === "active"
     );
   }
 

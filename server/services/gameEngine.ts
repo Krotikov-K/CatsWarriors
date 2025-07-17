@@ -64,10 +64,15 @@ export class GameEngine {
       turn: combat.currentTurn
     });
 
-    // Check if combat should end
+    // Check if combat should end - force end if NPCs are dead or characters defeated
     if (combat.type === "pve") {
-      if (aliveCharacters.length === 0 || aliveNPCs.length === 0) {
-        console.log(`PvE combat ${combatId} ending: chars=${aliveCharacters.length}, npcs=${aliveNPCs.length}`);
+      // Force check: if any NPCs have 0 HP or are marked as dead, end combat immediately
+      const deadNPCs = npcs.filter(npc => npc && (npc.currentHp <= 0 || npc.isDead));
+      if (aliveCharacters.length === 0 || aliveNPCs.length === 0 || deadNPCs.length > 0) {
+        console.log(`PvE combat ${combatId} ending: chars=${aliveCharacters.length}, npcs=${aliveNPCs.length}, deadNPCs=${deadNPCs.length}`);
+        if (deadNPCs.length > 0) {
+          console.log(`Force ending due to dead NPCs: ${deadNPCs.map(npc => `${npc.name} (HP: ${npc.currentHp}, Dead: ${npc.isDead})`).join(', ')}`);
+        }
         await this.endCombat(combatId);
         return;
       }
@@ -336,6 +341,9 @@ export class GameEngine {
   static async startAutoCombat(combatId: number): Promise<void> {
     console.log(`Starting auto combat for combat ID: ${combatId}`);
     
+    let turnCount = 0;
+    const maxTurns = 100; // Prevent infinite combats
+    
     // Process combat turns every 3 seconds to give client time to see updates
     const interval = setInterval(async () => {
       try {
@@ -346,12 +354,41 @@ export class GameEngine {
           return;
         }
         
+        // Safety check: force end combat after too many turns
+        turnCount++;
+        if (turnCount > maxTurns) {
+          console.log(`Combat ${combatId} exceeded maximum turns (${maxTurns}), force ending`);
+          await this.endCombat(combatId);
+          clearInterval(interval);
+          return;
+        }
+        
         await this.processCombatTurn(combatId);
       } catch (error) {
         console.error(`Error processing combat turn for ${combatId}:`, error);
-        // Don't stop combat on single error, just log it
+        // Stop combat on repeated errors to prevent infinite loops
+        clearInterval(interval);
+        try {
+          await this.endCombat(combatId);
+        } catch (endError) {
+          console.error(`Failed to end combat ${combatId} after error:`, endError);
+        }
       }
     }, 3000);
+    
+    // Safety timeout: force end combat after 10 minutes
+    setTimeout(async () => {
+      try {
+        const combat = await storage.getCombat(combatId);
+        if (combat && combat.status === "active") {
+          console.log(`Combat ${combatId} timeout after 10 minutes, force ending`);
+          await this.endCombat(combatId);
+        }
+      } catch (error) {
+        console.error(`Error in combat timeout for ${combatId}:`, error);
+      }
+      clearInterval(interval);
+    }, 600000); // 10 minutes
   }
 
   static calculateExperienceGain(level: number, enemyLevel: number): number {

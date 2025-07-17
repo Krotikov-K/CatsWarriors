@@ -317,6 +317,9 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Real-time member location updates every 5 seconds
   * WebSocket group victory notifications implemented and working
   * Group combat system fully functional with proper experience distribution
+  * Added combat safety mechanisms: max turn limit (100), 10-minute timeout, force-end admin endpoint
+  * Improved combat end detection to prevent hanging battles when NPCs are defeated
+  * Added /api/admin/force-end-combats endpoint for emergency combat cleanup
 
 ## User Preferences
 
