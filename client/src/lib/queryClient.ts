@@ -33,10 +33,7 @@ export async function apiRequest(
     const urlParams = new URLSearchParams(window.location.search);
     const devUserId = urlParams.get('userId');
     if (devUserId) {
-      console.log(`Frontend: Setting x-dev-user-id header to ${devUserId}`);
       (options.headers as any)['x-dev-user-id'] = devUserId;
-    } else {
-      console.log(`Frontend: No userId in URL, not setting x-dev-user-id header`);
     }
   }
 
@@ -98,10 +95,7 @@ export const getQueryFn: <T>(options: {
         const urlParams = new URLSearchParams(window.location.search);
         const devUserId = urlParams.get('userId');
         if (devUserId) {
-          console.log(`Frontend mutation: Setting x-dev-user-id header to ${devUserId}`);
           (options.headers as any)['x-dev-user-id'] = devUserId;
-        } else {
-          console.log(`Frontend mutation: No userId in URL, not setting x-dev-user-id header`);
         }
       }
 
