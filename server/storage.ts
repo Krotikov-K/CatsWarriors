@@ -1438,7 +1438,7 @@ export class DatabaseStorage implements IStorage {
 
   async getDiplomacyProposals(clan: string): Promise<DiplomacyProposal[]> {
     // Get proposals for this clan (as receiver)
-    return await db
+    const proposals = await db
       .select()
       .from(diplomacyProposals)
       .where(and(
@@ -1446,6 +1446,9 @@ export class DatabaseStorage implements IStorage {
         eq(diplomacyProposals.status, "pending")
       ))
       .orderBy(diplomacyProposals.createdAt);
+    
+    console.log(`Found ${proposals.length} proposals for clan ${clan}:`, proposals);
+    return proposals;
   }
 
   async respondToProposal(proposalId: number, response: string, respondedBy: number): Promise<void> {

@@ -27,6 +27,21 @@ const connectedClients = new Map<number, WebSocket>(); // characterId -> WebSock
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Development mode authentication middleware - add early in the chain
+  app.use((req, res, next) => {
+    if (process.env.NODE_ENV === "development") {
+      // In development, use query parameter or header to simulate different users
+      const devUserId = req.query.devUserId || req.headers['x-dev-user-id'];
+      if (devUserId) {
+        (req as AuthenticatedRequest).userId = parseInt(devUserId as string);
+      } else if (!(req as AuthenticatedRequest).userId) {
+        // Default to userId=1 for development
+        (req as AuthenticatedRequest).userId = 1;
+      }
+    }
+    next();
+  });
 
   // WebSocket server setup
   const wss = new WebSocketServer({ 
@@ -180,6 +195,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Authentication failed" });
     }
   });
+
+
 
   // User routes
   app.post("/api/register", async (req, res) => {
