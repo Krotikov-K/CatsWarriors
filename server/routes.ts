@@ -89,9 +89,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       (req as AuthenticatedRequest).userId = resolvedUserId;
       
-      // Log authentication for diplomacy requests only
+      // Log authentication for ALL requests to debug
+      console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, telegramData=${req.headers['x-telegram-init-data'] ? 'present' : 'absent'}`);
       if (req.url.includes('/api/diplomacy/')) {
-        console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, devHeader=${req.headers['x-dev-user-id']}, telegramData=${req.headers['x-telegram-init-data'] ? 'present' : 'absent'}`);
         console.log(`DIPLOMACY REQUEST: devUserId=${devUserId}, resolvedUserId=${resolvedUserId}, userFromUrl=${userFromUrl}`);
       }
     }
