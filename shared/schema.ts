@@ -92,7 +92,6 @@ export const groups = pgTable("groups", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   leaderId: integer("leader_id").notNull().references(() => characters.id),
-  locationId: integer("location_id").notNull().references(() => locations.id),
   maxMembers: integer("max_members").notNull().default(5),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -103,6 +102,16 @@ export const groupMembers = pgTable("group_members", {
   groupId: integer("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
   characterId: integer("character_id").notNull().references(() => characters.id, { onDelete: "cascade" }),
   joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const groupApplications = pgTable("group_applications", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+  characterId: integer("character_id").notNull().references(() => characters.id, { onDelete: "cascade" }),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
+  createdAt: timestamp("created_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
 });
 
 export const chatMessages = pgTable("chat_messages", {
@@ -222,6 +231,16 @@ export const joinGroupSchema = z.object({
   groupId: z.number(),
 });
 
+export const applyToGroupSchema = z.object({
+  groupId: z.number(),
+  message: z.string().max(200).optional(),
+});
+
+export const respondToApplicationSchema = z.object({
+  applicationId: z.number(),
+  response: z.enum(["accepted", "rejected"]),
+});
+
 export const insertChatMessageSchema = z.object({
   locationId: z.number(),
   characterId: z.number(),
@@ -281,6 +300,7 @@ export type Combat = typeof combats.$inferSelect;
 export type GameEvent = typeof gameEvents.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
+export type GroupApplication = typeof groupApplications.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type Diplomacy = typeof diplomacy.$inferSelect;
 export type InsertDiplomacy = z.infer<typeof insertDiplomacySchema>;
@@ -311,7 +331,8 @@ export interface GameState {
   isInCombat: boolean;
   currentCombat: Combat | null;
   currentGroup: Group | null;
-  groupsInLocation: Group[];
+  allGroups: Group[];
+  groupApplications: GroupApplication[];
   lastCompletedCombat?: Combat | null;
   chatMessages: ChatMessage[];
 }

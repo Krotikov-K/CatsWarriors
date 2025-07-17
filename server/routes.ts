@@ -412,7 +412,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get groups information
       const currentGroup = await storage.getCharacterGroup(character.id);
-      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
+      const allGroups = await storage.getAllGroups();
+      const groupApplications = await storage.getGroupApplications(currentGroup?.id || 0);
       
       // Get last completed combat for results
       const lastCompletedCombat = await storage.getCharacterLastCompletedCombat(character.id);
@@ -429,7 +430,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isInCombat: !!currentCombat,
         currentCombat,
         currentGroup,
-        groupsInLocation,
+        allGroups,
+        groupApplications,
         lastCompletedCombat,
         chatMessages
       };
@@ -458,7 +460,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get groups information
       const currentGroup = await storage.getCharacterGroup(characterId);
-      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
+      const allGroups = await storage.getAllGroups();
+      const groupApplications = await storage.getGroupApplications(currentGroup?.id || 0);
       
       // Get last completed combat for results
       const lastCompletedCombat = await storage.getCharacterLastCompletedCombat(characterId);
@@ -472,7 +475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isInCombat: !!currentCombat,
         currentCombat,
         currentGroup,
-        groupsInLocation,
+        allGroups,
+        groupApplications,
         lastCompletedCombat
       };
 
@@ -1106,11 +1110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentCombat = await storage.getCharacterActiveCombat(character.id);
       
       const currentGroup = await storage.getCharacterGroup(character.id);
-      const groupsInLocation = await storage.getGroupsInLocation(character.currentLocationId);
+      const allGroups = await storage.getAllGroups();
+      const groupApplications = await storage.getGroupApplications(currentGroup?.id || 0);
 
       console.log(`Game state for character ${character.id}: isInCombat=${!!currentCombat}, combatId=${currentCombat?.id}`);
       console.log(`Current group for character ${character.id}:`, currentGroup);
-      console.log(`Groups in location ${character.currentLocationId}:`, groupsInLocation);
+      console.log(`All groups:`, allGroups.length);
       console.log(`Active combats in location ${character.currentLocationId}:`, activeCombats.length);
 
       // Get last completed combat for results
@@ -1133,7 +1138,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isInCombat: !!currentCombat,
         currentCombat,
         currentGroup,
-        groupsInLocation,
+        allGroups,
+        groupApplications,
         lastCompletedCombat: lastCombat,
         chatMessages
       });
@@ -1368,7 +1374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Already in a group" });
       }
 
-      const group = await storage.createGroup(name, characterId, character.currentLocationId);
+      const group = await storage.createGroup(name, characterId);
       res.json(group);
     } catch (error) {
       console.error("Create group error:", error);
@@ -1421,6 +1427,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get group members error:", error);
       res.status(500).json({ message: "Failed to get group members" });
+    }
+  });
+
+  // Apply to join a group (creates an application)
+  app.post("/api/groups/:id/apply", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const { characterId, message } = req.body;
+      
+      if (!characterId) {
+        return res.status(401).json({ message: "Character ID required" });
+      }
+
+      // Check if character is already in a group
+      const existingGroup = await storage.getCharacterGroup(characterId);
+      if (existingGroup) {
+        return res.status(400).json({ message: "Already in a group" });
+      }
+
+      const application = await storage.createGroupApplication(groupId, characterId, message);
+      res.json(application);
+    } catch (error) {
+      console.error("Apply to group error:", error);
+      res.status(500).json({ message: "Failed to apply to group" });
+    }
+  });
+
+  // Get applications for a group (for leaders)
+  app.get("/api/groups/:id/applications", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const applications = await storage.getGroupApplications(groupId);
+      res.json(applications);
+    } catch (error) {
+      console.error("Get group applications error:", error);
+      res.status(500).json({ message: "Failed to get group applications" });
+    }
+  });
+
+  // Respond to group application (accept/reject)
+  app.post("/api/groups/applications/:id/respond", async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      const { response } = req.body; // "accepted" or "rejected"
+      
+      const application = await storage.respondToGroupApplication(applicationId, response);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      res.json(application);
+    } catch (error) {
+      console.error("Respond to application error:", error);
+      res.status(500).json({ message: "Failed to respond to application" });
     }
   });
 

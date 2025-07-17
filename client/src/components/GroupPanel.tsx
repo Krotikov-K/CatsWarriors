@@ -43,24 +43,25 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
     }
   });
 
-  const joinGroupMutation = useMutation({
-    mutationFn: async (groupId: number) => {
-      const response = await apiRequest('POST', `/api/groups/${groupId}/join`, {
-        characterId: gameState.character?.id
+  const applyToGroupMutation = useMutation({
+    mutationFn: async ({ groupId, message }: { groupId: number; message?: string }) => {
+      const response = await apiRequest('POST', `/api/groups/${groupId}/apply`, {
+        characterId: gameState.character?.id,
+        message
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
       toast({
-        title: "Присоединение к группе",
-        description: "Вы присоединились к группе",
+        title: "Заявка отправлена",
+        description: "Ваша заявка на вступление в группу отправлена лидеру",
       });
     },
     onError: () => {
       toast({
         title: "Ошибка",
-        description: "Не удалось присоединиться к группе",
+        description: "Не удалось отправить заявку",
         variant: "destructive",
       });
     }
@@ -84,6 +85,29 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
       toast({
         title: "Ошибка",
         description: "Не удалось покинуть группу",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const respondToApplicationMutation = useMutation({
+    mutationFn: async ({ applicationId, response }: { applicationId: number; response: "accepted" | "rejected" }) => {
+      const apiResponse = await apiRequest('POST', `/api/groups/applications/${applicationId}/respond`, {
+        response
+      });
+      return apiResponse.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      toast({
+        title: variables.response === "accepted" ? "Заявка принята" : "Заявка отклонена",
+        description: variables.response === "accepted" ? "Игрок принят в группу" : "Заявка отклонена",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обработать заявку",
         variant: "destructive",
       });
     }
@@ -126,6 +150,41 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                   </Badge>
                 )}
               </div>
+
+              {/* Group Applications for Leaders */}
+              {gameState.currentGroup.leaderId === gameState.character.id && gameState.groupApplications && gameState.groupApplications.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Заявки на вступление ({gameState.groupApplications.length}):</h4>
+                  {gameState.groupApplications.map((application) => (
+                    <div key={application.id} className="flex items-center justify-between p-3 border rounded bg-blue-50 dark:bg-blue-950/20">
+                      <div>
+                        <div className="font-medium">Заявка от игрока</div>
+                        <div className="text-sm text-muted-foreground">
+                          {application.message || "Без сообщения"}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => respondToApplicationMutation.mutate({ applicationId: application.id, response: "accepted" })}
+                          disabled={respondToApplicationMutation.isPending}
+                          size="sm"
+                          variant="default"
+                        >
+                          Принять
+                        </Button>
+                        <Button 
+                          onClick={() => respondToApplicationMutation.mutate({ applicationId: application.id, response: "rejected" })}
+                          disabled={respondToApplicationMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Отклонить
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <Button
                 onClick={() => leaveGroupMutation.mutate()}
@@ -156,10 +215,10 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">
-                  Доступные группы в локации ({gameState.groupsInLocation?.length || 0}):
+                  Все группы ({gameState.allGroups?.length || 0}):
                 </h4>
-                {gameState.groupsInLocation && gameState.groupsInLocation.length > 0 ? (
-                  gameState.groupsInLocation.map((group) => (
+                {gameState.allGroups && gameState.allGroups.length > 0 ? (
+                  gameState.allGroups.map((group) => (
                     <div key={group.id} className="flex items-center justify-between p-3 border rounded bg-accent/30">
                       <div>
                         <div className="font-medium">{group.name}</div>
@@ -170,19 +229,19 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                       </div>
                       {group.leaderId !== gameState.character?.id && (
                         <Button 
-                          onClick={() => joinGroupMutation.mutate(group.id)}
-                          disabled={joinGroupMutation.isPending}
+                          onClick={() => applyToGroupMutation.mutate({ groupId: group.id })}
+                          disabled={applyToGroupMutation.isPending}
                           size="sm"
                         >
                           <UserPlus className="h-4 w-4 mr-1" />
-                          Вступить
+                          Подать заявку
                         </Button>
                       )}
                     </div>
                   ))
                 ) : (
                   <div className="text-sm text-muted-foreground p-3 border rounded bg-muted/30">
-                    Нет групп в этой локации
+                    Пока нет групп
                   </div>
                 )}
               </div>

@@ -7,6 +7,7 @@ import {
   gameEvents,
   groups,
   groupMembers,
+  groupApplications,
   chatMessages,
   diplomacy,
   diplomacyProposals,
@@ -18,6 +19,7 @@ import {
   type GameEvent,
   type Group,
   type GroupMember,
+  type GroupApplication,
   type ChatMessage,
   type Diplomacy,
   type DiplomacyProposal,
@@ -81,14 +83,19 @@ export interface IStorage {
   getRecentEvents(limit: number): Promise<GameEvent[]>;
 
   // Group methods
-  createGroup(name: string, leaderId: number, locationId: number): Promise<Group>;
+  createGroup(name: string, leaderId: number): Promise<Group>;
   getGroup(id: number): Promise<Group | undefined>;
-  getGroupsInLocation(locationId: number): Promise<Group[]>;
+  getAllGroups(): Promise<Group[]>;
   getCharacterGroup(characterId: number): Promise<Group | undefined>;
   joinGroup(groupId: number, characterId: number): Promise<GroupMember | undefined>;
   leaveGroup(characterId: number): Promise<void>;
   disbandGroup(groupId: number): Promise<void>;
   getGroupMembers(groupId: number): Promise<Character[]>;
+  
+  // Group application methods
+  createGroupApplication(groupId: number, characterId: number, message?: string): Promise<GroupApplication>;
+  getGroupApplications(groupId: number): Promise<GroupApplication[]>;
+  respondToGroupApplication(applicationId: number, response: "accepted" | "rejected"): Promise<GroupApplication | undefined>;
 
   // Admin methods
   getAllUsers(): Promise<User[]>;
@@ -577,13 +584,12 @@ export class MemStorage implements IStorage {
   }
 
   // Group methods
-  async createGroup(name: string, leaderId: number, locationId: number): Promise<Group> {
+  async createGroup(name: string, leaderId: number): Promise<Group> {
     const id = this.currentGroupId++;
     const group: Group = {
       id,
       name,
       leaderId,
-      locationId,
       maxMembers: 5,
       isActive: true,
       createdAt: new Date(),
@@ -607,13 +613,11 @@ export class MemStorage implements IStorage {
     return this.groups.get(id);
   }
 
-  async getGroupsInLocation(locationId: number): Promise<Group[]> {
+  async getAllGroups(): Promise<Group[]> {
     // Clean up empty groups first
     await this.cleanupEmptyGroups();
     
-    return Array.from(this.groups.values()).filter(
-      group => group.locationId === locationId && group.isActive
-    );
+    return Array.from(this.groups.values()).filter(group => group.isActive);
   }
 
   private async cleanupEmptyGroups(): Promise<void> {
@@ -711,6 +715,32 @@ export class MemStorage implements IStorage {
     return memberIds
       .map(id => this.characters.get(id))
       .filter(char => char !== undefined) as Character[];
+  }
+
+  // Group Application methods (for in-memory storage)
+  async createGroupApplication(groupId: number, characterId: number, message?: string): Promise<GroupApplication> {
+    const id = Date.now(); // Simple ID for in-memory
+    const application: GroupApplication = {
+      id,
+      groupId,
+      characterId,
+      message,
+      status: "pending",
+      createdAt: new Date(),
+      respondedAt: null,
+    };
+    // Store in memory (for MemStorage)
+    return application;
+  }
+
+  async getGroupApplications(groupId: number): Promise<GroupApplication[]> {
+    // In-memory implementation would store applications
+    return [];
+  }
+
+  async respondToGroupApplication(applicationId: number, response: "accepted" | "rejected"): Promise<GroupApplication | undefined> {
+    // In-memory implementation
+    return undefined;
   }
 
   private calculateMaxHp(endurance: number): number {
@@ -1105,10 +1135,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Group methods - store in database
-  async createGroup(name: string, leaderId: number, locationId: number): Promise<Group> {
+  async createGroup(name: string, leaderId: number): Promise<Group> {
     const [group] = await db
       .insert(groups)
-      .values({ name, leaderId, locationId })
+      .values({ name, leaderId })
       .returning();
 
     // Add leader as first member
@@ -1127,8 +1157,8 @@ export class DatabaseStorage implements IStorage {
     return group || undefined;
   }
 
-  async getGroupsInLocation(locationId: number): Promise<Group[]> {
-    console.log(`Getting groups for location ${locationId}`);
+  async getAllGroups(): Promise<Group[]> {
+    console.log("Getting all groups");
     try {
       // Clean up empty groups first
       await this.cleanupEmptyGroups();
@@ -1136,12 +1166,12 @@ export class DatabaseStorage implements IStorage {
       const result = await db
         .select()
         .from(groups)
-        .where(and(eq(groups.locationId, locationId), eq(groups.isActive, true)));
+        .where(eq(groups.isActive, true));
       
-      console.log(`Found ${result.length} groups in location ${locationId}:`, result);
+      console.log(`Found ${result.length} total groups:`, result);
       return result;
     } catch (error) {
-      console.error(`Error getting groups for location ${locationId}:`, error);
+      console.error("Error getting all groups:", error);
       return [];
     }
   }
@@ -1253,6 +1283,64 @@ export class DatabaseStorage implements IStorage {
       .where(eq(groupMembers.groupId, groupId));
 
     return result.map(r => r.character).filter(char => char !== null) as Character[];
+  }
+
+  // Group application methods
+  async createGroupApplication(groupId: number, characterId: number, message?: string): Promise<GroupApplication> {
+    const [application] = await db
+      .insert(groupApplications)
+      .values({ 
+        groupId, 
+        characterId, 
+        message: message || null,
+        status: "pending"
+      })
+      .returning();
+    return application;
+  }
+
+  async getGroupApplications(groupId: number): Promise<GroupApplication[]> {
+    if (groupId === 0) return [];
+    
+    const applications = await db
+      .select()
+      .from(groupApplications)
+      .where(and(
+        eq(groupApplications.groupId, groupId),
+        eq(groupApplications.status, "pending")
+      ));
+    return applications;
+  }
+
+  async respondToGroupApplication(applicationId: number, response: "accepted" | "rejected"): Promise<GroupApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(groupApplications)
+      .where(eq(groupApplications.id, applicationId));
+    
+    if (!application) return undefined;
+
+    // If accepted, add character to group
+    if (response === "accepted") {
+      await db
+        .insert(groupMembers)
+        .values({ 
+          groupId: application.groupId, 
+          characterId: application.characterId 
+        });
+    }
+
+    // Update application status
+    const [updatedApplication] = await db
+      .update(groupApplications)
+      .set({ 
+        status: response,
+        respondedAt: new Date()
+      })
+      .where(eq(groupApplications.id, applicationId))
+      .returning();
+
+    return updatedApplication;
   }
 
   private calculateMaxHp(endurance: number): number {
