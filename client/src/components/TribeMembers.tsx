@@ -35,16 +35,22 @@ const rankNames = {
 const rankOrder = ["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"];
 
 export default function TribeMembers({ character }: TribeMembersProps) {
-  const { data: tribeMembers } = useQuery({
-    queryKey: [`/api/tribe-members/${character.clan}`],
+  const { data: tribeMembers = [] } = useQuery<Character[]>({
+    queryKey: ['/api/tribe-members', character.clan],
+    queryFn: async () => {
+      const res = await fetch(`/api/tribe-members/${character.clan}`);
+      if (!res.ok) throw new Error('Failed to fetch tribe members');
+      const data = await res.json();
+      return data.tribeMembers || [];
+    },
     refetchInterval: 5000,
   });
 
-  const sortedMembers = tribeMembers?.tribeMembers?.sort((a: Character, b: Character) => {
+  const sortedMembers = tribeMembers.sort((a: Character, b: Character) => {
     const aIndex = rankOrder.indexOf(a.rank);
     const bIndex = rankOrder.indexOf(b.rank);
     return aIndex - bIndex;
-  }) || [];
+  });
 
   const membersByRank = sortedMembers.reduce((acc: Record<string, Character[]>, member: Character) => {
     if (!acc[member.rank]) {
@@ -99,7 +105,12 @@ export default function TribeMembers({ character }: TribeMembersProps) {
                         <p className="font-medium truncate">{member.name}</p>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span>Ур. {member.level}</span>
-                          <span>❤️ {member.hp}/{80 + (member.endurance * 5)}</span>
+                          <span>❤️ {member.currentHp}/{member.maxHp}</span>
+                          {!member.isOnline && (
+                            <Badge variant="outline" className="text-xs">
+                              Офлайн
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       {member.id === character.id && (

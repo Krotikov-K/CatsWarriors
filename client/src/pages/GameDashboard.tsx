@@ -40,6 +40,7 @@ export default function GameDashboard() {
   
   // UI State
   const [activeTab, setActiveTab] = useState('overview');
+  const [tribeSectionTab, setTribeSectionTab] = useState('members');
   const [selectedCombat, setSelectedCombat] = useState<Combat | null>(null);
   const [showCombatModal, setShowCombatModal] = useState(false);
   
@@ -508,24 +509,82 @@ export default function GameDashboard() {
           </div>
         );
 
-      case 'tribe-management':
+      case 'tribe':
+        const canManage = ['leader', 'deputy', 'senior_healer', 'senior_warrior'].includes(character.rank);
+        
         return (
           <div className="p-4 space-y-6 pb-20">
-            <TribeManagement character={character} />
-          </div>
-        );
+            {/* Tribe section header */}
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Crown className="h-6 w-6 text-yellow-500" />
+                <h2 className="text-xl font-bold">
+                  {character.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя
+                </h2>
+              </div>
+              
+              {/* Character's current rank */}
+              <div className="bg-accent/50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">{RANKS[character.rank as keyof typeof RANKS]?.emoji}</span>
+                  <span className="font-semibold">{character.name}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Должность: {RANKS[character.rank as keyof typeof RANKS]?.name}
+                </p>
+              </div>
+            </div>
 
-      case 'tribe-members':
-        return (
-          <div className="p-4 space-y-6 pb-20">
-            <TribeMembers character={character} />
-          </div>
-        );
+            {/* Tribe sub-navigation */}
+            <div className="bg-card border border-border rounded-lg">
+              <div className="flex border-b border-border">
+                {canManage && (
+                  <button
+                    onClick={() => setTribeSectionTab('management')}
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                      tribeSectionTab === 'management'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Управление
+                  </button>
+                )}
+                <button
+                  onClick={() => setTribeSectionTab('members')}
+                  className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                    tribeSectionTab === 'members'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Члены племени
+                </button>
+                <button
+                  onClick={() => setTribeSectionTab('diplomacy')}
+                  className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                    tribeSectionTab === 'diplomacy'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Дипломатия
+                </button>
+              </div>
 
-      case 'diplomacy':
-        return (
-          <div className="p-4 space-y-6 pb-20">
-            <DiplomacyPanel character={character} />
+              {/* Tribe section content */}
+              <div className="p-4">
+                {tribeSectionTab === 'management' && canManage && (
+                  <TribeManagement character={character} />
+                )}
+                {tribeSectionTab === 'members' && (
+                  <TribeMembers character={character} />
+                )}
+                {tribeSectionTab === 'diplomacy' && (
+                  <DiplomacyPanel character={character} />
+                )}
+              </div>
+            </div>
           </div>
         );
 
@@ -595,39 +654,15 @@ export default function GameDashboard() {
           </button>
           
           <button
-            onClick={() => setActiveTab('tribe-management')}
+            onClick={() => setActiveTab('tribe')}
             className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
-              activeTab === 'tribe-management'
+              activeTab === 'tribe'
                 ? 'text-primary bg-primary/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Crown className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Управление</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('tribe-members')}
-            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
-              activeTab === 'tribe-members'
-                ? 'text-primary bg-primary/10'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Users className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Члены</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('diplomacy')}
-            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
-              activeTab === 'diplomacy'
-                ? 'text-primary bg-primary/10'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Shield className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Дипломатия</span>
+            <span className="text-xs font-medium">Племя</span>
           </button>
           
           <button

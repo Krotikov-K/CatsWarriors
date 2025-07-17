@@ -880,7 +880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Level up endpoints
   app.post("/api/character/change-rank", async (req: Request, res: Response) => {
     try {
-      const { characterId, newRank, requesterId } = req.body;
+      const { targetCharacterId, newRank, requesterId } = req.body;
 
       if (!requesterId) {
         return res.status(401).json({ error: "Requester ID required" });
@@ -893,7 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const requester = requesterCharacter[0];
-      const targetCharacter = await storage.getCharacter(characterId);
+      const targetCharacter = await storage.getCharacter(targetCharacterId);
 
       if (!targetCharacter) {
         return res.status(404).json({ error: "Target character not found" });
@@ -916,7 +916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update character rank
-      const updatedCharacter = await storage.updateCharacter(characterId, { rank: newRank });
+      const updatedCharacter = await storage.updateCharacter(targetCharacterId, { rank: newRank });
       
       if (!updatedCharacter) {
         return res.status(500).json({ error: "Failed to update character rank" });
@@ -931,7 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Broadcast rank change to all players
-      await broadcastRankChange(characterId);
+      await broadcastRankChange(targetCharacterId);
 
       res.json({ character: updatedCharacter });
     } catch (error) {
