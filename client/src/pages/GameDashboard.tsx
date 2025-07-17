@@ -113,6 +113,28 @@ export default function GameDashboard() {
     }
   }, [gameState?.character?.level, gameState?.character?.unspentStatPoints, previousLevel, showLevelUp]);
 
+  // Handle WebSocket messages for real-time updates
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('WebSocket message received:', lastMessage);
+      
+      if (lastMessage.type === 'group_victory') {
+        toast({
+          title: "🎉 Групповая победа!",
+          description: lastMessage.data.message,
+          duration: 5000,
+        });
+        // Refresh game state to get updated experience
+        queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      }
+      
+      if (lastMessage.type === 'combat_update') {
+        // Refresh combat data
+        queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      }
+    }
+  }, [lastMessage, toast, queryClient]);
+
   // Track combat completion for results
   useEffect(() => {
     const isCurrentlyInCombat = gameState?.isInCombat;
@@ -188,24 +210,6 @@ export default function GameDashboard() {
       setWasInCombat(false);
     }
   }, [gameState?.isInCombat, gameState?.lastCompletedCombat, showCombatResult]);
-
-  // Handle WebSocket messages for group victory notifications
-  useEffect(() => {
-    if (lastMessage && lastMessage.type === 'group_victory') {
-      const { npcName, expGain, message } = lastMessage.data;
-      
-      console.log('*** GROUP VICTORY NOTIFICATION RECEIVED ***', lastMessage.data);
-      
-      toast({
-        title: "🎉 Групповая победа!",
-        description: message,
-        duration: 5000,
-      });
-      
-      // Refresh game state to show updated experience
-      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
-    }
-  }, [lastMessage, toast, queryClient]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {

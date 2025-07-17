@@ -307,6 +307,16 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * All diplomacy features now fully functional: war declarations, peace proposals, and responses
   * Real-time WebSocket updates work correctly for all diplomacy state changes
   * Removed standalone DevUserSwitcher component per user request
+- July 17, 2025. Group combat system fixes and enhanced interface:
+  * Fixed critical double-attack bug - removed duplicate startAutoCombat calls
+  * NPCs and players now correctly attack only once per turn
+  * Enhanced GroupPanel with member list showing locations and online status
+  * Added group member management: leaders can kick members from groups
+  * Created /api/groups/:id/kick endpoint for member removal
+  * Group members display shows: name, gender icon, location, online status, HP
+  * Real-time member location updates every 5 seconds
+  * WebSocket group victory notifications implemented and working
+  * Group combat system fully functional with proper experience distribution
 
 ## User Preferences
 

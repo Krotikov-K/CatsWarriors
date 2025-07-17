@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Crown, UserPlus, LogOut } from "lucide-react";
+import { Users, Crown, UserPlus, LogOut, MapPin, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { GameState } from "@shared/schema";
+import type { GameState, Character } from "@shared/schema";
 
 interface GroupPanelProps {
   gameState: GameState;
@@ -113,6 +113,42 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
     }
   });
 
+  const kickMemberMutation = useMutation({
+    mutationFn: async (targetCharacterId: number) => {
+      const response = await apiRequest('POST', `/api/groups/${gameState.currentGroup?.id}/kick`, {
+        characterId: gameState.character?.id,
+        targetCharacterId
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      toast({
+        title: "Участник исключён",
+        description: "Игрок был исключён из группы",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось исключить игрока из группы",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Get group members with their locations
+  const { data: groupMembers } = useQuery({
+    queryKey: ['/api/groups', gameState.currentGroup?.id, 'members'],
+    queryFn: async (): Promise<(Character & { location?: { id: number; name: string; emoji: string } })[]> => {
+      if (!gameState.currentGroup?.id) return [];
+      const response = await apiRequest('GET', `/api/groups/${gameState.currentGroup.id}/members`);
+      return response.json();
+    },
+    enabled: !!gameState.currentGroup?.id,
+    refetchInterval: 5000 // Refresh every 5 seconds
+  });
+
   const handleCreateGroup = () => {
     if (groupName.trim()) {
       createGroupMutation.mutate({ name: groupName.trim() });
@@ -150,6 +186,51 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                   </Badge>
                 )}
               </div>
+
+              {/* Group Members */}
+              {groupMembers && groupMembers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Участники группы ({groupMembers.length}/{gameState.currentGroup.maxMembers}):</h4>
+                  {groupMembers.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 border rounded">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            {member.name}
+                            {member.id === gameState.currentGroup.leaderId && (
+                              <Crown className="h-3 w-3 text-yellow-500" />
+                            )}
+                            <span className="text-xs">{member.gender === 'male' ? '🐱' : '🐈'}</span>
+                          </div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {member.location ? `${member.location.emoji} ${member.location.name}` : "Неизвестная локация"}
+                            <span className="ml-2">
+                              {member.isOnline ? "🟢 В сети" : "⚫ Не в сети"}
+                            </span>
+                            {member.isOnline && (
+                              <Badge variant="outline" className="ml-2">
+                                HP: {member.currentHp}/{member.maxHp}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {gameState.currentGroup.leaderId === gameState.character.id && member.id !== gameState.character.id && (
+                        <Button
+                          onClick={() => kickMemberMutation.mutate(member.id)}
+                          disabled={kickMemberMutation.isPending}
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <UserX className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Group Applications for Leaders */}
               {gameState.currentGroup.leaderId === gameState.character.id && gameState.groupApplications && gameState.groupApplications.length > 0 && (

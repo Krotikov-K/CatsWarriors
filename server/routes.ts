@@ -1485,10 +1485,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const groupId = parseInt(req.params.id);
       const members = await storage.getGroupMembers(groupId);
-      res.json(members);
+      
+      // Enrich members with location data
+      const enrichedMembers = await Promise.all(
+        members.map(async (member) => {
+          const location = await storage.getLocation(member.currentLocationId);
+          return {
+            ...member,
+            location: location ? { id: location.id, name: location.name, emoji: location.emoji } : null
+          };
+        })
+      );
+      
+      res.json(enrichedMembers);
     } catch (error) {
       console.error("Get group members error:", error);
       res.status(500).json({ message: "Failed to get group members" });
+    }
+  });
+
+  app.post("/api/groups/:id/kick", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const { characterId, targetCharacterId } = req.body;
+      
+      if (!characterId || !targetCharacterId) {
+        return res.status(400).json({ message: "Character ID and target character ID required" });
+      }
+
+      // Check if requester is the group leader
+      const group = await storage.getGroup(groupId);
+      if (!group || group.leaderId !== characterId) {
+        return res.status(403).json({ message: "Only group leader can kick members" });
+      }
+
+      // Cannot kick yourself
+      if (characterId === targetCharacterId) {
+        return res.status(400).json({ message: "Cannot kick yourself from the group" });
+      }
+
+      // Remove the target character from the group
+      await storage.leaveGroup(targetCharacterId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Kick from group error:", error);
+      res.status(500).json({ message: "Failed to kick member from group" });
     }
   });
 
