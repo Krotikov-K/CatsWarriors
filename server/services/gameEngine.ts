@@ -50,6 +50,9 @@ export class GameEngine {
     const aliveNPCs = npcs.filter(npc => 
       npc && npc.currentHp > 0 && !npc.isDead
     ) as NPC[];
+    
+    console.log(`NPCs in combat ${combatId}:`, npcs.map(npc => npc ? `${npc.name} (HP: ${npc.currentHp}, Dead: ${npc.isDead})` : 'null'));
+    console.log(`Alive NPCs: ${aliveNPCs.length}`);
 
     const allCombatants = [...aliveCharacters, ...aliveNPCs];
 
