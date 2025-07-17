@@ -120,6 +120,16 @@ export default function CharacterCreation() {
     return descriptions[clan as keyof typeof descriptions] || "";
   };
 
+  const getClanEmoji = (clan: string) => {
+    const emojis = {
+      thunder: "⚡",
+      shadow: "🌙",
+      wind: "💨",
+      river: "🌊",
+    };
+    return emojis[clan as keyof typeof emojis] || "🐱";
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-inset">
       <Card className="w-full max-w-md bg-card border-border">
@@ -172,7 +182,7 @@ export default function CharacterCreation() {
                       <SelectContent className="bg-popover border-border">
                         {Object.entries(CLANS).map(([key, clan]) => (
                           <SelectItem key={key} value={key} className="text-popover-foreground">
-                            <span className={`clan-${key} font-medium`}>⚡</span> {clan.name}
+                            <span className={`clan-${key} font-medium`}>{getClanEmoji(key)}</span> {clan.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
