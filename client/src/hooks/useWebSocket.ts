@@ -20,11 +20,13 @@ export function useWebSocket(characterId: number | null) {
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
+        console.log('WebSocket connection opened');
         setIsConnected(true);
         reconnectAttempts.current = 0;
         
         // Authenticate with character ID
         if (ws.current && characterId) {
+          console.log('Authenticating with character ID:', characterId);
           ws.current.send(JSON.stringify({
             type: 'auth',
             data: { characterId },
@@ -36,6 +38,7 @@ export function useWebSocket(characterId: number | null) {
       ws.current.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('WebSocket message received:', message.type);
           setLastMessage(message);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);

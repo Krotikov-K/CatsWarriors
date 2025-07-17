@@ -143,6 +143,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (characterId) {
           connectedClients.set(characterId, ws);
           await storage.setCharacterOnline(characterId, true);
+          
+          // Send authentication confirmation
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ 
+              type: 'auth_success', 
+              data: { characterId }, 
+              timestamp: new Date().toISOString() 
+            }));
+          }
+          
           await broadcastLocationUpdate(characterId);
         }
         break;

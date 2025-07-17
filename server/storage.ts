@@ -898,7 +898,7 @@ export class DatabaseStorage implements IStorage {
     throw new Error("Creating locations not supported in current implementation");
   }
 
-  // NPC methods - these will use in-memory storage for now as they respawn
+  // NPC methods - NPCs are now unique per location to prevent cross-location death sharing
   private npcsMap = new Map<number, NPC>();
   private currentNpcId = 1;
 
@@ -907,15 +907,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   private initializeNPCs() {
+    // Create separate NPC instances for each location they spawn in
     NPCS_DATA.forEach(npcData => {
-      const npc: NPC = {
-        ...npcData,
-        id: this.currentNpcId++,
-        currentHp: npcData.maxHp,
-        isDead: false,
-        lastDeathTime: null,
-      };
-      this.npcsMap.set(npc.id, npc);
+      npcData.spawnsInLocation.forEach(locationId => {
+        const npc: NPC = {
+          ...npcData,
+          id: this.currentNpcId++,
+          currentHp: npcData.maxHp,
+          isDead: false,
+          lastDeathTime: null,
+          spawnsInLocation: [locationId], // Each NPC instance only belongs to one location
+        };
+        this.npcsMap.set(npc.id, npc);
+      });
     });
   }
 
@@ -924,15 +928,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNPCsByLocation(locationId: number): Promise<NPC[]> {
-    const allNPCs = Array.from(this.npcsMap.values()).filter(npc => 
+    // Since each NPC is now unique per location, we filter by exact location match
+    const locationNPCs = Array.from(this.npcsMap.values()).filter(npc => 
       npc.spawnsInLocation.includes(locationId)
     );
 
-    // Add respawn time remaining for dead NPCs
-    return allNPCs.map(npc => {
+    // Add respawn time remaining for dead NPCs and check for auto-respawn
+    return locationNPCs.map(npc => {
       if (npc.isDead && npc.lastDeathTime && npc.respawnTime > 0) {
         const timeElapsed = Math.floor((Date.now() - npc.lastDeathTime.getTime()) / 1000);
         const timeRemaining = Math.max(0, npc.respawnTime - timeElapsed);
+        
+        // Auto-respawn if time has elapsed
+        if (timeRemaining === 0) {
+          npc.isDead = false;
+          npc.currentHp = npc.maxHp;
+          npc.lastDeathTime = null;
+          this.npcsMap.set(npc.id, npc);
+          return npc;
+        }
+        
         return { ...npc, respawnTimeRemaining: timeRemaining };
       }
       return npc;
@@ -944,16 +959,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createNPC(insertNpc: InsertNPC): Promise<NPC> {
-    const id = this.currentNpcId++;
-    const npc: NPC = {
-      ...insertNpc,
-      id,
-      currentHp: insertNpc.maxHp,
-      isDead: false,
-      lastDeathTime: null,
-    };
-    this.npcsMap.set(id, npc);
-    return npc;
+    // Create separate instances for each location the NPC spawns in
+    const createdNPCs: NPC[] = [];
+    
+    insertNpc.spawnsInLocation.forEach(locationId => {
+      const id = this.currentNpcId++;
+      const npc: NPC = {
+        ...insertNpc,
+        id,
+        currentHp: insertNpc.maxHp,
+        isDead: false,
+        lastDeathTime: null,
+        spawnsInLocation: [locationId], // Each instance only belongs to one location
+      };
+      this.npcsMap.set(id, npc);
+      createdNPCs.push(npc);
+    });
+    
+    // Return the first created NPC (for compatibility with existing API)
+    return createdNPCs[0];
   }
 
   async updateNPC(id: number, updates: Partial<NPC>): Promise<NPC | undefined> {

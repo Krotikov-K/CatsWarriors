@@ -320,6 +320,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Added combat safety mechanisms: max turn limit (100), 10-minute timeout, force-end admin endpoint
   * Improved combat end detection to prevent hanging battles when NPCs are defeated
   * Added /api/admin/force-end-combats endpoint for emergency combat cleanup
+- July 17, 2025. Critical NPC cross-location death state fix:
+  * Fixed major bug where killing NPC in one location made it dead in all locations
+  * Redesigned NPC system to create separate instances for each spawn location
+  * Each NPC now has unique ID and isolated health/death state per location
+  * Example: Дикий Кролик now has separate instances (ID 7, 8, 9) for locations 11, 12, 13
+  * NPCs can now be killed independently in different locations without affecting others
+  * Improved spawnsInLocation field to reflect single-location ownership per instance
 
 ## User Preferences
 
