@@ -412,11 +412,11 @@ export const LOCATIONS_DATA = [
   { id: 2, name: "Лагерь Речного Племени", type: "camp", clan: "river", dangerLevel: 1, x: 97, y: 50, connectedTo: [5], emoji: "🏕️" },
   
   // Зелёные локации (замкнутый внешний круг)
-  { id: 3, name: "Четыре Дерева", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 10, connectedTo: [4, 10], emoji: "🌳" },
+  { id: 3, name: "Четыре Дерева", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 10, connectedTo: [4, 10, 20], emoji: "🌳" },
   { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 25, connectedTo: [3, 5, 11], emoji: "🌻" },
   { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 90, y: 50, connectedTo: [2, 4, 6], emoji: "🌲" },
   { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 75, connectedTo: [5, 7], emoji: "🕳️" },
-  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8, 13], emoji: "🛤️" },
+  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8, 13, 23], emoji: "🛤️" },
   { id: 8, name: "Болотистая Низина", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 75, connectedTo: [7, 9], emoji: "🌾" },
   { id: 9, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 2, x: 10, y: 50, connectedTo: [1, 8, 10], emoji: "🌿" },
   { id: 10, name: "Горная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 25, connectedTo: [9, 3], emoji: "🗻" },
@@ -432,6 +432,16 @@ export const LOCATIONS_DATA = [
   // Красные локации (центр с связями к жёлтому)
   { id: 17, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 45, y: 50, connectedTo: [14, 18], emoji: "⚔️" },
   { id: 18, name: "Логово Волка", type: "combat", clan: null, dangerLevel: 5, x: 55, y: 50, connectedTo: [12, 17], emoji: "🐺" },
+  
+  // Дополнительные локации (верх) - соединены с Четыре Дерева
+  { id: 19, name: "Пугающее ущелье", type: "danger", clan: null, dangerLevel: 4, x: 35, y: 2, connectedTo: [20], emoji: "🏔️" },
+  { id: 20, name: "Солнечный Склон", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 2, connectedTo: [19, 21, 3], emoji: "☀️" },
+  { id: 21, name: "Гремящая Роща", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 2, connectedTo: [20], emoji: "🌩️" },
+  
+  // Дополнительные локации (низ) - соединены со Старая Дорога
+  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 35, y: 98, connectedTo: [23], emoji: "💎" },
+  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 98, connectedTo: [22, 24, 7], emoji: "🌊" },
+  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 98, connectedTo: [23], emoji: "🌑" },
 ] as const;
 
 export const NPCS_DATA = [
@@ -460,4 +470,20 @@ export const NPCS_DATA = [
   // Старейшины в племенных лагерях для повышения котят
   { id: 12, name: "Старейшина Грозового Племени", type: "elder", level: 15, maxHp: 300, strength: 20, agility: 15, intelligence: 30, endurance: 25, description: "Мудрый старейшина, проводящий обряды посвящения", emoji: "👴", experienceReward: 0, spawnsInLocation: [1], respawnTime: 0 },
   { id: 13, name: "Старейшина Речного Племени", type: "elder", level: 15, maxHp: 300, strength: 20, agility: 15, intelligence: 30, endurance: 25, description: "Мудрый старейшина, проводящий обряды посвящения", emoji: "👴", experienceReward: 0, spawnsInLocation: [2], respawnTime: 0 },
+  
+  // NPCs для новых локаций (верхний ряд)
+  { id: 25, name: "Каменный Грифон", type: "boss", level: 9, maxHp: 280, strength: 28, agility: 18, intelligence: 15, endurance: 22, description: "Древний страж горных ущелий", emoji: "🦅", experienceReward: 350, spawnsInLocation: [19], respawnTime: 1200 },
+  { id: 26, name: "Горная Пума", type: "enemy", level: 7, maxHp: 160, strength: 24, agility: 22, intelligence: 16, endurance: 18, description: "Свирепая пума с солнечных склонов", emoji: "🐆", experienceReward: 220, spawnsInLocation: [19], respawnTime: 600 },
+  { id: 27, name: "Солнечный Ястреб", type: "enemy", level: 6, maxHp: 120, strength: 20, agility: 26, intelligence: 18, endurance: 14, description: "Быстрый хищник солнечных высот", emoji: "🦅", experienceReward: 180, spawnsInLocation: [20], respawnTime: 480 },
+  { id: 28, name: "Огненная Лисица", type: "enemy", level: 8, maxHp: 200, strength: 22, agility: 24, intelligence: 20, endurance: 16, description: "Мистическая лисица из солнечных земель", emoji: "🦊", experienceReward: 280, spawnsInLocation: [20], respawnTime: 720 },
+  { id: 29, name: "Грозовой Барс", type: "boss", level: 10, maxHp: 320, strength: 30, agility: 20, intelligence: 18, endurance: 24, description: "Повелитель гремящих рощ", emoji: "🐅", experienceReward: 400, spawnsInLocation: [21], respawnTime: 1440 },
+  { id: 30, name: "Молниеносная Рысь", type: "enemy", level: 7, maxHp: 180, strength: 26, agility: 28, intelligence: 16, endurance: 18, description: "Быстрая как молния рысь", emoji: "🐈‍⬛", experienceReward: 240, spawnsInLocation: [21], respawnTime: 660 },
+  
+  // NPCs для новых локаций (нижний ряд)
+  { id: 31, name: "Кристальный Дракон", type: "boss", level: 11, maxHp: 380, strength: 32, agility: 22, intelligence: 25, endurance: 26, description: "Древний страж кристальных вод", emoji: "🐲", experienceReward: 500, spawnsInLocation: [22], respawnTime: 1800 },
+  { id: 32, name: "Водяной Элементаль", type: "enemy", level: 8, maxHp: 220, strength: 20, agility: 16, intelligence: 24, endurance: 22, description: "Дух хрустальных вод", emoji: "💧", experienceReward: 300, spawnsInLocation: [22], respawnTime: 900 },
+  { id: 33, name: "Озёрный Левиафан", type: "boss", level: 12, maxHp: 420, strength: 35, agility: 18, intelligence: 20, endurance: 28, description: "Гигантский повелитель озёрных глубин", emoji: "🐋", experienceReward: 600, spawnsInLocation: [23], respawnTime: 2160 },
+  { id: 34, name: "Призрачная Русалка", type: "enemy", level: 9, maxHp: 240, strength: 18, agility: 22, intelligence: 26, endurance: 20, description: "Дух озёрных снов", emoji: "🧜‍♀️", experienceReward: 360, spawnsInLocation: [23], respawnTime: 1080 },
+  { id: 35, name: "Теневой Демон", type: "boss", level: 13, maxHp: 460, strength: 38, agility: 24, intelligence: 22, endurance: 30, description: "Владыка тропы теней", emoji: "😈", experienceReward: 700, spawnsInLocation: [24], respawnTime: 2520 },
+  { id: 36, name: "Призрак Воина", type: "enemy", level: 10, maxHp: 280, strength: 30, agility: 20, intelligence: 18, endurance: 24, description: "Дух павшего воина", emoji: "👻", experienceReward: 420, spawnsInLocation: [24], respawnTime: 1200 },
 ] as const;
