@@ -632,6 +632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { characterId, targetId, locationId } = startCombatSchema.parse(req.body);
       const npcId = req.body.npcId; // Only use explicit npcId for NPC combat
+      const asGroup = req.body.asGroup || false; // Group attack flag
       
       const character = await storage.getCharacter(characterId);
       if (!character) {
@@ -673,6 +674,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         combatType = "pve";
         npcParticipants = [npcId];
         eventData.npcParticipants = [npcId];
+        
+        // Check if this is a group attack
+        if (asGroup) {
+          const characterGroup = await storage.getCharacterGroup(characterId);
+          if (characterGroup) {
+            const groupMembers = await storage.getGroupMembers(characterGroup.id);
+            // Add other group members who are in the same location and not in combat
+            for (const member of groupMembers) {
+              if (member.id !== characterId && 
+                  member.currentLocationId === locationId && 
+                  member.currentHp > 1) {
+                const memberCombat = await storage.getCharacterActiveCombat(member.id);
+                if (!memberCombat) {
+                  participants.push(member.id);
+                }
+              }
+            }
+          }
+        }
+        
+        eventData.participants = participants;
         
         // Create PVE combat
         combat = await storage.createCombat(locationId, participants);
