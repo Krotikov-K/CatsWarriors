@@ -24,28 +24,6 @@ export default function TopBar({ location, playersOnline }: TopBarProps) {
         <div className="ml-4 text-sm text-gray-400">
           <i className="fas fa-users mr-1"></i>
           <span>{playersOnline} игроков в локации</span>
-          {import.meta.env.DEV && (
-            <div className="ml-4 space-x-2">
-              <button 
-                onClick={() => {
-                  localStorage.setItem('devUserId', '1');
-                  window.location.reload();
-                }}
-                className="underline text-amber-400 hover:text-amber-300 bg-transparent border-none cursor-pointer"
-              >
-                Кисяо
-              </button> | 
-              <button 
-                onClick={() => {
-                  localStorage.setItem('devUserId', '3');
-                  window.location.reload();
-                }}
-                className="underline text-blue-400 hover:text-blue-300 bg-transparent border-none cursor-pointer"
-              >
-                Админ
-              </button>
-            </div>
-          )}
         </div>
       </div>
       

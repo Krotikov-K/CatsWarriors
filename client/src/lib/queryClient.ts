@@ -28,9 +28,10 @@ export async function apiRequest(
     }
   }
 
-  // Add development user ID for testing (from localStorage)
+  // Add development user ID for testing (from URL parameter)
   if (import.meta.env.DEV && typeof window !== 'undefined') {
-    const devUserId = localStorage.getItem('devUserId') || window.location.search.includes('userId=3') ? '3' : '1';
+    const urlParams = new URLSearchParams(window.location.search);
+    const devUserId = urlParams.get('userId') || '1';
     (options.headers as any)['x-dev-user-id'] = devUserId;
   }
 
@@ -87,9 +88,10 @@ export const getQueryFn: <T>(options: {
         }
       }
 
-      // Add development user ID for testing (from localStorage)
+      // Add development user ID for testing (from URL parameter)
       if (import.meta.env.DEV && typeof window !== 'undefined') {
-        const devUserId = localStorage.getItem('devUserId') || window.location.search.includes('userId=3') ? '3' : '1';
+        const urlParams = new URLSearchParams(window.location.search);
+        const devUserId = urlParams.get('userId') || '1';
         (options.headers as any)['x-dev-user-id'] = devUserId;
       }
 
