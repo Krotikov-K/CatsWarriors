@@ -614,6 +614,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Cannot attack clanmates! PvP is only allowed between different tribes" });
         }
 
+        // Check diplomacy status - PvP only allowed during war
+        const diplomacyStatus = await storage.getDiplomacyStatus(character.clan, target.clan);
+        if (diplomacyStatus !== "war") {
+          return res.status(400).json({ message: "Cannot attack during peacetime! Tribes must be at war for PvP combat" });
+        }
+
         // Check if attacker has only 1 HP
         if (character.currentHp <= 1) {
           return res.status(400).json({ message: "Cannot attack with 1 HP! Your character is too weak to fight" });

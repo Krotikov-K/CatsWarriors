@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,12 @@ interface PvPPanelProps {
 export default function PvPPanel({ character, playersInLocation, locationId }: PvPPanelProps) {
   const { toast } = useToast();
   const [isAttacking, setIsAttacking] = useState(false);
+
+  // Get diplomacy status
+  const { data: diplomacyData } = useQuery({
+    queryKey: ["/api/diplomacy"],
+    refetchInterval: 5000,
+  });
 
   const attackPlayerMutation = useMutation({
     mutationFn: async (targetId: number) => {
@@ -50,6 +56,11 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
     attackPlayerMutation.mutate(targetId);
   };
 
+  // Get diplomacy status between clans
+  const relations = diplomacyData?.relations || {};
+  const toClan = character.clan === "thunder" ? "river" : "thunder";
+  const diplomacyStatus = relations[character.clan]?.[toClan] || "peace";
+  
   // Filter players from enemy clans only
   const enemyPlayers = playersInLocation.filter(player => 
     player.id !== character.id && 
@@ -65,8 +76,8 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
     return clan === 'thunder' ? '⚡' : '🌊';
   };
 
-  // Check if current character can attack (has more than 1 HP)
-  const canAttack = character.currentHp > 1;
+  // Check if current character can attack (has more than 1 HP and tribes are at war)
+  const canAttack = character.currentHp > 1 && diplomacyStatus === "war";
 
   if (enemyPlayers.length === 0) {
     return (
@@ -103,7 +114,11 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="text-sm text-muted-foreground mb-4">
-          💀 Вызывайте на дуэль игроков из вражеского племени
+          {diplomacyStatus === "war" ? (
+            <span className="text-red-600">⚔️ Идет война! Вызывайте на дуэль игроков из вражеского племени</span>
+          ) : (
+            <span className="text-green-600">🕊️ Мирное время. Атаки на игроков другого племени запрещены</span>
+          )}
         </div>
         
         {enemyPlayers.map((player) => {
@@ -142,7 +157,9 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
                 disabled={isAttacking || attackPlayerMutation.isPending || !canAttack}
                 className="min-w-[100px]"
               >
-                {!canAttack ? (
+                {diplomacyStatus !== "war" ? (
+                  "🕊️ Мир"
+                ) : character.currentHp <= 1 ? (
                   "Слаб (1 HP)"
                 ) : isAttacking ? (
                   "Атакую..."
@@ -159,9 +176,10 @@ export default function PvPPanel({ character, playersInLocation, locationId }: P
         
         <div className="text-xs text-muted-foreground mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800">
           <strong>⚠️ Правила PvP:</strong><br />
-          • Дуэли возможны только между разными племенами<br />
+          • Дуэли возможны только между разными племенами и во время войны<br />
           • Персонажи с 1 HP не могут драться (слишком слабы)<br />
-          • Проигравший остается с 1 HP (честная дуэль)
+          • Проигравший остается с 1 HP (честная дуэль)<br />
+          • Во время мира атаки на игроков другого племени запрещены
         </div>
       </CardContent>
     </Card>

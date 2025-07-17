@@ -139,7 +139,9 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
           Дипломатия
         </CardTitle>
         <CardDescription>
-          Управление отношениями между племенами (только для предводителей)
+          {character.rank === "leader" 
+            ? "Управление отношениями между племенами" 
+            : "Текущие отношения между племенами"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -161,9 +163,10 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
           </p>
         </div>
 
-        {/* Change Status */}
-        <div className="space-y-3">
-          <h4 className="font-semibold">Изменить дипломатический статус</h4>
+        {/* Change Status - Only for leaders */}
+        {character.rank === "leader" && (
+          <div className="space-y-3">
+            <h4 className="font-semibold">Изменить дипломатический статус</h4>
           <div className="flex gap-2">
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="flex-1">
@@ -192,25 +195,26 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
               {changeDiplomacyMutation.isPending ? "Изменение..." : "Применить"}
             </Button>
           </div>
-        </div>
-
-        {/* Warning for War */}
-        {selectedStatus === "war" && (
-          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                Предупреждение
-              </span>
+          
+          {/* Warning for War */}
+          {selectedStatus === "war" && (
+            <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <span className="font-medium text-yellow-800 dark:text-yellow-200">
+                  Предупреждение
+                </span>
+              </div>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                Объявление войны приведет к тому, что представители племен смогут сражаться друг с другом в любых локациях.
+              </p>
             </div>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              Объявление войны приведет к тому, что представители племен смогут сражаться друг с другом в любых локациях.
-            </p>
+          )}
           </div>
         )}
 
-        {/* Diplomacy Proposals */}
-        {proposals.length > 0 && (
+        {/* Diplomacy Proposals - Only for leaders */}
+        {character.rank === "leader" && proposals.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -266,10 +270,20 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
 
         {/* Information */}
         <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Только предводители могут изменять дипломатические отношения</p>
-          <p>• Предложения мира требуют согласия обеих сторон</p>
-          <p>• Во время войны возможны сражения между племенами</p>
-          <p>• Дипломатические изменения влияют на всех членов обоих племен</p>
+          {character.rank === "leader" ? (
+            <>
+              <p>• Только предводители могут изменять дипломатические отношения</p>
+              <p>• Предложения мира требуют согласия обеих сторон</p>
+              <p>• Во время войны возможны сражения между племенами</p>
+              <p>• Дипломатические изменения влияют на всех членов обоих племен</p>
+            </>
+          ) : (
+            <>
+              <p>• Во время войны возможны сражения между племенами</p>
+              <p>• Во время мира атаки на игроков другого племени запрещены</p>
+              <p>• Только предводители могут изменять дипломатические отношения</p>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
