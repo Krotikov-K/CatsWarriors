@@ -28,6 +28,12 @@ export async function apiRequest(
     }
   }
 
+  // Add development user ID for testing (from localStorage)
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    const devUserId = localStorage.getItem('devUserId') || window.location.search.includes('userId=3') ? '3' : '1';
+    (options.headers as any)['x-dev-user-id'] = devUserId;
+  }
+
   // Add admin authentication for admin endpoints
   if (url.includes('/api/admin/')) {
     const isAuthenticated = localStorage.getItem("adminAuthenticated");
@@ -79,6 +85,12 @@ export const getQueryFn: <T>(options: {
         if (initData) {
           (options.headers as any)['x-telegram-init-data'] = initData;
         }
+      }
+
+      // Add development user ID for testing (from localStorage)
+      if (import.meta.env.DEV && typeof window !== 'undefined') {
+        const devUserId = localStorage.getItem('devUserId') || window.location.search.includes('userId=3') ? '3' : '1';
+        (options.headers as any)['x-dev-user-id'] = devUserId;
       }
 
       // Add admin authentication for admin endpoints
