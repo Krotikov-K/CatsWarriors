@@ -329,10 +329,11 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Improved spawnsInLocation field to reflect single-location ownership per instance
 - July 17, 2025. Map expansion with 6 new dangerous locations:
   * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
-  * Added mystical locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower left)
-  * All new locations have danger level 4 for high-level characters (level 6-13)
-  * Created 12 new powerful NPCs including bosses: Кристальный Дракон, Грозовой Барс, Теневой Демон
-  * New locations positioned horizontally: upper areas extend right, lower areas extend left
+  * Added dangerous locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower right)
+  * All new locations have danger level 4 for high-level characters (level 4-12)
+  * Created 12 lore-appropriate NPCs: various badgers and foxes fitting Warriors universe
+  * Strongest bosses: Старый Барсук, Вожак Барсуков, Речной Барсук, Альфа-Барсук, Теневой Барсук
+  * New locations positioned horizontally without overlapping existing areas
   * Connected new areas to main map through Четыре Дерева and Старая Дорога respectively
 
 ## User Preferences
