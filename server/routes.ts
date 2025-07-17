@@ -1407,6 +1407,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { fromClan, toClan, status } = changeDiplomacySchema.parse(req.body);
       const userId = (req as AuthenticatedRequest).userId || 1;
 
+      console.log("Diplomacy change request:", { fromClan, toClan, status, userId });
+
       // Get user's character
       const characters = await storage.getCharactersByUserId(userId);
       if (!characters.length) {
@@ -1414,6 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const character = characters[0];
+      console.log("Character for diplomacy:", { id: character.id, name: character.name, rank: character.rank, clan: character.clan });
 
       // Only leaders can change diplomacy
       if (character.rank !== "leader") {
@@ -1452,6 +1455,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: `${character.name} ${status === "war" ? "объявил войну" : "заключил мир"} с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`,
         locationId: character.currentLocationId,
         characterId: character.id,
+      });
+
+      // Broadcast diplomacy change to all connected players
+      broadcastToAll('diplomacy_change', {
+        relations: await storage.getAllDiplomacyRelations(),
+        message: `${character.name} ${status === "war" ? "объявил войну" : "заключил мир"} с ${toClan === "thunder" ? "Грозовым" : "Речным"} племенем`
       });
 
       res.json({ success: true, type: "direct" });
