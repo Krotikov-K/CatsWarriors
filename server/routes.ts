@@ -31,6 +31,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Development mode authentication middleware - add early in the chain
   app.use((req, res, next) => {
     if (process.env.NODE_ENV === "development") {
+      let resolvedUserId = 1; // Default to Кисяо
+      
       // Check URL for user parameter (for development testing)
       const url = new URL(req.url, 'http://localhost:5000');
       const userFromUrl = url.searchParams.get('userId');
@@ -38,7 +40,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In development, use query parameter or header to simulate different users
       const devUserId = userFromUrl || req.query.devUserId || req.headers['x-dev-user-id'];
       if (devUserId) {
-        (req as AuthenticatedRequest).userId = parseInt(devUserId as string);
+        resolvedUserId = parseInt(devUserId as string);
       } else {
         // Check Telegram WebApp data for userId
         const telegramInitData = req.headers['x-telegram-init-data'];
@@ -51,25 +53,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const telegramId = user.id.toString();
               // Map Telegram ID to userId (simple mapping for development)
               if (telegramId === '12345') {
-                (req as AuthenticatedRequest).userId = 3; // Админ
+                resolvedUserId = 3; // Админ
               } else {
-                (req as AuthenticatedRequest).userId = 1; // Default Кисяо
+                resolvedUserId = 1; // Default Кисяо
               }
-            } else {
-              (req as AuthenticatedRequest).userId = 1;
             }
           } catch (error) {
-            (req as AuthenticatedRequest).userId = 1;
+            resolvedUserId = 1;
           }
         } else {
           // Check browser URL for userid (simple fallback)
           const refererUrl = req.headers.referer;
           if (refererUrl && refererUrl.includes('userId=3')) {
-            (req as AuthenticatedRequest).userId = 3;
+            resolvedUserId = 3;
           } else {
-            (req as AuthenticatedRequest).userId = 1;
+            resolvedUserId = 1;
           }
         }
+      }
+      
+      (req as AuthenticatedRequest).userId = resolvedUserId;
+      
+      // Log authentication for diplomacy requests only
+      if (req.url.includes('/api/diplomacy/')) {
+        console.log(`Auth Debug [${req.method} ${req.url}]: userId=${resolvedUserId}, referer=${req.headers.referer}, query=${JSON.stringify(req.query)}`);
       }
     }
     next();
