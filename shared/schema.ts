@@ -416,7 +416,7 @@ export const LOCATIONS_DATA = [
   { id: 4, name: "Солнечная Поляна", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 25, connectedTo: [3, 5, 11], emoji: "🌻" },
   { id: 5, name: "Лесная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 90, y: 50, connectedTo: [2, 4, 6], emoji: "🌲" },
   { id: 6, name: "Мшистый Овраг", type: "hunting", clan: null, dangerLevel: 2, x: 80, y: 75, connectedTo: [5, 7], emoji: "🕳️" },
-  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8, 13, 22], emoji: "🛤️" },
+  { id: 7, name: "Старая Дорога", type: "hunting", clan: null, dangerLevel: 2, x: 50, y: 90, connectedTo: [6, 8, 13, 24], emoji: "🛤️" },
   { id: 8, name: "Болотистая Низина", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 75, connectedTo: [7, 9], emoji: "🌾" },
   { id: 9, name: "Дальний Лес", type: "hunting", clan: null, dangerLevel: 2, x: 10, y: 50, connectedTo: [1, 8, 10], emoji: "🌿" },
   { id: 10, name: "Горная Тропа", type: "hunting", clan: null, dangerLevel: 2, x: 20, y: 25, connectedTo: [9, 3], emoji: "🗻" },
@@ -438,10 +438,10 @@ export const LOCATIONS_DATA = [
   { id: 20, name: "Солнечный Склон", type: "danger", clan: null, dangerLevel: 4, x: 80, y: 5, connectedTo: [19, 21], emoji: "☀️" },
   { id: 21, name: "Гремящая Роща", type: "danger", clan: null, dangerLevel: 4, x: 95, y: 5, connectedTo: [20], emoji: "🌩️" },
   
-  // Дополнительные локации (низ) - слева направо от Старая Дорога
-  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 20, y: 95, connectedTo: [23, 7], emoji: "💎" },
-  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 35, y: 95, connectedTo: [22, 24], emoji: "🌊" },
-  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 95, connectedTo: [23], emoji: "🌑" },
+  // Дополнительные локации (низ) - справа налево от Старая Дорога
+  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 80, y: 95, connectedTo: [23], emoji: "💎" },
+  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 95, connectedTo: [22, 24], emoji: "🌊" },
+  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 95, connectedTo: [23, 7], emoji: "🌑" },
 ] as const;
 
 export const NPCS_DATA = [
