@@ -327,6 +327,13 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Example: Дикий Кролик now has separate instances (ID 7, 8, 9) for locations 11, 12, 13
   * NPCs can now be killed independently in different locations without affecting others
   * Improved spawnsInLocation field to reflect single-location ownership per instance
+- July 17, 2025. Map expansion with 6 new dangerous locations:
+  * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
+  * Added mystical locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower left)
+  * All new locations have danger level 4 for high-level characters (level 6-13)
+  * Created 12 new powerful NPCs including bosses: Кристальный Дракон, Грозовой Барс, Теневой Демон
+  * New locations positioned horizontally: upper areas extend right, lower areas extend left
+  * Connected new areas to main map through Четыре Дерева and Старая Дорога respectively
 
 ## User Preferences
 

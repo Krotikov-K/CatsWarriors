@@ -433,15 +433,15 @@ export const LOCATIONS_DATA = [
   { id: 17, name: "Поле Битв", type: "combat", clan: null, dangerLevel: 5, x: 45, y: 50, connectedTo: [14, 18], emoji: "⚔️" },
   { id: 18, name: "Логово Волка", type: "combat", clan: null, dangerLevel: 5, x: 55, y: 50, connectedTo: [12, 17], emoji: "🐺" },
   
-  // Дополнительные локации (верх) - соединены с Четыре Дерева
-  { id: 19, name: "Пугающее ущелье", type: "danger", clan: null, dangerLevel: 4, x: 35, y: 2, connectedTo: [20], emoji: "🏔️" },
-  { id: 20, name: "Солнечный Склон", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 2, connectedTo: [19, 21, 3], emoji: "☀️" },
-  { id: 21, name: "Гремящая Роща", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 2, connectedTo: [20], emoji: "🌩️" },
+  // Дополнительные локации (верх) - идут вправо от центра
+  { id: 19, name: "Пугающее ущелье", type: "danger", clan: null, dangerLevel: 4, x: 105, y: 15, connectedTo: [20], emoji: "🏔️" },
+  { id: 20, name: "Солнечный Склон", type: "danger", clan: null, dangerLevel: 4, x: 120, y: 15, connectedTo: [19, 21, 3], emoji: "☀️" },
+  { id: 21, name: "Гремящая Роща", type: "danger", clan: null, dangerLevel: 4, x: 135, y: 15, connectedTo: [20], emoji: "🌩️" },
   
-  // Дополнительные локации (низ) - соединены со Старая Дорога
-  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 35, y: 98, connectedTo: [23], emoji: "💎" },
-  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 98, connectedTo: [22, 24, 7], emoji: "🌊" },
-  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 98, connectedTo: [23], emoji: "🌑" },
+  // Дополнительные локации (низ) - идут влево от центра
+  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: -35, y: 85, connectedTo: [23], emoji: "💎" },
+  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: -20, y: 85, connectedTo: [22, 24, 7], emoji: "🌊" },
+  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: -5, y: 85, connectedTo: [23], emoji: "🌑" },
 ] as const;
 
 export const NPCS_DATA = [
