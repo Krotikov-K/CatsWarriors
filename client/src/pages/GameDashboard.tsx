@@ -4,7 +4,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Home, Map, MessageCircle, User, Crown } from "lucide-react";
+import { Home, Map, MessageCircle, User, Crown, Users, Shield } from "lucide-react";
 import { ChatPanel } from '@/components/ChatPanel';
 import { navigate } from "wouter/use-browser-location";
 
@@ -21,6 +21,7 @@ import TopBar from "@/components/TopBar";
 import CombatModal from "@/components/CombatModal";
 import CombatResultModal from "@/components/CombatResultModal";
 import RankManagement from "@/components/RankManagement";
+import TribeManagement from "@/components/TribeManagement";
 import TribeMembers from "@/components/TribeMembers";
 import PvPPanel from "@/components/PvPPanel";
 import DiplomacyPanel from "@/components/DiplomacyPanel";
@@ -507,92 +508,23 @@ export default function GameDashboard() {
           </div>
         );
 
-      case 'tribe':
+      case 'tribe-management':
         return (
           <div className="p-4 space-y-6 pb-20">
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Crown className="h-6 w-6 text-yellow-500" />
-                <h2 className="text-xl font-bold">
-                  {character.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя
-                </h2>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Character's current rank */}
-                <div className="bg-accent/50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{RANKS[character.rank as keyof typeof RANKS]?.emoji}</span>
-                    <span className="font-semibold">{character.name}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Должность: {RANKS[character.rank as keyof typeof RANKS]?.name}
-                  </p>
-                </div>
+            <TribeManagement character={character} />
+          </div>
+        );
 
-                {/* Rank management for leaders */}
-                {(() => {
-                  const currentRank = RANKS[character.rank as keyof typeof RANKS];
-                  const canManageRanks = currentRank?.canPromote?.length > 0;
-                  
-                  if (canManageRanks) {
-                    return (
-                      <div className="space-y-3">
-                        <h3 className="font-semibold">Управление племенем</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Как {currentRank.name}, вы можете назначать соплеменников на следующие должности
-                        </p>
-                        <RankManagement 
-                          character={character} 
-                          playersInLocation={playersInLocation}
-                        />
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
+      case 'tribe-members':
+        return (
+          <div className="p-4 space-y-6 pb-20">
+            <TribeMembers character={character} />
+          </div>
+        );
 
-                {/* Elder promotion for kittens */}
-                {character.rank === "kitten" && (
-                  <div className="space-y-3">
-                    <h3 className="font-semibold">Обряд посвящения</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Пора выбрать свой путь в племени! Найдите старейшину в лагере своего племени для проведения обряда посвящения.
-                    </p>
-                    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        💡 Идите в лагерь {character.clan === 'thunder' ? 'Грозового' : 'Речного'} племени и найдите старейшину (👴)
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tribal information */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Информация о племени</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-accent/30 rounded p-2">
-                      <div className="font-medium">Тип племени</div>
-                      <div className="text-muted-foreground">
-                        {character.clan === 'thunder' ? 'Лесные воины' : 'Речные рыболовы'}
-                      </div>
-                    </div>
-                    <div className="bg-accent/30 rounded p-2">
-                      <div className="font-medium">Лагерь</div>
-                      <div className="text-muted-foreground">
-                        {character.clan === 'thunder' ? 'Лагерь Грозового Племени' : 'Лагерь Речного Племени'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tribe Members List */}
-            <TribeMembers clan={character.clan} currentCharacter={character} />
-            
-            {/* Diplomacy Panel - только для лидеров */}
-            {/* Diplomacy status visible to all players */}
+      case 'diplomacy':
+        return (
+          <div className="p-4 space-y-6 pb-20">
             <DiplomacyPanel character={character} />
           </div>
         );
@@ -663,15 +595,39 @@ export default function GameDashboard() {
           </button>
           
           <button
-            onClick={() => setActiveTab('tribe')}
+            onClick={() => setActiveTab('tribe-management')}
             className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
-              activeTab === 'tribe'
+              activeTab === 'tribe-management'
                 ? 'text-primary bg-primary/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Crown className="w-5 h-5 mb-1" />
-            <span className="text-xs font-medium">Племя</span>
+            <span className="text-xs font-medium">Управление</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('tribe-members')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'tribe-members'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Члены</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('diplomacy')}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
+              activeTab === 'diplomacy'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Shield className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Дипломатия</span>
           </button>
           
           <button

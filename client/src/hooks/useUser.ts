@@ -40,22 +40,13 @@ export function useUser() {
           }
         } else {
           console.log('No Telegram user detected, using development mode');
-          // Create unique session-based user for development
-          let sessionUserId = localStorage.getItem('dev_session_user_id');
-          if (!sessionUserId) {
-            // Generate random user ID for this browser session
-            sessionUserId = Math.floor(Math.random() * 900 + 100).toString(); // Random ID between 100-999
-            localStorage.setItem('dev_session_user_id', sessionUserId);
-            console.log('Created new development session user:', sessionUserId);
-          }
-          setUser({ id: parseInt(sessionUserId), username: `dev_session_${sessionUserId}` });
+          // Use default user ID 1 for development (Кисяо)
+          setUser({ id: 1, username: 'dev_user_kisyao' });
         }
       } catch (error) {
         console.error('Authentication failed:', error);
-        // Generate unique fallback based on browser fingerprint
-        const browserFingerprint = navigator.userAgent.length + window.screen.width + window.screen.height;
-        const fallbackUserId = Math.abs(browserFingerprint % 500) + 500; // ID between 500-999
-        setUser({ id: fallbackUserId, username: `fallback_${fallbackUserId}` });
+        // Use default user ID 1 for development fallback
+        setUser({ id: 1, username: 'dev_user_kisyao' });
       } finally {
         setIsLoading(false);
       }

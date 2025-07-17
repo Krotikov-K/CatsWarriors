@@ -1,151 +1,158 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Crown, Shield, Heart, Star } from "lucide-react";
-import { type Character, RANKS } from "@shared/schema";
+import { Scroll, Users, Crown, Shield, Heart, Leaf, Sword, BookOpen, Baby } from "lucide-react";
+import type { Character } from "@shared/schema";
 
 interface TribeMembersProps {
-  clan: string;
-  currentCharacter: Character;
+  character: Character;
 }
 
-export default function TribeMembers({ clan, currentCharacter }: TribeMembersProps) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["/api/tribe-members", clan],
-    queryFn: async () => {
-      const response = await fetch(`/api/tribe-members/${clan}`);
-      if (!response.ok) {
-        throw new Error("Не удалось загрузить список членов племени");
-      }
-      return response.json();
-    },
-    refetchInterval: 30000, // Update every 30 seconds
+const rankIcons = {
+  leader: "👑",
+  deputy: "⚔️", 
+  senior_healer: "🌿",
+  healer: "🍃",
+  healer_apprentice: "🌱",
+  senior_warrior: "⭐",
+  warrior: "🗡️",
+  apprentice: "🔰",
+  kitten: "🐾"
+};
+
+const rankNames = {
+  leader: "Предводитель",
+  deputy: "Глашатай",
+  senior_healer: "Старший целитель", 
+  healer: "Целитель",
+  healer_apprentice: "Ученик целителя",
+  senior_warrior: "Старший воитель",
+  warrior: "Воитель",
+  apprentice: "Оруженосец",
+  kitten: "Котёнок"
+};
+
+const rankOrder = ["leader", "deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"];
+
+export default function TribeMembers({ character }: TribeMembersProps) {
+  const { data: tribeMembers } = useQuery({
+    queryKey: [`/api/tribe-members/${character.clan}`],
+    refetchInterval: 5000,
   });
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Члены племени
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const sortedMembers = tribeMembers?.tribeMembers?.sort((a: Character, b: Character) => {
+    const aIndex = rankOrder.indexOf(a.rank);
+    const bIndex = rankOrder.indexOf(b.rank);
+    return aIndex - bIndex;
+  }) || [];
 
-  if (error || !data?.tribeMembers) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Члены племени
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            Не удалось загрузить список членов племени
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const tribeMembers = data.tribeMembers as Character[];
-  
-  // Group members by rank
-  const membersByRank: Record<string, Character[]> = {};
-  tribeMembers.forEach(member => {
-    if (!membersByRank[member.rank]) {
-      membersByRank[member.rank] = [];
+  const membersByRank = sortedMembers.reduce((acc: Record<string, Character[]>, member: Character) => {
+    if (!acc[member.rank]) {
+      acc[member.rank] = [];
     }
-    membersByRank[member.rank].push(member);
-  });
-
-  const getRankIcon = (rank: string) => {
-    switch (rank) {
-      case "leader":
-        return <Crown className="h-4 w-4 text-yellow-500" />;
-      case "deputy":
-        return <Shield className="h-4 w-4 text-blue-500" />;
-      case "senior_healer":
-      case "healer":
-      case "healer_apprentice":
-        return <Heart className="h-4 w-4 text-green-500" />;
-      case "senior_warrior":
-        return <Star className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
+    acc[member.rank].push(member);
+    return acc;
+  }, {});
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Члены племени ({tribeMembers.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {Object.entries(membersByRank).map(([rank, members]) => {
-          const rankInfo = RANKS[rank as keyof typeof RANKS];
-          if (!rankInfo) return null;
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Члены {character.clan === "thunder" ? "Грозового ⚡" : "Речного 🌊"} племени
+          </CardTitle>
+          <CardDescription>
+            Всего соплеменников: {sortedMembers.length}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Members by Rank */}
+      <div className="space-y-4">
+        {rankOrder.map(rank => {
+          const members = membersByRank[rank] || [];
+          if (members.length === 0) return null;
 
           return (
-            <div key={rank} className="space-y-2">
-              <div className="flex items-center gap-2 font-medium text-sm">
-                {getRankIcon(rank)}
-                <span>{rankInfo.emoji} {rankInfo.name}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {members.length}
-                </Badge>
-              </div>
-              
-              <div className="grid gap-2 ml-6">
-                {members.map(member => (
-                  <div
-                    key={member.id}
-                    className={`flex items-center justify-between p-2 rounded-lg border ${
-                      member.id === currentCharacter.id 
-                        ? "bg-primary/10 border-primary/20" 
-                        : "bg-card border-border"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{member.name}</span>
-                      {member.id === currentCharacter.id && (
-                        <Badge variant="outline" className="text-xs">
+            <Card key={rank}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <span className="text-xl">{rankIcons[rank as keyof typeof rankIcons]}</span>
+                  {rankNames[rank as keyof typeof rankNames]}
+                  <Badge variant="outline" className="ml-auto">
+                    {members.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {members.map((member: Character) => (
+                    <div 
+                      key={member.id}
+                      className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                    >
+                      <span className="text-lg">
+                        {member.gender === "male" ? "🐱" : "🐈"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{member.name}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>Ур. {member.level}</span>
+                          <span>❤️ {member.hp}/{80 + (member.endurance * 5)}</span>
+                        </div>
+                      </div>
+                      {member.id === character.id && (
+                        <Badge variant="secondary" className="text-xs">
                           Вы
                         </Badge>
                       )}
                     </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Ур. {member.level}</span>
-                      <span>{member.gender === 'male' ? '🐱' : '🐈'}</span>
-                      <div className={`w-2 h-2 rounded-full ${member.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
-        
-        {tribeMembers.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            В племени пока нет активных членов
+      </div>
+
+      {/* Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Scroll className="h-5 w-5" />
+            Статистика племени
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                {membersByRank.leader?.length || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Предводители</div>
+            </div>
+            <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {(membersByRank.warrior?.length || 0) + (membersByRank.senior_warrior?.length || 0)}
+              </div>
+              <div className="text-sm text-muted-foreground">Воители</div>
+            </div>
+            <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {(membersByRank.healer?.length || 0) + (membersByRank.senior_healer?.length || 0) + (membersByRank.healer_apprentice?.length || 0)}
+              </div>
+              <div className="text-sm text-muted-foreground">Целители</div>
+            </div>
+            <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {(membersByRank.apprentice?.length || 0) + (membersByRank.kitten?.length || 0)}
+              </div>
+              <div className="text-sm text-muted-foreground">Ученики</div>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
