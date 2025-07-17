@@ -31,13 +31,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Development mode authentication middleware - add early in the chain
   app.use((req, res, next) => {
     if (process.env.NODE_ENV === "development") {
+      // Check URL for user parameter (for development testing)
+      const url = new URL(req.url, 'http://localhost:5000');
+      const userFromUrl = url.searchParams.get('userId');
+      
       // In development, use query parameter or header to simulate different users
-      const devUserId = req.query.devUserId || req.headers['x-dev-user-id'];
+      const devUserId = userFromUrl || req.query.devUserId || req.headers['x-dev-user-id'];
       if (devUserId) {
         (req as AuthenticatedRequest).userId = parseInt(devUserId as string);
-      } else if (!(req as AuthenticatedRequest).userId) {
-        // Default to userId=1 for development
-        (req as AuthenticatedRequest).userId = 1;
+      } else {
+        // Check Telegram WebApp data for userId
+        const telegramInitData = req.headers['x-telegram-init-data'];
+        if (telegramInitData) {
+          try {
+            const urlParams = new URLSearchParams(telegramInitData as string);
+            const userParam = urlParams.get('user');
+            if (userParam) {
+              const user = JSON.parse(userParam);
+              const telegramId = user.id.toString();
+              // Map Telegram ID to userId (simple mapping for development)
+              if (telegramId === '12345') {
+                (req as AuthenticatedRequest).userId = 3; // Админ
+              } else {
+                (req as AuthenticatedRequest).userId = 1; // Default Кисяо
+              }
+            } else {
+              (req as AuthenticatedRequest).userId = 1;
+            }
+          } catch (error) {
+            (req as AuthenticatedRequest).userId = 1;
+          }
+        } else {
+          // Check browser URL for userid (simple fallback)
+          const refererUrl = req.headers.referer;
+          if (refererUrl && refererUrl.includes('userId=3')) {
+            (req as AuthenticatedRequest).userId = 3;
+          } else {
+            (req as AuthenticatedRequest).userId = 1;
+          }
+        }
       }
     }
     next();

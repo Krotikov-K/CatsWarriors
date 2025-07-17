@@ -19,11 +19,12 @@ export async function apiRequest(
     },
   };
 
-  // Add development user ID for testing
-  if (import.meta.env.DEV) {
-    const devUserId = localStorage.getItem('devUserId');
-    if (devUserId) {
-      (options.headers as any)['x-dev-user-id'] = devUserId;
+  // Add Telegram WebApp init data for authentication
+  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    const webApp = window.Telegram.WebApp;
+    const initData = webApp.initData;
+    if (initData) {
+      (options.headers as any)['x-telegram-init-data'] = initData;
     }
   }
 
@@ -71,11 +72,12 @@ export const getQueryFn: <T>(options: {
         headers: {}
       };
 
-      // Add development user ID for testing
-      if (import.meta.env.DEV) {
-        const devUserId = localStorage.getItem('devUserId');
-        if (devUserId) {
-          (options.headers as any)['x-dev-user-id'] = devUserId;
+      // Add Telegram WebApp init data for authentication
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        const initData = webApp.initData;
+        if (initData) {
+          (options.headers as any)['x-telegram-init-data'] = initData;
         }
       }
 
