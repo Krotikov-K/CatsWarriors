@@ -439,9 +439,9 @@ export const LOCATIONS_DATA = [
   { id: 21, name: "Гремящая Роща", type: "danger", clan: null, dangerLevel: 4, x: 95, y: 5, connectedTo: [20], emoji: "🌩️" },
   
   // Дополнительные локации (низ) - справа налево от Старая Дорога
-  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 80, y: 95, connectedTo: [23], emoji: "💎" },
-  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 95, connectedTo: [22, 24], emoji: "🌊" },
-  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 50, y: 95, connectedTo: [23, 7], emoji: "🌑" },
+  { id: 22, name: "Хрустальный Ручей", type: "danger", clan: null, dangerLevel: 4, x: 95, y: 95, connectedTo: [23], emoji: "💎" },
+  { id: 23, name: "Озеро Снов", type: "danger", clan: null, dangerLevel: 4, x: 80, y: 95, connectedTo: [22, 24], emoji: "🌊" },
+  { id: 24, name: "Тропа Теней", type: "danger", clan: null, dangerLevel: 4, x: 65, y: 95, connectedTo: [23, 7], emoji: "🌑" },
 ] as const;
 
 export const NPCS_DATA = [
