@@ -215,10 +215,16 @@ export class GameEngine {
         // Award experience to surviving characters
         const combat = await storage.getCombat(combatId);
         if (combat) {
+          console.log(`Awarding experience for combat ${combatId}:`);
+          console.log(`- NPC killed: ${target.name} (${target.experienceReward} exp)`);
+          console.log(`- Combat participants: [${combat.participants.join(', ')}]`);
+          
           for (const characterId of combat.participants) {
             const character = await storage.getCharacter(characterId);
             if (character && character.currentHp > 0) {
               const expGain = target.experienceReward;
+              console.log(`- ${character.name} (ID: ${characterId}): ${character.experience} -> ${character.experience + expGain} exp (HP: ${character.currentHp})`);
+              
               await storage.updateCharacter(characterId, {
                 experience: character.experience + expGain
               });
@@ -233,6 +239,10 @@ export class GameEngine {
                 message: `${character.name} получает ${expGain} опыта за победу!`
               };
               await storage.addCombatLogEntry(combatId, expEntry);
+            } else if (character) {
+              console.log(`- ${character.name} (ID: ${characterId}): NOT awarded (HP: ${character.currentHp})`);
+            } else {
+              console.log(`- Character ID ${characterId}: NOT FOUND`);
             }
           }
         }
