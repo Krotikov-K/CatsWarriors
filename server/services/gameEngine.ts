@@ -219,6 +219,8 @@ export class GameEngine {
           console.log(`- NPC killed: ${target.name} (${target.experienceReward} exp)`);
           console.log(`- Combat participants: [${combat.participants.join(', ')}]`);
           
+          const survivingParticipants: number[] = [];
+          
           for (const characterId of combat.participants) {
             const character = await storage.getCharacter(characterId);
             if (character && character.currentHp > 0) {
@@ -239,10 +241,20 @@ export class GameEngine {
                 message: `${character.name} получает ${expGain} опыта за победу!`
               };
               await storage.addCombatLogEntry(combatId, expEntry);
+              
+              survivingParticipants.push(characterId);
             } else if (character) {
               console.log(`- ${character.name} (ID: ${characterId}): NOT awarded (HP: ${character.currentHp})`);
             } else {
               console.log(`- Character ID ${characterId}: NOT FOUND`);
+            }
+          }
+          
+          // Broadcast group victory to all surviving participants
+          if (survivingParticipants.length > 1) {
+            const broadcastGroupVictory = (global as any).broadcastGroupVictory;
+            if (broadcastGroupVictory) {
+              await broadcastGroupVictory(survivingParticipants, target.name, target.experienceReward);
             }
           }
         }

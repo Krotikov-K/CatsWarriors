@@ -234,6 +234,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  async function broadcastGroupVictory(participantIds: number[], npcName: string, expGain: number) {
+    const updateMessage: WebSocketMessage = {
+      type: 'group_victory',
+      data: { 
+        npcName,
+        expGain,
+        message: `Ваша группа победила ${npcName} и получила ${expGain} опыта!`
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to all group participants
+    for (const characterId of participantIds) {
+      const client = connectedClients.get(characterId);
+      if (client && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(updateMessage));
+      }
+    }
+  }
+
+  // Export for use in gameEngine
+  (global as any).broadcastGroupVictory = broadcastGroupVictory;
+
   // Telegram authentication route
   app.post("/api/auth/telegram", async (req, res) => {
     try {

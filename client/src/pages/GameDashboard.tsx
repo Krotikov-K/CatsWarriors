@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Home, Map, MessageCircle, User, Crown, Users, Shield } from "lucide-react";
@@ -35,6 +36,9 @@ export default function GameDashboard() {
   const queryClient = useQueryClient();
   
   const { gameState, isLoading: gameLoading, error } = useGameState(user?.id || null);
+  
+  // WebSocket connection for real-time updates
+  const { lastMessage } = useWebSocket(gameState?.character?.id || null);
   
   console.log('GameDashboard render:', { user, userLoading, gameState, gameLoading, error });
   
@@ -184,6 +188,24 @@ export default function GameDashboard() {
       setWasInCombat(false);
     }
   }, [gameState?.isInCombat, gameState?.lastCompletedCombat, showCombatResult]);
+
+  // Handle WebSocket messages for group victory notifications
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'group_victory') {
+      const { npcName, expGain, message } = lastMessage.data;
+      
+      console.log('*** GROUP VICTORY NOTIFICATION RECEIVED ***', lastMessage.data);
+      
+      toast({
+        title: "🎉 Групповая победа!",
+        description: message,
+        duration: 5000,
+      });
+      
+      // Refresh game state to show updated experience
+      queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+    }
+  }, [lastMessage, toast, queryClient]);
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
