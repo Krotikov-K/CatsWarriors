@@ -52,11 +52,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const telegramUser = JSON.parse(userParam);
               const telegramId = telegramUser.id.toString();
               
+              console.log(`Telegram auth: telegramId=${telegramId}, username=${telegramUser.username}`);
+              
               // Find user by Telegram ID in database
               const user = await storage.getUserByTelegramId(telegramId);
               if (user) {
                 resolvedUserId = user.id;
+                console.log(`Found user: id=${user.id}, username=${user.username}, telegramId=${user.telegramId}`);
               } else {
+                console.log(`Creating new user for telegramId=${telegramId}`);
                 // Create new user if not exists
                 const newUser = await storage.createUser({
                   username: telegramUser.username || `user_${telegramId}`,
@@ -66,7 +70,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   password: "telegram_auth"
                 });
                 resolvedUserId = newUser.id;
+                console.log(`Created new user: id=${newUser.id}`);
               }
+            } else {
+              console.log("No user param in telegram data");
+              resolvedUserId = 1;
             }
           } catch (error) {
             console.error("Telegram auth error:", error);
@@ -74,6 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } else {
           // Fallback: use default mapping for development
+          console.log("No telegram data, using default");
           resolvedUserId = 1; // Default to Кисяо
         }
       }

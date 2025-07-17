@@ -31,8 +31,13 @@ export async function apiRequest(
   // Add development user ID for testing (from URL parameter)
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
-    const devUserId = urlParams.get('userId') || '1';
-    (options.headers as any)['x-dev-user-id'] = devUserId;
+    const devUserId = urlParams.get('userId');
+    if (devUserId) {
+      console.log(`Frontend: Setting x-dev-user-id header to ${devUserId}`);
+      (options.headers as any)['x-dev-user-id'] = devUserId;
+    } else {
+      console.log(`Frontend: No userId in URL, not setting x-dev-user-id header`);
+    }
   }
 
   // Add admin authentication for admin endpoints
@@ -91,8 +96,13 @@ export const getQueryFn: <T>(options: {
       // Add development user ID for testing (from URL parameter)
       if (import.meta.env.DEV && typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        const devUserId = urlParams.get('userId') || '1';
-        (options.headers as any)['x-dev-user-id'] = devUserId;
+        const devUserId = urlParams.get('userId');
+        if (devUserId) {
+          console.log(`Frontend mutation: Setting x-dev-user-id header to ${devUserId}`);
+          (options.headers as any)['x-dev-user-id'] = devUserId;
+        } else {
+          console.log(`Frontend mutation: No userId in URL, not setting x-dev-user-id header`);
+        }
       }
 
       // Add admin authentication for admin endpoints
