@@ -592,9 +592,8 @@ export default function GameDashboard() {
             <TribeMembers clan={character.clan} currentCharacter={character} />
             
             {/* Diplomacy Panel - только для лидеров */}
-            {character.rank === "leader" && (
-              <DiplomacyPanel character={character} />
-            )}
+            {/* Diplomacy status visible to all players */}
+            <DiplomacyPanel character={character} />
           </div>
         );
 
