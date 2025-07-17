@@ -1474,6 +1474,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as AuthenticatedRequest).userId || 1;
 
+      console.log("Getting diplomacy proposals for userId:", userId);
+
       // Get user's character
       const characters = await storage.getCharactersByUserId(userId);
       if (!characters.length) {
@@ -1481,13 +1483,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const character = characters[0];
+      console.log("Character for proposals:", { id: character.id, name: character.name, rank: character.rank, clan: character.clan });
 
       // Only leaders can see proposals
       if (character.rank !== "leader") {
+        console.log("403: Character is not a leader:", character.rank);
         return res.status(403).json({ message: "Only leaders can view diplomacy proposals" });
       }
 
       const proposals = await storage.getDiplomacyProposals(character.clan);
+      console.log("Found proposals for clan", character.clan, ":", proposals.length);
       res.json({ proposals });
     } catch (error) {
       console.error("Get diplomacy proposals error:", error);

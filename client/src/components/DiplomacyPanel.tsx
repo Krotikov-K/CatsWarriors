@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,38 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'diplomacy_change') {
+          // Refresh diplomacy data when changes occur
+          queryClient.invalidateQueries({ queryKey: ["/api/diplomacy"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/diplomacy/proposals"] });
+          
+          // Show notification about diplomacy change
+          if (data.message) {
+            toast({
+              title: "Дипломатическое изменение",
+              description: data.message,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [queryClient, toast]);
+
   const { data: diplomacyData } = useQuery({
     queryKey: ["/api/diplomacy"],
     refetchInterval: 5000,
@@ -25,6 +57,7 @@ export default function DiplomacyPanel({ character }: DiplomacyPanelProps) {
 
   const { data: proposalsData } = useQuery({
     queryKey: ["/api/diplomacy/proposals"],
+    enabled: character.rank === "leader", // Only fetch for leaders
     refetchInterval: 3000,
   });
 
