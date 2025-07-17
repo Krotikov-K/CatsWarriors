@@ -235,6 +235,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function broadcastGroupVictory(participantIds: number[], npcName: string, expGain: number) {
+    console.log(`*** BROADCASTING GROUP VICTORY ***`);
+    console.log(`- Target participants: [${participantIds.join(', ')}]`);
+    console.log(`- Connected clients: ${connectedClients.size}`);
+    console.log(`- Connected client IDs: [${Array.from(connectedClients.keys()).join(', ')}]`);
+    
     const updateMessage: WebSocketMessage = {
       type: 'group_victory',
       data: { 
@@ -245,16 +250,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: new Date().toISOString()
     };
 
+    console.log(`- Message to send:`, JSON.stringify(updateMessage));
+
     // Send to all group participants
+    let sentCount = 0;
     for (const characterId of participantIds) {
       const client = connectedClients.get(characterId);
+      console.log(`- Character ${characterId}: client exists=${!!client}, connected=${client?.readyState === WebSocket.OPEN}`);
+      
       if (client && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(updateMessage));
+        try {
+          client.send(JSON.stringify(updateMessage));
+          sentCount++;
+          console.log(`- Successfully sent to character ${characterId}`);
+        } catch (error) {
+          console.log(`- Failed to send to character ${characterId}:`, error);
+        }
+      } else {
+        console.log(`- Character ${characterId} not connected or client not ready`);
       }
     }
+    
+    console.log(`*** GROUP VICTORY BROADCAST COMPLETE: ${sentCount}/${participantIds.length} messages sent ***`);
   }
 
-  // Export for use in gameEngine
+  // Make function globally available for gameEngine
   (global as any).broadcastGroupVictory = broadcastGroupVictory;
 
   // Telegram authentication route
@@ -728,10 +748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           npcParticipants: npcParticipants
         });
         
-        // Start automated combat processing (avoid duplicate starts)
-        setTimeout(() => {
-          GameEngine.startAutoCombat(combat.id);
-        }, 100);
+        // Auto combat will be started later in the general handler
         
       } else if (targetId) {
         // PVP combat with another character

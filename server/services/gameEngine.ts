@@ -126,7 +126,18 @@ export class GameEngine {
     console.log(`${attacker.name} can target:`, possibleTargets.map(t => t.name));
 
     if (possibleTargets.length > 0) {
-      const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+      // For NPCs, always target character with highest HP
+      let target: Character | NPC;
+      if (!('userId' in attacker)) { // NPC attacker
+        target = possibleTargets.reduce((highest, current) => 
+          current.currentHp > highest.currentHp ? current : highest
+        );
+        console.log(`NPC ${attacker.name} targets ${target.name} (highest HP: ${target.currentHp})`);
+      } else {
+        // For character attackers, random target
+        target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+      }
+      
       console.log(`Combat ${combatId}: ${attacker.name} attacks ${target.name}`);
       await this.executeAttack(attacker, target, combatId);
     } else {
@@ -252,10 +263,21 @@ export class GameEngine {
           
           // Broadcast group victory to all surviving participants
           if (survivingParticipants.length > 1) {
+            console.log(`*** SENDING GROUP VICTORY NOTIFICATION ***`);
+            console.log(`- Participants: [${survivingParticipants.join(', ')}]`);
+            console.log(`- NPC defeated: ${target.name}`);
+            console.log(`- Experience gained: ${target.experienceReward}`);
+            
             const broadcastGroupVictory = (global as any).broadcastGroupVictory;
             if (broadcastGroupVictory) {
+              console.log(`- Broadcasting via WebSocket to ${survivingParticipants.length} participants`);
               await broadcastGroupVictory(survivingParticipants, target.name, target.experienceReward);
+              console.log(`- Group victory notification sent successfully`);
+            } else {
+              console.log(`- ERROR: broadcastGroupVictory function not available`);
             }
+          } else {
+            console.log(`- Not a group victory: only ${survivingParticipants.length} participants`);
           }
         }
       }
