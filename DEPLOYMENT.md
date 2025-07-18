@@ -1,4 +1,4 @@
-# Руководство по развертыванию Cats War
+# Руководство по развертыванию Клыки и Клятвы
 
 ## Развертывание на GitHub
 
@@ -6,7 +6,7 @@
 
 1. Зайдите на [GitHub.com](https://github.com)
 2. Нажмите кнопку "New repository" (зеленая кнопка)
-3. Введите название репозитория: `cats-war`
+3. Введите название репозитория: `fangs-and-oaths`
 4. Выберите "Public" для открытого проекта
 5. НЕ добавляйте README.md (он уже есть в проекте)
 6. Нажмите "Create repository"
@@ -23,10 +23,10 @@ git init
 git add .
 
 # Первый коммит
-git commit -m "Initial commit: Cats War RPG game"
+git commit -m "Initial commit: Клыки и Клятвы RPG game"
 
 # Добавление удаленного репозитория (замените YOUR_USERNAME на ваш GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/cats-war.git
+git remote add origin https://github.com/YOUR_USERNAME/fangs-and-oaths.git
 
 # Отправка на GitHub
 git push -u origin main
@@ -38,8 +38,8 @@ git push -u origin main
 
 1. Клонировать проект:
 ```bash
-git clone https://github.com/YOUR_USERNAME/cats-war.git
-cd cats-war
+git clone https://github.com/YOUR_USERNAME/fangs-and-oaths.git
+cd fangs-and-oaths
 ```
 
 2. Установить зависимости:

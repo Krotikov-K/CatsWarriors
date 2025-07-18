@@ -345,7 +345,7 @@ export default function GameDashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-4">Cats War</h1>
+          <h1 className="text-2xl font-bold mb-4">Клыки и Клятвы</h1>
           <p className="text-muted-foreground mb-6">
             Загружаем игру...
           </p>
@@ -381,7 +381,7 @@ export default function GameDashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-4">Добро пожаловать в Cats War!</h1>
+          <h1 className="text-2xl font-bold mb-4">Добро пожаловать в Клыки и Клятвы!</h1>
           <p className="text-muted-foreground mb-6">
             У вас пока нет персонажа. Создайте своего воина-кота.
           </p>

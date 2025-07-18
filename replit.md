@@ -1,8 +1,8 @@
-# Cats War - Multiplayer Role-Playing Game
+# Клыки и Клятвы - Multiplayer Role-Playing Game
 
 ## Overview
 
-Cats War is a real-time multiplayer role-playing game built with a React frontend and Express backend. Players create warrior cats from different clans and engage in turn-based combat across various locations. The game features clan-based gameplay, character progression, real-time communication through WebSockets, and optional Telegram bot integration.
+Клыки и Клятвы is a real-time multiplayer role-playing game built with a React frontend and Express backend. Players create warrior cats from different clans and engage in turn-based combat across various locations. The game features clan-based gameplay, character progression, real-time communication through WebSockets, and optional Telegram bot integration.
 
 ## System Architecture
 
@@ -327,6 +327,10 @@ Cats War is a real-time multiplayer role-playing game built with a React fronten
   * Example: Дикий Кролик now has separate instances (ID 7, 8, 9) for locations 11, 12, 13
   * NPCs can now be killed independently in different locations without affecting others
   * Improved spawnsInLocation field to reflect single-location ownership per instance
+- July 17, 2025. Game rebranding to "Клыки и Клятвы":
+  * Changed game title from "Cats War" to "Клыки и Клятвы" throughout project
+  * Updated all user-facing text, documentation, and interface elements
+  * Maintained all existing functionality with new branding
 - July 17, 2025. Map expansion with 6 new dangerous locations:
   * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
   * Added dangerous locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower right)

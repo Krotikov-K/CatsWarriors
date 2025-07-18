@@ -38,7 +38,7 @@ export default function AdminLogin() {
               <Shield className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Админ-панель Cats War</CardTitle>
+          <CardTitle className="text-2xl">Админ-панель Клыки и Клятвы</CardTitle>
           <CardDescription>
             Введите пароль администратора для доступа к панели управления
           </CardDescription>

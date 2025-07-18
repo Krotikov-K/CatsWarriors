@@ -312,7 +312,7 @@ export default function AdminPanel() {
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
-          <p className="text-muted-foreground">Управление игровым миром Cats War</p>
+          <p className="text-muted-foreground">Управление игровым миром Клыки и Клятвы</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Админ-режим</Badge>

@@ -79,7 +79,7 @@ class AdminBotService {
   private async handleStart(chatId: number, userId: number) {
     if (!this.bot) return;
 
-    const welcomeMessage = `🔒 Добро пожаловать в админ-панель Cats War!
+    const welcomeMessage = `🔒 Добро пожаловать в админ-панель Клыки и Клятвы!
 
 Это защищенная админ-панель для управления игрой.
 
@@ -178,7 +178,7 @@ class AdminBotService {
 
     await this.bot.sendMessage(
       chatId,
-      `🛠️ Админ-панель Cats War
+      `🛠️ Админ-панель Клыки и Клятвы
 
 Выберите раздел для управления:
 
@@ -205,7 +205,7 @@ class AdminBotService {
   private async handleHelp(chatId: number, userId: number) {
     if (!this.bot) return;
 
-    const helpMessage = `📋 Справка по админ-боту Cats War
+    const helpMessage = `📋 Справка по админ-боту Клыки и Клятвы
 
 🔧 Доступные команды:
 /start - Начальное приветствие

@@ -1,6 +1,6 @@
-# Cats War - Multiplayer Role-Playing Game
+# Клыки и Клятвы - Multiplayer Role-Playing Game
 
-Браузерная многопользовательская RPG "Война Котов" по мотивам серии книг "Коты-Воители". Игра представляет собой Telegram Web App для мобильных устройств.
+Браузерная многопользовательская RPG "Клыки и Клятвы" по мотивам серии книг "Коты-Воители". Игра представляет собой Telegram Web App для мобильных устройств.
 
 ## Особенности
 
@@ -24,8 +24,8 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/ваш-username/cats-war.git
-cd cats-war
+git clone https://github.com/ваш-username/fangs-and-oaths.git
+cd fangs-and-oaths
 ```
 
 2. Установите зависимости:
