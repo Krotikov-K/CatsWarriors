@@ -983,11 +983,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import RANKS from schema
       const { RANKS } = await import("@shared/schema");
       
-      // Check permissions
+      // Check permissions - requester must be able to promote to the new rank
       const requesterRank = RANKS[requester.rank as keyof typeof RANKS];
+      const newRankData = RANKS[newRank as keyof typeof RANKS];
+      
+      // Check if requester can promote to this rank
       const canPromote = requesterRank?.canPromote.includes(newRank) || false;
       
-      if (!canPromote) {
+      // Also check if the new rank can be promoted by the requester according to canBePromotedBy
+      const canBePromoted = newRankData?.canBePromotedBy?.includes(requester.rank) || false;
+      
+      // Admin check for special ranks
+      const isAdmin = requester.rank === "leader" || requesterRank?.adminOnly === true;
+      const canPromoteAsAdmin = isAdmin && newRankData?.canBePromotedBy?.includes("admin");
+      
+      if (!canPromote && !canBePromoted && !canPromoteAsAdmin) {
+        console.log(`Promotion denied: ${requester.rank} cannot promote to ${newRank}. canPromote: ${canPromote}, canBePromoted: ${canBePromoted}, isAdmin: ${isAdmin}`);
         return res.status(403).json({ error: "You don't have permission to assign this rank" });
       }
 
@@ -1239,6 +1250,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Clear combat results error:", error);
       res.status(500).json({ message: "Failed to clear combat results" });
+    }
+  });
+
+  // Test promotion endpoint
+  app.post("/api/test-promotion", async (req, res) => {
+    try {
+      const { RANKS } = await import("@shared/schema");
+      
+      console.log("=== TESTING PROMOTION PERMISSIONS ===");
+      
+      // Test cases
+      const testCases = [
+        { from: "senior_healer", to: "healer", should: true },
+        { from: "senior_healer", to: "healer_apprentice", should: true },
+        { from: "senior_warrior", to: "warrior", should: true },
+        { from: "senior_warrior", to: "apprentice", should: true },
+        { from: "healer", to: "healer_apprentice", should: true },
+        { from: "warrior", to: "apprentice", should: false },
+      ];
+      
+      const results = testCases.map(test => {
+        const fromRank = RANKS[test.from as keyof typeof RANKS];
+        const toRankData = RANKS[test.to as keyof typeof RANKS];
+        
+        const canPromote = fromRank?.canPromote.includes(test.to) || false;
+        const canBePromoted = toRankData?.canBePromotedBy?.includes(test.from) || false;
+        
+        const actualResult = canPromote || canBePromoted;
+        const passed = actualResult === test.should;
+        
+        console.log(`${test.from} -> ${test.to}: canPromote=${canPromote}, canBePromoted=${canBePromoted}, result=${actualResult}, expected=${test.should}, PASSED=${passed}`);
+        
+        return {
+          ...test,
+          canPromote,
+          canBePromoted,
+          actualResult,
+          passed
+        };
+      });
+      
+      res.json({ results });
+    } catch (error) {
+      console.error("Test promotion error:", error);
+      res.status(500).json({ message: "Test failed", error: error.message });
     }
   });
 

@@ -354,6 +354,7 @@ export const RANKS = {
     name: "Предводитель", 
     emoji: "👑", 
     canPromote: ["deputy", "senior_healer", "healer", "healer_apprentice", "senior_warrior", "warrior", "apprentice", "kitten"],
+    canBePromotedBy: ["admin"],
     adminOnly: true 
   },
   deputy: { 

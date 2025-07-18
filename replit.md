@@ -331,6 +331,12 @@
   * Changed game title from "Cats War" to "Клыки и Клятвы" throughout project
   * Updated all user-facing text, documentation, and interface elements
   * Maintained all existing functionality with new branding
+- July 18, 2025. Fixed rank promotion system:
+  * Fixed critical bug where senior healers couldn't promote healer apprentices to healers
+  * Fixed similar issue with senior warriors unable to promote apprentices to warriors
+  * Updated permission logic to check both canPromote and canBePromotedBy fields properly
+  * Added admin authentication handling for leaders and special ranks
+  * Promotion system now works correctly across all tribal hierarchy levels
 - July 17, 2025. Map expansion with 6 new dangerous locations:
   * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
   * Added dangerous locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower right)
