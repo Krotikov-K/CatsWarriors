@@ -27,6 +27,7 @@ import TribeMembers from "@/components/TribeMembers";
 import PvPPanel from "@/components/PvPPanel";
 import DiplomacyPanel from "@/components/DiplomacyPanel";
 import TerritoryWarPanel from "@/components/TerritoryWarPanel";
+import OverviewPanel from "@/components/OverviewPanel";
 
 import type { Combat } from "@shared/schema";
 import { RANKS } from "@shared/schema";
@@ -408,93 +409,12 @@ export default function GameDashboard() {
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="p-4 space-y-6 pb-20">
-            <div className="bg-card border border-border rounded-lg p-4">
-              <h2 className="text-xl font-bold mb-2">
-                {location?.name || 'Неизвестная локация'}
-              </h2>
-              <p className="text-muted-foreground mb-3">
-                {location?.description || 'Описание локации отсутствует'}
-              </p>
-              <div className="flex items-center gap-4 text-sm">
-                <span className="bg-accent px-2 py-1 rounded">
-                  Уровень опасности: {location?.dangerLevel || 1}
-                </span>
-                <span className="text-muted-foreground">
-                  Игроков онлайн: {playersOnline}
-                </span>
-              </div>
-            </div>
-            
-            <GroupPanel gameState={gameState} />
-            
-            {location && character && location.type === "camp" && (
-              <CampActions 
-                character={character} 
-                location={location}
-              />
-            )}
-            
-            {npcsInLocation.length > 0 && (
-              <NPCPanel 
-                npcs={npcsInLocation}
-                onAttackNPC={handleAttackNPC}
-                canAttack={!gameState.isInCombat && character.currentHp > 1}
-                character={character}
-                currentGroup={gameState.currentGroup}
-              />
-            )}
-
-            {activeCombats.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Активные бои</h3>
-                <div className="space-y-2">
-                  {activeCombats.map((combat) => (
-                    <div
-                      key={combat.id}
-                      className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:bg-accent transition-colors"
-                      onClick={() => handleCombatClick(combat)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Бой #{combat.id}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {combat.participants.length} участников
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PvP Panel - показывать только если есть игроки из других племён */}
-            <PvPPanel 
+          <div className="p-4 pb-20">
+            <OverviewPanel 
               character={character}
+              location={location}
               playersInLocation={playersInLocation}
-              locationId={location.id}
             />
-            
-            {/* Territory War Panel */}
-            <TerritoryWarPanel character={character} location={location} />
-
-            {playersInLocation.length > 1 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Игроки в локации</h3>
-                <div className="space-y-2">
-                  {playersInLocation.filter(p => p.id !== character.id).map((player) => (
-                    <div key={player.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <div>
-                        <div className="font-medium">{player.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {player.clan === 'thunder' ? 'Грозовое' : 'Речное'} племя • Уровень {player.level}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         );
 
