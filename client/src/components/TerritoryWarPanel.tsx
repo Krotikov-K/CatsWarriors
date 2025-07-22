@@ -175,17 +175,17 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   }
 
   return (
-    <Card className="w-full bg-orange-50 border-orange-200">
+    <Card className="w-full bg-card border-border">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-orange-800">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           ⚔️ Война за территории
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Clan Influence */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-orange-700">Очки влияния:</span>
-          <Badge variant="outline" className="bg-orange-100">
+          <span className="text-sm text-muted-foreground">Очки влияния:</span>
+          <Badge variant="outline">
             {influence?.influencePoints || 0} очков
           </Badge>
         </div>
@@ -193,7 +193,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
         {/* Territory Status */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-orange-700">Владелец:</span>
+            <span className="text-sm text-muted-foreground">Владелец:</span>
             {isNeutral ? (
               <Badge variant="secondary">Нейтральная</Badge>
             ) : (
@@ -206,15 +206,15 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
 
         {/* Active Battle */}
         {activeBattle && (
-          <div className="space-y-2 p-3 bg-red-50 border border-red-200 rounded">
+          <div className="space-y-2 p-3 bg-destructive/10 border border-destructive/20 rounded">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-red-700">⚡ Активная битва</span>
+              <span className="text-sm font-semibold text-destructive">⚡ Активная битва</span>
               <Badge variant="destructive" className="text-xs">
                 {getTimeUntilBattle(activeBattle.battleStartTime)}
               </Badge>
             </div>
             
-            <div className="space-y-1 text-xs text-red-600">
+            <div className="space-y-1 text-xs text-muted-foreground">
               <div>Атакующие: {getClanEmoji(activeBattle.attackingClan)} {getClanDisplayName(activeBattle.attackingClan)}</div>
               {activeBattle.defendingClan && (
                 <div>Защитники: {getClanEmoji(activeBattle.defendingClan)} {getClanDisplayName(activeBattle.defendingClan)}</div>
@@ -234,7 +234,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
             )}
 
             {activeBattle.participants.includes(character.id) && (
-              <Badge variant="outline" className="w-full justify-center bg-green-50 text-green-700 border-green-200">
+              <Badge variant="outline" className="w-full justify-center bg-green-500/10 text-green-400 border-green-500/20">
                 ✓ Вы участвуете в битве
               </Badge>
             )}
@@ -245,7 +245,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
         {!activeBattle && canDeclare && !isOwnedByClan && (
           <div className="space-y-2">
             {!hasInfluence && (
-              <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+              <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 p-2 rounded">
                 Нужно 1 очко влияния для объявления битвы. Племена получают 1 очко каждые 24 часа.
               </p>
             )}
@@ -262,13 +262,13 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
         )}
 
         {!canDeclare && !activeBattle && (
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Только предводители и глашатаи могут объявлять битвы за территории
           </p>
         )}
 
         {isOwnedByClan && (
-          <Badge variant="outline" className="w-full justify-center bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="w-full justify-center bg-green-500/10 text-green-400 border-green-500/20">
             ✓ Территория принадлежит вашему племени
           </Badge>
         )}
