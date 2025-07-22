@@ -337,6 +337,12 @@
   * Updated permission logic to check both canPromote and canBePromotedBy fields properly
   * Added admin authentication handling for leaders and special ranks
   * Promotion system now works correctly across all tribal hierarchy levels
+- July 18, 2025. Location coordinate updates investigation:
+  * Confirmed admin bot location coordinate updates work correctly via API
+  * PATCH /api/admin/locations/:id successfully updates coordinates in real-time
+  * Changes immediately reflect in game interface through /api/locations endpoint
+  * Location updates modify static LOCATIONS_DATA array correctly
+  * No issues found with coordinate synchronization system
 - July 17, 2025. Map expansion with 6 new dangerous locations:
   * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
   * Added dangerous locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower right)
