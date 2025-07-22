@@ -373,6 +373,15 @@ Preferred communication style: Simple, everyday language.
 - Replaced incorrect /api/combat/attack-npc endpoint with correct /api/combat/start
 - Fixed NPC ID mapping to use server-side data instead of static client data
 - Added legacy endpoint stub for old attack-npc requests to prevent future errors
+- July 22, 2025: Complete territory warfare system implementation:
+  * Full mass battle system supporting unlimited participants (crowd vs crowd)
+  * Automatic battle resolution based on participant stats, level, and HP
+  * Territory ownership transfer to winning clan after battle completion
+  * Balanced influence points system: capture costs 1 point, tribes gain 1 point per 24 hours
+  * Real-time battle status updates and WebSocket notifications
+  * Enhanced battle interface showing preparation/active status and participant counts
+  * Experience rewards (200 points) for all territory battle participants
+  * Game events and notifications for battle declarations and completions
 
 ### Target Audience & Requirements
 - **Platform**: Mobile devices only (Telegram Web App)
