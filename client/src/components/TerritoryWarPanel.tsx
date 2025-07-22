@@ -229,18 +229,30 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
               {activeBattle.defendingClan && (
                 <div>Защитники: {getClanEmoji(activeBattle.defendingClan)} {getClanDisplayName(activeBattle.defendingClan)}</div>
               )}
-              <div>Участники: {activeBattle.participants.length}</div>
+              <div>Участников: {activeBattle.participants.length} воинов</div>
+              {activeBattle.status === 'active' && (
+                <div className="text-red-400 font-semibold">⚔️ Битва идёт!</div>
+              )}
+              {activeBattle.status === 'preparing' && (
+                <div className="text-yellow-400">🕒 Подготовка к битве...</div>
+              )}
             </div>
 
-            {isInvolvedInBattle && !activeBattle.participants.includes(character.id) && (
+            {isInvolvedInBattle && !activeBattle.participants.includes(character.id) && activeBattle.status === 'preparing' && (
               <Button
                 size="sm"
                 className="w-full bg-red-600 hover:bg-red-700"
                 onClick={() => handleJoinBattle(activeBattle.id)}
                 disabled={joinBattleMutation.isPending}
               >
-                Присоединиться к битве
+                ⚔️ Присоединиться к битве
               </Button>
+            )}
+
+            {isInvolvedInBattle && !activeBattle.participants.includes(character.id) && activeBattle.status === 'active' && (
+              <Badge variant="outline" className="w-full justify-center bg-red-500/10 text-red-400 border-red-500/20">
+                ⚡ Битва уже началась - слишком поздно!
+              </Badge>
             )}
 
             {activeBattle.participants.includes(character.id) && (

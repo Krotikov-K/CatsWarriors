@@ -2027,7 +2027,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.createGameEvent({
         type: "territory_battle_declared",
-        message: `${character.name} объявил битву за территорию ${location.name}! Битва начнется через час.`,
+        message: `${character.name} объявил битву за территорию ${location.name}! Битва начнется через 5 минут.`,
         locationId,
         characterId: character.id,
       });
@@ -2049,12 +2049,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/territory/battles", async (req: Request, res: Response) => {
     try {
+      // Process battle state transitions
+      const startedBattles = await storage.startActiveBattles();
+      const completedBattles = await storage.processTerritoryBattleResults();
+      
+      // Broadcast battle updates if any battles changed state
+      for (const battle of startedBattles) {
+        broadcastToAll({
+          type: 'territory_battle_started',
+          battle,
+          message: `Битва за территорию началась!`
+        });
+      }
+      
+      for (const battle of completedBattles) {
+        broadcastToAll({
+          type: 'territory_battle_completed',
+          battle,
+          message: `Битва завершена! Победил: ${battle.winner}`
+        });
+      }
+      
       const locationId = req.query.locationId ? parseInt(req.query.locationId as string) : undefined;
-      const battles = await storage.getActiveTerritoryBattles(locationId);
+      const battles = await storage.getAllActiveBattles();
+      const filteredBattles = locationId ? battles.filter(b => b.locationId === locationId) : battles;
       
       // Add location and character info
       const { LOCATIONS_DATA } = await import("@shared/schema");
-      const battlesWithInfo = await Promise.all(battles.map(async (battle) => {
+      const battlesWithInfo = await Promise.all(filteredBattles.map(async (battle) => {
         const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
         const declaredByChar = await storage.getCharacter(battle.declaredBy);
         

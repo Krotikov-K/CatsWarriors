@@ -41,7 +41,7 @@ import {
   NPCS_DATA
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, or, lte, desc, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -1962,6 +1962,129 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return updated;
+  }
+
+  async startActiveBattles(): Promise<TerritoryBattle[]> {
+    const now = new Date();
+    const battlesDue = await db
+      .select()
+      .from(territoryBattles)
+      .where(and(
+        eq(territoryBattles.status, "preparing"),
+        lte(territoryBattles.battleStartTime, now)
+      ));
+
+    const updatedBattles = [];
+    for (const battle of battlesDue) {
+      const [updated] = await db
+        .update(territoryBattles)
+        .set({ status: "active" })
+        .where(eq(territoryBattles.id, battle.id))
+        .returning();
+      updatedBattles.push(updated);
+    }
+
+    return updatedBattles;
+  }
+
+  async processTerritoryBattleResults(): Promise<TerritoryBattle[]> {
+    const activeBattles = await db
+      .select()
+      .from(territoryBattles)
+      .where(eq(territoryBattles.status, "active"));
+
+    const completedBattles = [];
+    
+    for (const battle of activeBattles) {
+      // Get participants for each clan
+      const attackingParticipants = [];
+      const defendingParticipants = [];
+      
+      for (const participantId of battle.participants) {
+        const character = await this.getCharacter(participantId);
+        if (character && character.currentHp > 1) { // Only alive characters count
+          if (character.clan === battle.attackingClan) {
+            attackingParticipants.push(character);
+          } else if (character.clan === battle.defendingClan) {
+            defendingParticipants.push(character);
+          }
+        }
+      }
+
+      // Calculate battle power for each side
+      const attackingPower = this.calculateBattlePower(attackingParticipants);
+      const defendingPower = this.calculateBattlePower(defendingParticipants);
+
+      // Add random factor (30% variance)
+      const randomFactor = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+      const finalAttackingPower = attackingPower * randomFactor;
+      const finalDefendingPower = defendingPower * (2 - randomFactor); // Inverse for balance
+
+      // Determine winner
+      let winner: string;
+      if (finalAttackingPower > finalDefendingPower) {
+        winner = battle.attackingClan;
+        
+        // Transfer territory to winner
+        await this.captureTerritoryAutomatically(
+          battle.locationId, 
+          battle.attackingClan,
+          attackingParticipants[0]?.id || battle.declaredBy
+        );
+      } else {
+        winner = battle.defendingClan || "neutral";
+        // Defenders keep their territory
+      }
+
+      // Complete the battle
+      const completedBattle = await this.completeTerritoryBattle(battle.id, winner);
+      completedBattles.push(completedBattle);
+
+      // Award experience to participants
+      const experienceReward = 200; // Higher reward for territory battles
+      for (const participant of [...attackingParticipants, ...defendingParticipants]) {
+        await this.addExperience(participant.id, experienceReward);
+      }
+
+      // Create game event for battle result
+      const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
+      await this.createGameEvent({
+        type: "territory_battle_completed",
+        message: `Битва за ${location?.name} завершена! Победил: ${winner === battle.attackingClan ? 'атакующий' : 'защищающийся'} клан ${winner === 'thunder' ? 'Грозовое племя ⚡' : winner === 'river' ? 'Речное племя 🌊' : 'неизвестно'}`,
+        locationId: battle.locationId,
+        characterId: battle.declaredBy,
+      });
+    }
+
+    return completedBattles;
+  }
+
+  private calculateBattlePower(participants: Character[]): number {
+    return participants.reduce((total, character) => {
+      const level = character.level;
+      const stats = character.strength + character.agility + character.intelligence + character.endurance;
+      const hpBonus = character.currentHp / character.maxHp; // HP percentage bonus
+      return total + (level * 10 + stats * 2) * hpBonus;
+    }, 0);
+  }
+
+  async getAllActiveBattles(): Promise<TerritoryBattle[]> {
+    return db
+      .select()
+      .from(territoryBattles)
+      .where(or(
+        eq(territoryBattles.status, "preparing"),
+        eq(territoryBattles.status, "active")
+      ));
+  }
+
+  async getRecentCompletedBattles(limit: number = 10): Promise<TerritoryBattle[]> {
+    return db
+      .select()
+      .from(territoryBattles)
+      .where(eq(territoryBattles.status, "completed"))
+      .orderBy(desc(territoryBattles.createdAt))
+      .limit(limit);
   }
 }
 
