@@ -151,7 +151,6 @@ export const clanInfluence = pgTable("clan_influence", {
   clan: text("clan").notNull().unique(),
   influencePoints: integer("influence_points").notNull().default(0),
   lastPointsGained: timestamp("last_points_gained").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const territoryOwnership = pgTable("territory_ownership", {
