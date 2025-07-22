@@ -2125,6 +2125,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Legacy endpoint stub - redirect to correct endpoint
+  app.post("/api/combat/attack-npc", async (req, res) => {
+    res.status(400).json({ 
+      message: "This endpoint is deprecated. Use /api/combat/start instead.",
+      redirectTo: "/api/combat/start"
+    });
+  });
+
   return httpServer;
 }
 
