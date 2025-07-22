@@ -1900,7 +1900,8 @@ export class DatabaseStorage implements IStorage {
         defendingClan,
         declaredBy,
         battleStartTime,
-        status: "preparing"
+        status: "preparing",
+        participants: [declaredBy] // Include declarer as first participant
       })
       .returning();
     
@@ -1938,13 +1939,17 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Battle not found");
     }
     
-    const updatedParticipants = battle.participants.includes(characterId) 
-      ? battle.participants 
-      : [...battle.participants, characterId];
+    // Check if already in battle
+    if (battle.participants.includes(characterId)) {
+      return battle; // Already joined
+    }
     
+    // Use SQL to append to array
     const [updated] = await db
       .update(territoryBattles)
-      .set({ participants: updatedParticipants })
+      .set({ 
+        participants: sql`array_append(participants, ${characterId})`
+      })
       .where(eq(territoryBattles.id, battleId))
       .returning();
       
