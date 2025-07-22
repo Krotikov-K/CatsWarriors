@@ -262,7 +262,19 @@ export default function OverviewPanel({ character, location, playersInLocation, 
         </TabsContent>
 
         <TabsContent value="groups" className="space-y-4">
-          <GroupPanel character={character} />
+          <GroupPanel gameState={{
+            character,
+            location,
+            playersInLocation,
+            npcsInLocation: serverNpcs,
+            activeCombats,
+            isInCombat: false,
+            currentCombat: null,
+            currentGroup: null,
+            allGroups: [],
+            groupApplications: [],
+            chatMessages: []
+          }} />
         </TabsContent>
 
         <TabsContent value="plants" className="space-y-4">

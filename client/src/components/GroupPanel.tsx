@@ -179,7 +179,7 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                     Макс. участников: {gameState.currentGroup.maxMembers}
                   </p>
                 </div>
-                {gameState.currentGroup.leaderId === gameState.character.id && (
+                {gameState.currentGroup?.leaderId === gameState.character?.id && (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Crown className="h-3 w-3" />
                     Лидер
@@ -197,7 +197,7 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             {member.name}
-                            {member.id === gameState.currentGroup.leaderId && (
+                            {member.id === gameState.currentGroup?.leaderId && (
                               <Crown className="h-3 w-3 text-yellow-500" />
                             )}
                             <span className="text-xs">{member.gender === 'male' ? '🐱' : '🐈'}</span>
@@ -216,7 +216,7 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
                           </div>
                         </div>
                       </div>
-                      {gameState.currentGroup.leaderId === gameState.character.id && member.id !== gameState.character.id && (
+                      {gameState.currentGroup?.leaderId === gameState.character?.id && member.id !== gameState.character?.id && (
                         <Button
                           onClick={() => kickMemberMutation.mutate(member.id)}
                           disabled={kickMemberMutation.isPending}
@@ -233,7 +233,7 @@ export default function GroupPanel({ gameState }: GroupPanelProps) {
               )}
 
               {/* Group Applications for Leaders */}
-              {gameState.currentGroup.leaderId === gameState.character.id && gameState.groupApplications && gameState.groupApplications.length > 0 && (
+              {gameState.currentGroup?.leaderId === gameState.character?.id && gameState.groupApplications && gameState.groupApplications.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Заявки на вступление ({gameState.groupApplications.length}):</h4>
                   {gameState.groupApplications.map((application) => (
