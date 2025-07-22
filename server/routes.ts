@@ -1949,6 +1949,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only leaders and deputies can declare territory battles" });
       }
 
+      // CRITICAL: Character must be in the location they want to capture
+      if (character.currentLocationId !== locationId) {
+        return res.status(400).json({ message: "You must be in the location to capture it" });
+      }
+
       // Import LOCATIONS_DATA
       const { LOCATIONS_DATA } = await import("@shared/schema");
       
