@@ -1955,6 +1955,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           characterId: character.id,
         });
 
+        // Broadcast territory capture to all players
+        broadcastToAll({
+          type: 'territory_captured',
+          territory: captured,
+          location: location.name,
+          capturedBy: character.name,
+          clan: character.clan
+        });
+
         return res.json({ success: true, type: "auto_capture", ownership: captured });
       }
 

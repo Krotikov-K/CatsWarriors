@@ -134,6 +134,36 @@ export default function GameDashboard() {
         // Refresh combat data
         queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
       }
+      
+      if (lastMessage.type === 'territory_captured') {
+        const { location, capturedBy, clan } = lastMessage.data;
+        const clanName = clan === 'thunder' ? 'Грозовое племя' : 'Речное племя';
+        const clanEmoji = clan === 'thunder' ? '⚡' : '🌊';
+        
+        toast({
+          title: `${clanEmoji} Территория захвачена!`,
+          description: `${capturedBy} захватил ${location} для ${clanName}`,
+          duration: 5000,
+        });
+        
+        // Refresh territory ownership data and game state
+        queryClient.invalidateQueries({ queryKey: ['/api/territory/ownership'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/territory/influence'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
+      }
+      
+      if (lastMessage.type === 'territory_battle_declared') {
+        const { location, declaredBy } = lastMessage.data;
+        
+        toast({
+          title: "⚔️ Битва объявлена!",
+          description: `${declaredBy} объявил битву за ${location}`,
+          duration: 5000,
+        });
+        
+        // Refresh battle data
+        queryClient.invalidateQueries({ queryKey: ['/api/territory/battles'] });
+      }
     }
   }, [lastMessage, toast, queryClient]);
 
