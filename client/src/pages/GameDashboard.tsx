@@ -26,6 +26,7 @@ import TribeManagement from "@/components/TribeManagement";
 import TribeMembers from "@/components/TribeMembers";
 import PvPPanel from "@/components/PvPPanel";
 import DiplomacyPanel from "@/components/DiplomacyPanel";
+import TerritoryWarPanel from "@/components/TerritoryWarPanel";
 
 import type { Combat } from "@shared/schema";
 import { RANKS } from "@shared/schema";
@@ -472,6 +473,9 @@ export default function GameDashboard() {
               playersInLocation={playersInLocation}
               locationId={location.id}
             />
+            
+            {/* Territory War Panel */}
+            <TerritoryWarPanel character={character} location={location} />
 
             {playersInLocation.length > 1 && (
               <div>

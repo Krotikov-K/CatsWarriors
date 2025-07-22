@@ -13,9 +13,12 @@ import {
   joinCombatSchema,
   createGroupSchema,
   joinGroupSchema,
+  declareTerritoryBattleSchema,
+  joinTerritoryBattleSchema,
   type WebSocketMessage,
   type Character,
-  type Combat
+  type Combat,
+  type TerritoryOwnership
 } from "@shared/schema";
 
 interface AuthenticatedRequest extends Request {
@@ -1880,6 +1883,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Respond to diplomacy proposal error:", error);
       res.status(500).json({ message: "Failed to respond to proposal" });
+    }
+  });
+
+  // Territory Warfare API
+  app.get("/api/territory/influence/:clan", async (req: Request, res: Response) => {
+    try {
+      const { clan } = req.params;
+      if (clan !== "thunder" && clan !== "river") {
+        return res.status(400).json({ message: "Invalid clan" });
+      }
+      
+      const influence = await storage.getClanInfluence(clan);
+      
+      // Process daily influence gain
+      const updatedInfluence = await storage.processDailyInfluenceGain(clan);
+      
+      res.json(updatedInfluence);
+    } catch (error) {
+      console.error("Get clan influence error:", error);
+      res.status(500).json({ message: "Failed to get clan influence" });
+    }
+  });
+
+  app.post("/api/territory/declare-battle", async (req: Request, res: Response) => {
+    try {
+      const { declareTerritoryBattleSchema } = await import("@shared/schema");
+      const { locationId, declaredBy } = declareTerritoryBattleSchema.parse(req.body);
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      // Get character
+      const character = await storage.getCharacter(declaredBy);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      // Verify character belongs to user
+      if (character.userId !== userId) {
+        return res.status(403).json({ message: "Not your character" });
+      }
+
+      // Check if character can declare battles (leader or deputy)
+      if (character.rank !== "leader" && character.rank !== "deputy") {
+        return res.status(403).json({ message: "Only leaders and deputies can declare territory battles" });
+      }
+
+      // Import LOCATIONS_DATA
+      const { LOCATIONS_DATA } = await import("@shared/schema");
+      
+      // Check location exists and is not a camp
+      const location = LOCATIONS_DATA.find(loc => loc.id === locationId);
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+
+      if (location.type === "camp") {
+        return res.status(400).json({ message: "Cannot attack clan camps" });
+      }
+
+      // Get current ownership
+      const ownership = await storage.getTerritoryOwnership(locationId);
+      
+      // Check if location is neutral (auto-capture)
+      if (!ownership) {
+        const captured = await storage.captureTerritoryAutomatically(locationId, character.clan, character.id);
+        
+        await storage.createGameEvent({
+          type: "territory_captured",
+          message: `${character.name} захватил нейтральную территорию ${location.name}`,
+          locationId,
+          characterId: character.id,
+        });
+
+        return res.json({ success: true, type: "auto_capture", ownership: captured });
+      }
+
+      // Check if it's already owned by the same clan
+      if (ownership.ownerClan === character.clan) {
+        return res.status(400).json({ message: "Your clan already controls this territory" });
+      }
+
+      // Check diplomacy status
+      const diplomacyStatus = await storage.getDiplomacyStatus(character.clan, ownership.ownerClan);
+      if (diplomacyStatus !== "war") {
+        return res.status(400).json({ message: "Cannot attack territories of clans you are not at war with" });
+      }
+
+      // Check influence points
+      const influence = await storage.getClanInfluence(character.clan);
+      if (!influence || influence.influencePoints < 1) {
+        return res.status(400).json({ message: "Need at least 1 influence point to declare battle" });
+      }
+
+      // Spend influence point
+      await storage.updateClanInfluence(character.clan, influence.influencePoints - 1);
+
+      // Declare battle
+      const battle = await storage.declareTerritoryBattle(locationId, character.clan, character.id);
+
+      await storage.createGameEvent({
+        type: "territory_battle_declared",
+        message: `${character.name} объявил битву за территорию ${location.name}! Битва начнется через час.`,
+        locationId,
+        characterId: character.id,
+      });
+
+      // Broadcast to all players
+      broadcastToAll({
+        type: 'territory_battle_declared',
+        battle,
+        location: location.name,
+        declaredBy: character.name
+      });
+
+      res.json({ success: true, battle });
+    } catch (error) {
+      console.error("Declare territory battle error:", error);
+      res.status(500).json({ message: "Failed to declare territory battle" });
+    }
+  });
+
+  app.get("/api/territory/battles", async (req: Request, res: Response) => {
+    try {
+      const locationId = req.query.locationId ? parseInt(req.query.locationId as string) : undefined;
+      const battles = await storage.getActiveTerritoryBattles(locationId);
+      
+      // Add location and character info
+      const { LOCATIONS_DATA } = await import("@shared/schema");
+      const battlesWithInfo = await Promise.all(battles.map(async (battle) => {
+        const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
+        const declaredByChar = await storage.getCharacter(battle.declaredBy);
+        
+        return {
+          ...battle,
+          locationName: location?.name || 'Unknown',
+          declaredByName: declaredByChar?.name || 'Unknown'
+        };
+      }));
+      
+      res.json({ battles: battlesWithInfo });
+    } catch (error) {
+      console.error("Get territory battles error:", error);
+      res.status(500).json({ message: "Failed to get territory battles" });
+    }
+  });
+
+  app.post("/api/territory/join-battle", async (req: Request, res: Response) => {
+    try {
+      const { joinTerritoryBattleSchema } = await import("@shared/schema");
+      const { battleId, characterId } = joinTerritoryBattleSchema.parse(req.body);
+      const userId = (req as AuthenticatedRequest).userId || 1;
+
+      const character = await storage.getCharacter(characterId);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      if (character.userId !== userId) {
+        return res.status(403).json({ message: "Not your character" });
+      }
+
+      const battle = await storage.getTerritoryBattle(battleId);
+      if (!battle) {
+        return res.status(404).json({ message: "Battle not found" });
+      }
+
+      // Check if character's clan is involved in the battle
+      if (character.clan !== battle.attackingClan && character.clan !== battle.defendingClan) {
+        return res.status(403).json({ message: "Your clan is not involved in this battle" });
+      }
+
+      const updatedBattle = await storage.joinTerritoryBattle(battleId, characterId);
+      
+      // Broadcast update
+      broadcastToAll({
+        type: 'territory_battle_joined',
+        battle: updatedBattle,
+        characterName: character.name
+      });
+
+      res.json({ success: true, battle: updatedBattle });
+    } catch (error) {
+      console.error("Join territory battle error:", error);
+      res.status(500).json({ message: "Failed to join territory battle" });
+    }
+  });
+
+  app.get("/api/territory/ownership", async (req: Request, res: Response) => {
+    try {
+      // Get all territory ownerships
+      const { LOCATIONS_DATA } = await import("@shared/schema");
+      const allOwnerships: TerritoryOwnership[] = [];
+      for (const location of LOCATIONS_DATA) {
+        if (location.type !== "camp") { // Skip clan camps
+          const ownership = await storage.getTerritoryOwnership(location.id);
+          if (ownership) {
+            allOwnerships.push(ownership);
+          }
+        }
+      }
+      
+      res.json({ territories: allOwnerships });
+    } catch (error) {
+      console.error("Get territory ownership error:", error);
+      res.status(500).json({ message: "Failed to get territory ownership" });
     }
   });
 

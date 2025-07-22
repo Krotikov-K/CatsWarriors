@@ -11,6 +11,9 @@ import {
   chatMessages,
   diplomacy,
   diplomacyProposals,
+  clanInfluence,
+  territoryOwnership,
+  territoryBattles,
   type User,
   type Character,
   type Location,
@@ -23,10 +26,16 @@ import {
   type ChatMessage,
   type Diplomacy,
   type DiplomacyProposal,
+  type ClanInfluence,
+  type TerritoryOwnership,
+  type TerritoryBattle,
   type InsertUser,
   type InsertCharacter,
   type InsertLocation,
   type InsertNPC,
+  type InsertClanInfluence,
+  type InsertTerritoryOwnership,
+  type InsertTerritoryBattle,
   type CombatLogEntry,
   LOCATIONS_DATA,
   NPCS_DATA
@@ -124,6 +133,18 @@ export interface IStorage {
   createDiplomacyProposal(fromClan: string, toClan: string, proposedStatus: string, proposedBy: number, message?: string): Promise<DiplomacyProposal>;
   getDiplomacyProposals(clan: string): Promise<DiplomacyProposal[]>;
   respondToProposal(proposalId: number, response: string, respondedBy: number): Promise<void>;
+  
+  // Territory warfare methods
+  getClanInfluence(clan: string): Promise<ClanInfluence | undefined>;
+  updateClanInfluence(clan: string, points: number): Promise<ClanInfluence>;
+  processDailyInfluenceGain(clan: string): Promise<ClanInfluence>;
+  getTerritoryOwnership(locationId: number): Promise<TerritoryOwnership | undefined>;
+  captureTerritoryAutomatically(locationId: number, clan: string, capturedBy: number): Promise<TerritoryOwnership>;
+  declareTerritoryBattle(locationId: number, attackingClan: string, declaredBy: number): Promise<TerritoryBattle>;
+  getTerritoryBattle(battleId: number): Promise<TerritoryBattle | undefined>;
+  getActiveTerritoryBattles(locationId?: number): Promise<TerritoryBattle[]>;
+  joinTerritoryBattle(battleId: number, characterId: number): Promise<TerritoryBattle>;
+  completeTerritoryBattle(battleId: number, winner: string): Promise<TerritoryBattle>;
 }
 
 export class MemStorage implements IStorage {
@@ -756,6 +777,70 @@ export class MemStorage implements IStorage {
   async getGroupApplicationsWithCharacterNames(groupId: number): Promise<(GroupApplication & { characterName: string })[]> {
     // In-memory implementation would return applications with names
     return [];
+  }
+
+  // Territory warfare methods (MemStorage stubs)
+  async getClanInfluence(clan: string): Promise<ClanInfluence | undefined> {
+    return undefined;
+  }
+
+  async updateClanInfluence(clan: string, points: number): Promise<ClanInfluence> {
+    return {
+      id: 1,
+      clan,
+      influencePoints: points,
+      lastPointsGained: new Date(),
+      createdAt: new Date()
+    };
+  }
+
+  async processDailyInfluenceGain(clan: string): Promise<ClanInfluence> {
+    return this.updateClanInfluence(clan, 1);
+  }
+
+  async getTerritoryOwnership(locationId: number): Promise<TerritoryOwnership | undefined> {
+    return undefined;
+  }
+
+  async captureTerritoryAutomatically(locationId: number, clan: string, capturedBy: number): Promise<TerritoryOwnership> {
+    return {
+      id: 1,
+      locationId,
+      ownerClan: clan,
+      capturedBy,
+      capturedAt: new Date()
+    };
+  }
+
+  async declareTerritoryBattle(locationId: number, attackingClan: string, declaredBy: number): Promise<TerritoryBattle> {
+    return {
+      id: 1,
+      locationId,
+      attackingClan,
+      defendingClan: null,
+      declaredBy,
+      battleStartTime: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
+      status: "preparing",
+      winner: null,
+      participants: [],
+      createdAt: new Date()
+    };
+  }
+
+  async getTerritoryBattle(battleId: number): Promise<TerritoryBattle | undefined> {
+    return undefined;
+  }
+
+  async getActiveTerritoryBattles(locationId?: number): Promise<TerritoryBattle[]> {
+    return [];
+  }
+
+  async joinTerritoryBattle(battleId: number, characterId: number): Promise<TerritoryBattle> {
+    return this.declareTerritoryBattle(1, "thunder", 1);
+  }
+
+  async completeTerritoryBattle(battleId: number, winner: string): Promise<TerritoryBattle> {
+    return this.declareTerritoryBattle(1, "thunder", 1);
   }
 
   private calculateMaxHp(endurance: number): number {
@@ -1712,6 +1797,171 @@ export class DatabaseStorage implements IStorage {
     if (response === "accepted") {
       await this.changeDiplomacyStatus(proposal.fromClan, proposal.toClan, proposal.proposedStatus, respondedBy);
     }
+  }
+
+  // Territory warfare methods
+  async getClanInfluence(clan: string): Promise<ClanInfluence | undefined> {
+    const [influence] = await db
+      .select()
+      .from(clanInfluence)
+      .where(eq(clanInfluence.clan, clan));
+    return influence || undefined;
+  }
+
+  async updateClanInfluence(clan: string, points: number): Promise<ClanInfluence> {
+    const existing = await this.getClanInfluence(clan);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(clanInfluence)
+        .set({ influencePoints: points })
+        .where(eq(clanInfluence.clan, clan))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(clanInfluence)
+        .values({ clan, influencePoints: points })
+        .returning();
+      return created;
+    }
+  }
+
+  async processDailyInfluenceGain(clan: string): Promise<ClanInfluence> {
+    const existing = await this.getClanInfluence(clan);
+    const now = new Date();
+    
+    if (existing) {
+      const timeDiff = now.getTime() - existing.lastPointsGained.getTime();
+      const hoursElapsed = timeDiff / (1000 * 60 * 60);
+      
+      if (hoursElapsed >= 24) {
+        const [updated] = await db
+          .update(clanInfluence)
+          .set({ 
+            influencePoints: existing.influencePoints + 1,
+            lastPointsGained: now 
+          })
+          .where(eq(clanInfluence.clan, clan))
+          .returning();
+        return updated;
+      }
+      return existing;
+    } else {
+      const [created] = await db
+        .insert(clanInfluence)
+        .values({ clan, influencePoints: 1, lastPointsGained: now })
+        .returning();
+      return created;
+    }
+  }
+
+  async getTerritoryOwnership(locationId: number): Promise<TerritoryOwnership | undefined> {
+    const [ownership] = await db
+      .select()
+      .from(territoryOwnership)
+      .where(eq(territoryOwnership.locationId, locationId));
+    return ownership || undefined;
+  }
+
+  async captureTerritoryAutomatically(locationId: number, clan: string, capturedBy: number): Promise<TerritoryOwnership> {
+    const existing = await this.getTerritoryOwnership(locationId);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(territoryOwnership)
+        .set({ 
+          ownerClan: clan,
+          capturedBy,
+          capturedAt: new Date()
+        })
+        .where(eq(territoryOwnership.locationId, locationId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(territoryOwnership)
+        .values({ locationId, ownerClan: clan, capturedBy })
+        .returning();
+      return created;
+    }
+  }
+
+  async declareTerritoryBattle(locationId: number, attackingClan: string, declaredBy: number): Promise<TerritoryBattle> {
+    const ownership = await this.getTerritoryOwnership(locationId);
+    const defendingClan = ownership?.ownerClan || null;
+    const battleStartTime = new Date(Date.now() + 60 * 60 * 1000);
+    
+    const [battle] = await db
+      .insert(territoryBattles)
+      .values({
+        locationId,
+        attackingClan,
+        defendingClan,
+        declaredBy,
+        battleStartTime,
+        status: "preparing"
+      })
+      .returning();
+    
+    return battle;
+  }
+
+  async getTerritoryBattle(battleId: number): Promise<TerritoryBattle | undefined> {
+    const [battle] = await db
+      .select()
+      .from(territoryBattles)
+      .where(eq(territoryBattles.id, battleId));
+    return battle || undefined;
+  }
+
+  async getActiveTerritoryBattles(locationId?: number): Promise<TerritoryBattle[]> {
+    if (locationId !== undefined) {
+      return db
+        .select()
+        .from(territoryBattles)
+        .where(and(
+          eq(territoryBattles.locationId, locationId),
+          eq(territoryBattles.status, "preparing")
+        ));
+    } else {
+      return db
+        .select()
+        .from(territoryBattles)
+        .where(eq(territoryBattles.status, "preparing"));
+    }
+  }
+
+  async joinTerritoryBattle(battleId: number, characterId: number): Promise<TerritoryBattle> {
+    const battle = await this.getTerritoryBattle(battleId);
+    if (!battle) {
+      throw new Error("Battle not found");
+    }
+    
+    const updatedParticipants = battle.participants.includes(characterId) 
+      ? battle.participants 
+      : [...battle.participants, characterId];
+    
+    const [updated] = await db
+      .update(territoryBattles)
+      .set({ participants: updatedParticipants })
+      .where(eq(territoryBattles.id, battleId))
+      .returning();
+      
+    return updated;
+  }
+
+  async completeTerritoryBattle(battleId: number, winner: string): Promise<TerritoryBattle> {
+    const [updated] = await db
+      .update(territoryBattles)
+      .set({ 
+        status: "completed",
+        winner
+      })
+      .where(eq(territoryBattles.id, battleId))
+      .returning();
+      
+    return updated;
   }
 }
 

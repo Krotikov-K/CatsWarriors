@@ -145,6 +145,36 @@ export const diplomacyProposals = pgTable("diplomacy_proposals", {
   respondedBy: integer("responded_by").references(() => characters.id),
 });
 
+// Territory warfare system
+export const clanInfluence = pgTable("clan_influence", {
+  id: serial("id").primaryKey(),
+  clan: text("clan").notNull().unique(),
+  influencePoints: integer("influence_points").notNull().default(0),
+  lastPointsGained: timestamp("last_points_gained").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const territoryOwnership = pgTable("territory_ownership", {
+  id: serial("id").primaryKey(),
+  locationId: integer("location_id").notNull(),
+  ownerClan: text("owner_clan").notNull(),
+  capturedAt: timestamp("captured_at").defaultNow(),
+  capturedBy: integer("captured_by").notNull(), // characterId who led the capture
+});
+
+export const territoryBattles = pgTable("territory_battles", {
+  id: serial("id").primaryKey(),
+  locationId: integer("location_id").notNull(),
+  attackingClan: text("attacking_clan").notNull(),
+  defendingClan: text("defending_clan"), // null for neutral territories
+  declaredBy: integer("declared_by").notNull(), // characterId
+  battleStartTime: timestamp("battle_start_time").notNull(),
+  status: text("status").notNull().default("preparing"), // "preparing", "active", "completed"
+  winner: text("winner"), // clan name or null if ongoing
+  participants: json("participants").$type<number[]>().notNull().default([]), // characterIds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -222,6 +252,44 @@ export const joinCombatSchema = z.object({
   characterId: z.number(),
   combatId: z.number(),
 });
+
+export const declareTerritoryBattleSchema = z.object({
+  locationId: z.number(),
+  declaredBy: z.number(), // characterId
+});
+
+export const joinTerritoryBattleSchema = z.object({
+  battleId: z.number(),
+  characterId: z.number(),
+});
+
+// Insert schemas for territory warfare
+export const insertClanInfluenceSchema = createInsertSchema(clanInfluence).pick({
+  clan: true,
+  influencePoints: true,
+});
+
+export const insertTerritoryOwnershipSchema = createInsertSchema(territoryOwnership).pick({
+  locationId: true,
+  ownerClan: true,
+  capturedBy: true,
+});
+
+export const insertTerritoryBattleSchema = createInsertSchema(territoryBattles).pick({
+  locationId: true,
+  attackingClan: true,
+  defendingClan: true,
+  declaredBy: true,
+  battleStartTime: true,
+});
+
+// Type exports for territory warfare
+export type ClanInfluence = typeof clanInfluence.$inferSelect;
+export type InsertClanInfluence = z.infer<typeof insertClanInfluenceSchema>;
+export type TerritoryOwnership = typeof territoryOwnership.$inferSelect;
+export type InsertTerritoryOwnership = z.infer<typeof insertTerritoryOwnershipSchema>;
+export type TerritoryBattle = typeof territoryBattles.$inferSelect;
+export type InsertTerritoryBattle = z.infer<typeof insertTerritoryBattleSchema>;
 
 export const createGroupSchema = z.object({
   name: z.string().min(2).max(30),
