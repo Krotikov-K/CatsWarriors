@@ -287,8 +287,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`*** GROUP VICTORY BROADCAST COMPLETE: ${sentCount}/${participantIds.length} messages sent ***`);
   }
 
-  // Make function globally available for gameEngine
+  // Broadcast to all connected clients
+  async function broadcastToAll(data: any) {
+    const updateMessage: WebSocketMessage = {
+      type: data.type || 'general_update',
+      data: data,
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to all connected clients
+    for (const [characterId, client] of connectedClients) {
+      if (client && client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(JSON.stringify(updateMessage));
+        } catch (error) {
+          console.log(`Failed to send broadcast message to character ${characterId}:`, error);
+        }
+      }
+    }
+  }
+
+  // Make functions globally available for gameEngine
   (global as any).broadcastGroupVictory = broadcastGroupVictory;
+  (global as any).broadcastToAll = broadcastToAll;
 
   // Telegram authentication route
   app.post("/api/auth/telegram", async (req, res) => {
