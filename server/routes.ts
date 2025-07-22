@@ -2021,14 +2021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateClanInfluence(character.clan, influence.influencePoints - 1);
 
       // Create battle
-      const battle = await storage.createTerritoryBattle({
-        locationId,
-        attackingClan: character.clan,
-        defendingClan: ownership.ownerClan,
-        declaredBy: character.id,
-        status: "preparing",
-        participants: [character.id],
-      });
+      const battle = await storage.declareTerritoryBattle(locationId, character.clan, character.id);
 
       await storage.createGameEvent({
         type: "territory_battle_declared",
