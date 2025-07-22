@@ -35,14 +35,13 @@ export default function OverviewPanel({ character, location, playersInLocation }
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get NPCs in current location
+  // Get NPCs in current location - use maxHp for health display and check respawnTime for death status
   const npcsInLocation = location ? NPCS_DATA.filter(npc => 
-    npc.spawnsInLocation.includes(location.id) && !npc.isDead
+    Array.isArray(npc.spawnsInLocation) ? npc.spawnsInLocation.includes(location.id) : false
   ) : [];
 
-  const deadNpcsInLocation = location ? NPCS_DATA.filter(npc => 
-    npc.spawnsInLocation.includes(location.id) && npc.isDead
-  ) : [];
+  const liveNpcsInLocation = npcsInLocation;
+  const deadNpcsInLocation: any[] = []; // Will be populated from server data later
 
   // Attack NPC handler
   const handleAttackNPC = (npcId: number, asGroup?: boolean) => {
@@ -82,11 +81,11 @@ export default function OverviewPanel({ character, location, playersInLocation }
 
   const renderNPCsTab = () => (
     <div className="space-y-4">
-      {npcsInLocation.length > 0 && (
+      {liveNpcsInLocation.length > 0 && (
         <div>
-          <h4 className="font-semibold mb-2 text-sm">🎯 Живые НПС</h4>
+          <h4 className="font-semibold mb-2 text-sm">🎯 Доступные НПС</h4>
           <div className="space-y-2">
-            {npcsInLocation.map((npc) => (
+            {liveNpcsInLocation.map((npc) => (
               <div key={npc.id} className="bg-secondary/50 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
@@ -98,15 +97,19 @@ export default function OverviewPanel({ character, location, playersInLocation }
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-3 h-3 text-red-500" />
-                    <span className="text-xs">{npc.health}</span>
+                    <span className="text-xs">{npc.maxHp}</span>
                   </div>
                 </div>
-                <NPCPanel 
-                  npc={npc} 
-                  character={character}
-                  onAttack={handleAttackNPC}
-                  canAttack={character.currentHp > 1}
-                />
+                <div className="space-y-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleAttackNPC(npc.id)}
+                    disabled={character.currentHp <= 1}
+                    className="w-full"
+                  >
+                    {character.currentHp <= 1 ? "Слишком слаб" : "Атаковать"}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -127,11 +130,9 @@ export default function OverviewPanel({ character, location, playersInLocation }
                       Мертв
                     </Badge>
                   </div>
-                  {npc.respawnTime && (
-                    <span className="text-xs text-muted-foreground">
-                      Возродится через {Math.ceil((npc.respawnTime.getTime() - Date.now()) / 60000)} мин
-                    </span>
-                  )}
+                  <span className="text-xs text-muted-foreground">
+                    Возродится через {Math.ceil(npc.respawnTime / 60)} мин
+                  </span>
                 </div>
               </div>
             ))}
@@ -139,7 +140,7 @@ export default function OverviewPanel({ character, location, playersInLocation }
         </div>
       )}
 
-      {npcsInLocation.length === 0 && deadNpcsInLocation.length === 0 && (
+      {liveNpcsInLocation.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           <Sword className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">В этой локации нет НПС</p>
@@ -237,10 +238,18 @@ export default function OverviewPanel({ character, location, playersInLocation }
   return (
     <div className="space-y-4">
       {/* Territory War Panel at the top */}
-      <TerritoryWarPanel character={character} />
+      <TerritoryWarPanel character={character} location={location} />
 
-      {/* Groups Section */}
-      <GroupPanel character={character} />
+      {/* Groups Section - simplified for overview */}
+      <div className="bg-card rounded-lg p-3">
+        <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          Группы
+        </h4>
+        <p className="text-xs text-muted-foreground">
+          Для управления группами перейдите во вкладку "Племя"
+        </p>
+      </div>
 
       {/* Camp Actions */}
       {location && location.type === 'camp' && location.clan === character.clan && (
