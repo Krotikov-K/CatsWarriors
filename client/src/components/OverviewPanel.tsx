@@ -37,10 +37,8 @@ export default function OverviewPanel({ character, location, playersInLocation, 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get NPCs in current location - use maxHp for health display and check respawnTime for death status
-  const npcsInLocation = location ? NPCS_DATA.filter(npc => 
-    Array.isArray(npc.spawnsInLocation) ? npc.spawnsInLocation.includes(location.id) : false
-  ) : [];
+  // Use server NPCs data instead of static data for correct IDs
+  const npcsInLocation = serverNpcs || [];
 
   const liveNpcsInLocation = npcsInLocation;
   const deadNpcsInLocation: any[] = []; // Will be populated from server data later
