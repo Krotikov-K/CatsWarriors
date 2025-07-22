@@ -209,16 +209,7 @@ export default function OverviewPanel({ character, location, playersInLocation, 
       {/* Territory War Panel at the top */}
       <TerritoryWarPanel character={character} location={location} />
 
-      {/* Groups Section - simplified for overview */}
-      <div className="bg-card rounded-lg p-3">
-        <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
-          <Users className="w-4 h-4" />
-          Группы
-        </h4>
-        <p className="text-xs text-muted-foreground">
-          Для управления группами перейдите во вкладку "Племя"
-        </p>
-      </div>
+
 
       {/* Camp Actions */}
       {location && location.type === 'camp' && location.clan === character.clan && (
@@ -247,10 +238,14 @@ export default function OverviewPanel({ character, location, playersInLocation, 
 
       {/* Sub-tabs */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="npcs" className="text-xs">
             <Sword className="w-4 h-4 mr-1" />
             НПС
+          </TabsTrigger>
+          <TabsTrigger value="groups" className="text-xs">
+            <Users className="w-4 h-4 mr-1" />
+            Группы
           </TabsTrigger>
           <TabsTrigger value="plants" className="text-xs">
             <Leaf className="w-4 h-4 mr-1" />
@@ -264,6 +259,10 @@ export default function OverviewPanel({ character, location, playersInLocation, 
 
         <TabsContent value="npcs" className="space-y-4">
           {renderNPCsTab()}
+        </TabsContent>
+
+        <TabsContent value="groups" className="space-y-4">
+          <GroupPanel character={character} />
         </TabsContent>
 
         <TabsContent value="plants" className="space-y-4">

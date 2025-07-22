@@ -368,6 +368,11 @@ Preferred communication style: Simple, everyday language.
 - Battle preparation time reduced from 1 hour to 5 minutes
 - Fixed group membership limit enforcement (maximum 5 members)
 - Added influence points system with 10 points per clan for testing
+- July 22, 2025: Fixed critical NPC attack validation bug "The string did not match the expected pattern"
+- Moved group management back to Overview tab as separate subtab per user request
+- Replaced incorrect /api/combat/attack-npc endpoint with correct /api/combat/start
+- Fixed NPC ID mapping to use server-side data instead of static client data
+- Added legacy endpoint stub for old attack-npc requests to prevent future errors
 
 ### Target Audience & Requirements
 - **Platform**: Mobile devices only (Telegram Web App)
