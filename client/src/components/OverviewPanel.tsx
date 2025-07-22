@@ -17,6 +17,8 @@ interface OverviewPanelProps {
   character: Character;
   location: Location | null;
   playersInLocation: Character[];
+  activeCombats?: Combat[];
+  npcsInLocation?: NPC[];
 }
 
 interface GameState {
@@ -30,7 +32,7 @@ interface GameState {
   currentGroup: any;
 }
 
-export default function OverviewPanel({ character, location, playersInLocation }: OverviewPanelProps) {
+export default function OverviewPanel({ character, location, playersInLocation, activeCombats = [], npcsInLocation: serverNpcs = [] }: OverviewPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState("npcs");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -81,33 +83,22 @@ export default function OverviewPanel({ character, location, playersInLocation }
 
   const renderNPCsTab = () => (
     <div className="space-y-4">
-      {liveNpcsInLocation.length > 0 && (
+      {/* Active Combats */}
+      {activeCombats.length > 0 && (
         <div>
-          <h4 className="font-semibold mb-2 text-sm">🎯 Доступные НПС</h4>
+          <h4 className="font-semibold mb-2 text-sm">⚔️ Активные бои</h4>
           <div className="space-y-2">
-            {liveNpcsInLocation.map((npc) => (
-              <div key={npc.id} className="bg-secondary/50 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{npc.emoji}</span>
-                    <span className="font-medium text-sm">{npc.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      Ур. {npc.level}
-                    </Badge>
+            {activeCombats.map((combat) => (
+              <div key={combat.id} className="bg-red-100/20 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-sm">Бой #{combat.id}</span>
+                    <div className="text-xs text-muted-foreground">
+                      Участников: {combat.participants?.length || 0} • Ход {combat.turn || 1}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Heart className="w-3 h-3 text-red-500" />
-                    <span className="text-xs">{npc.maxHp}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleAttackNPC(npc.id)}
-                    disabled={character.currentHp <= 1}
-                    className="w-full"
-                  >
-                    {character.currentHp <= 1 ? "Слишком слаб" : "Атаковать"}
+                  <Button size="sm" variant="outline" className="text-xs">
+                    Присоединиться
                   </Button>
                 </div>
               </div>
@@ -116,36 +107,14 @@ export default function OverviewPanel({ character, location, playersInLocation }
         </div>
       )}
 
-      {deadNpcsInLocation.length > 0 && (
-        <div>
-          <h4 className="font-semibold mb-2 text-sm">💀 Мертвые НПС</h4>
-          <div className="space-y-2">
-            {deadNpcsInLocation.map((npc) => (
-              <div key={npc.id} className="bg-red-100/20 rounded-lg p-3 opacity-60">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg grayscale">{npc.emoji}</span>
-                    <span className="font-medium text-sm">{npc.name}</span>
-                    <Badge variant="destructive" className="text-xs">
-                      Мертв
-                    </Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    Возродится через {Math.ceil(npc.respawnTime / 60)} мин
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {liveNpcsInLocation.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <Sword className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">В этой локации нет НПС</p>
-        </div>
-      )}
+      {/* Use the original NPCPanel component */}
+      <NPCPanel 
+        npcs={liveNpcsInLocation}
+        onAttackNPC={handleAttackNPC}
+        canAttack={character.currentHp > 1}
+        character={character}
+        currentGroup={null}
+      />
     </div>
   );
 

@@ -414,6 +414,8 @@ export default function GameDashboard() {
               character={character}
               location={location}
               playersInLocation={playersInLocation}
+              activeCombats={activeCombats}
+              npcsInLocation={npcsInLocation}
             />
           </div>
         );
