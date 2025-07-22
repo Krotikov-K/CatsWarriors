@@ -1890,7 +1890,7 @@ export class DatabaseStorage implements IStorage {
   async declareTerritoryBattle(locationId: number, attackingClan: string, declaredBy: number): Promise<TerritoryBattle> {
     const ownership = await this.getTerritoryOwnership(locationId);
     const defendingClan = ownership?.ownerClan || null;
-    const battleStartTime = new Date(Date.now() + 60 * 60 * 1000);
+    const battleStartTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     
     const [battle] = await db
       .insert(territoryBattles)

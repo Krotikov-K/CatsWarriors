@@ -363,6 +363,12 @@
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates (July 22, 2025)
+- Territory warfare system with color-coded map visualization
+- Battle preparation time reduced from 1 hour to 5 minutes
+- Fixed group membership limit enforcement (maximum 5 members)
+- Added influence points system with 10 points per clan for testing
+
 ### Target Audience & Requirements
 - **Platform**: Mobile devices only (Telegram Web App)
 - **Age group**: 8-16 years old
