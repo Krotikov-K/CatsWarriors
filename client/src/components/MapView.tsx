@@ -1,7 +1,7 @@
 import { type Location, type Character, type Combat, LOCATIONS_DATA } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 interface MapViewProps {
@@ -24,6 +24,7 @@ interface MapLocationProps {
   isCurrentLocation: boolean;
   canMoveTo: boolean;
   playerCount: number;
+  ownerClan?: string;
   onClick: () => void;
 }
 
@@ -37,23 +38,24 @@ function MapLocation({
   isCurrentLocation, 
   canMoveTo,
   playerCount,
+  ownerClan,
   onClick 
 }: MapLocationProps) {
   const getLocationColor = () => {
-    if (clan) {
-      switch (clan) {
-        case "thunder": return "bg-gradient-to-br from-green-400 to-green-600";
-        case "river": return "bg-gradient-to-br from-cyan-400 to-cyan-600";
-      }
+    // Tribal camps always keep their original colors
+    if (type === "camp") {
+      if (clan === "thunder") return "bg-gradient-to-br from-yellow-500 to-yellow-600";
+      if (clan === "river") return "bg-gradient-to-br from-blue-500 to-blue-600";
     }
     
-    switch (type) {
-      case "hunting": return "bg-gradient-to-br from-green-400 to-green-600";
-      case "combat": return "bg-gradient-to-br from-red-400 to-red-600";
-      case "sacred": return "bg-gradient-to-br from-indigo-400 to-indigo-600";
-      case "neutral": return "bg-gradient-to-br from-yellow-400 to-yellow-600";
-      default: return "bg-gradient-to-br from-gray-400 to-gray-600";
+    // Territory ownership colors
+    if (ownerClan) {
+      if (ownerClan === "thunder") return "bg-gradient-to-br from-yellow-300 to-yellow-500";
+      if (ownerClan === "river") return "bg-gradient-to-br from-blue-300 to-blue-500";
     }
+    
+    // Default neutral color (gray)
+    return "bg-gradient-to-br from-gray-400 to-gray-600";
   };
 
   const getBorderColor = () => {
@@ -109,6 +111,11 @@ export default function MapView({
 }: MapViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch territory ownership data
+  const { data: territoryOwnership } = useQuery<{ territories: Array<{ locationId: number; ownerClan: string }> }>({
+    queryKey: ['/api/territory/ownership'],
+  });
 
   const moveCharacterMutation = useMutation({
     mutationFn: async (locationId: number) => {
@@ -287,6 +294,7 @@ export default function MapView({
                   isCurrentLocation={loc.id === character.currentLocationId}
                   canMoveTo={canMoveToLocation(loc.id)}
                   playerCount={getPlayerCountForLocation(loc.id)}
+                  ownerClan={territoryOwnership?.territories?.find(t => t.locationId === loc.id)?.ownerClan}
                   onClick={() => handleLocationClick(loc.id)}
                 />
               ))}
@@ -299,12 +307,16 @@ export default function MapView({
               <h4 className="font-semibold mb-2 text-xs text-foreground">Легенда</h4>
               <div className="grid grid-cols-2 gap-1 text-xs">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-400 to-green-600 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 mr-2"></div>
                   <span className="text-muted-foreground">Грозовое</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mr-2"></div>
                   <span className="text-muted-foreground">Речное</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 mr-2"></div>
+                  <span className="text-muted-foreground">Нейтральные</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 mr-2"></div>
