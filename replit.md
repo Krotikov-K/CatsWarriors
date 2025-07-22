@@ -373,6 +373,23 @@ Preferred communication style: Simple, everyday language.
 - Replaced incorrect /api/combat/attack-npc endpoint with correct /api/combat/start
 - Fixed NPC ID mapping to use server-side data instead of static client data
 - Added legacy endpoint stub for old attack-npc requests to prevent future errors
+- July 22, 2025: Fixed HTTP 500 territory battle declaration errors:
+  * Removed invalid declareTerritoryBattleSchema import causing Zod validation failures
+  * Fixed storage.getCharacterByUserId method call (replaced with getCharacter)
+  * Corrected PostgreSQL JSON array handling in declareTerritoryBattle method
+  * Fixed character movement API requiring characterId parameter
+  * Territory battle system now fully functional for neutral territory capture
+- July 22, 2025: Complete territory warfare system implementation:
+  * Full mass battle system supporting unlimited participants (crowd vs crowd)
+  * Automatic battle resolution based on participant stats, level, and HP
+  * Territory ownership transfer to winning clan after battle completion
+  * Balanced influence points system: capture costs 1 point, tribes gain 1 point per 24 hours
+  * Real-time battle status updates and WebSocket notifications
+  * Enhanced battle interface showing preparation/active status and participant counts
+  * Experience rewards (200 points) for all territory battle participants
+  * Game events and notifications for battle declarations and completions
+  * Fixed PostgreSQL JSON array handling by converting to TEXT field with JSON.stringify
+  * Territory battles now successfully create, store participants, and process correctly
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP

@@ -1901,7 +1901,7 @@ export class DatabaseStorage implements IStorage {
         declaredBy,
         battleStartTime,
         status: "preparing",
-        participants: [declaredBy] // Include declarer as first participant
+        participants: JSON.stringify([declaredBy]) // Stringify the array
       })
       .returning();
     
@@ -1939,16 +1939,18 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Battle not found");
     }
     
-    // Check if already in battle
-    if (battle.participants.includes(characterId)) {
+    // Parse participants and check if already in battle
+    const participants = JSON.parse(battle.participants);
+    if (participants.includes(characterId)) {
       return battle; // Already joined
     }
     
-    // Use SQL to append to array
+    // Update participants JSON string
+    const updatedParticipants = [...participants, characterId];
     const [updated] = await db
       .update(territoryBattles)
       .set({ 
-        participants: sql`array_append(participants, ${characterId})`
+        participants: JSON.stringify(updatedParticipants)
       })
       .where(eq(territoryBattles.id, battleId))
       .returning();

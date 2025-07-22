@@ -17,7 +17,7 @@ interface TerritoryBattle {
   declaredByName: string;
   battleStartTime: string;
   status: string;
-  participants: number[];
+  participants: string; // JSON string of number[]
 }
 
 interface ClanInfluence {

@@ -170,7 +170,7 @@ export const territoryBattles = pgTable("territory_battles", {
   battleStartTime: timestamp("battle_start_time").notNull(),
   status: text("status").notNull().default("preparing"), // "preparing", "active", "completed"
   winner: text("winner"), // clan name or null if ongoing
-  participants: json("participants").$type<number[]>().notNull().default([]), // characterIds
+  participants: text("participants").notNull(), // JSON string of characterIds array
   createdAt: timestamp("created_at").defaultNow(),
 });
 
