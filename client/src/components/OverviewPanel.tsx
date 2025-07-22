@@ -52,8 +52,10 @@ export default function OverviewPanel({ character, location, playersInLocation, 
 
   const attackNPCMutation = useMutation({
     mutationFn: async ({ npcId, asGroup }: { npcId: number; asGroup?: boolean }) => {
-      const response = await apiRequest("POST", "/api/combat/attack-npc", {
-        npcId,
+      const response = await apiRequest("POST", "/api/combat/start", {
+        characterId: character.id,
+        npcId: npcId,
+        locationId: character.currentLocationId,
         asGroup: asGroup || false
       });
       return response.json();
