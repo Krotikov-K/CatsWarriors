@@ -74,12 +74,12 @@ export default function OverviewPanel({ character, location, playersInLocation, 
     },
   });
 
-  // Mock plants data for future implementation
+  // Fixed plants data - consistent across renders  
   const plantsInLocation = location ? [
     { id: 1, name: "Кошачья мята", type: "healing", rarity: "common", description: "Успокаивает нервы" },
     { id: 2, name: "Паутинник", type: "healing", rarity: "uncommon", description: "Останавливает кровотечение" },
     { id: 3, name: "Тысячелистник", type: "healing", rarity: "rare", description: "Заживляет раны" }
-  ].slice(0, Math.floor(Math.random() * 4)) : [];
+  ].slice(0, (location.id % 3) + 1) : []; // Deterministic based on location ID
 
   const renderNPCsTab = () => (
     <div className="space-y-4">
@@ -94,7 +94,7 @@ export default function OverviewPanel({ character, location, playersInLocation, 
                   <div>
                     <span className="font-medium text-sm">Бой #{combat.id}</span>
                     <div className="text-xs text-muted-foreground">
-                      Участников: {combat.participants?.length || 0} • Ход {combat.turn || 1}
+                      Участников: {combat.participants?.length || 0} • Ход {combat.currentTurn || 1}
                     </div>
                   </div>
                   <Button size="sm" variant="outline" className="text-xs">
@@ -109,7 +109,7 @@ export default function OverviewPanel({ character, location, playersInLocation, 
 
       {/* Use the original NPCPanel component */}
       <NPCPanel 
-        npcs={liveNpcsInLocation}
+        npcs={serverNpcs.length > 0 ? serverNpcs : []}
         onAttackNPC={handleAttackNPC}
         canAttack={character.currentHp > 1}
         character={character}
