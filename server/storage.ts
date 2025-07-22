@@ -102,6 +102,10 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateLocation(id: number, updates: Partial<Location>): Promise<Location | undefined>;
   
+  // Group application methods
+  hasExistingApplication(groupId: number, characterId: number): Promise<boolean>;
+  getGroupApplicationsWithCharacterNames(groupId: number): Promise<(GroupApplication & { characterName: string })[]>;
+  
   // Health regeneration
   processHealthRegeneration(characterId: number): Promise<Character | undefined>;
   useHealingPoultice(characterId: number): Promise<Character | undefined>;
@@ -744,6 +748,16 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
+  async hasExistingApplication(groupId: number, characterId: number): Promise<boolean> {
+    // In-memory implementation would check applications
+    return false;
+  }
+
+  async getGroupApplicationsWithCharacterNames(groupId: number): Promise<(GroupApplication & { characterName: string })[]> {
+    // In-memory implementation would return applications with names
+    return [];
+  }
+
   private calculateMaxHp(endurance: number): number {
     return 80 + (endurance * 5);
   }
@@ -1343,6 +1357,52 @@ export class DatabaseStorage implements IStorage {
     return applications;
   }
 
+  async hasExistingApplication(groupId: number, characterId: number): Promise<boolean> {
+    const [application] = await db
+      .select()
+      .from(groupApplications)
+      .where(and(
+        eq(groupApplications.groupId, groupId),
+        eq(groupApplications.characterId, characterId),
+        eq(groupApplications.status, "pending")
+      ))
+      .limit(1);
+    return !!application;
+  }
+
+  async getGroupApplicationsWithCharacterNames(groupId: number): Promise<(GroupApplication & { characterName: string })[]> {
+    if (groupId === 0) return [];
+    
+    const applications = await db
+      .select({
+        id: groupApplications.id,
+        groupId: groupApplications.groupId,
+        characterId: groupApplications.characterId,
+        message: groupApplications.message,
+        status: groupApplications.status,
+        createdAt: groupApplications.createdAt,
+        respondedAt: groupApplications.respondedAt,
+        characterName: characters.name
+      })
+      .from(groupApplications)
+      .leftJoin(characters, eq(groupApplications.characterId, characters.id))
+      .where(and(
+        eq(groupApplications.groupId, groupId),
+        eq(groupApplications.status, "pending")
+      ));
+    
+    return applications.map(app => ({
+      id: app.id,
+      groupId: app.groupId,
+      characterId: app.characterId,
+      message: app.message,
+      status: app.status,
+      createdAt: app.createdAt,
+      respondedAt: app.respondedAt,
+      characterName: app.characterName || 'Unknown'
+    }));
+  }
+
   async respondToGroupApplication(applicationId: number, response: "accepted" | "rejected"): Promise<GroupApplication | undefined> {
     const [application] = await db
       .select()
@@ -1353,12 +1413,24 @@ export class DatabaseStorage implements IStorage {
 
     // If accepted, add character to group
     if (response === "accepted") {
-      await db
-        .insert(groupMembers)
-        .values({ 
-          groupId: application.groupId, 
-          characterId: application.characterId 
-        });
+      // Check if character is not already in the group to prevent duplicates
+      const existingMember = await db
+        .select()
+        .from(groupMembers)
+        .where(and(
+          eq(groupMembers.groupId, application.groupId),
+          eq(groupMembers.characterId, application.characterId)
+        ))
+        .limit(1);
+      
+      if (!existingMember.length) {
+        await db
+          .insert(groupMembers)
+          .values({ 
+            groupId: application.groupId, 
+            characterId: application.characterId 
+          });
+      }
     }
 
     // Update application status
@@ -1372,6 +1444,52 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updatedApplication;
+  }
+
+  async hasExistingApplication(groupId: number, characterId: number): Promise<boolean> {
+    const [application] = await db
+      .select()
+      .from(groupApplications)
+      .where(and(
+        eq(groupApplications.groupId, groupId),
+        eq(groupApplications.characterId, characterId),
+        eq(groupApplications.status, "pending")
+      ))
+      .limit(1);
+    return !!application;
+  }
+
+  async getGroupApplicationsWithCharacterNames(groupId: number): Promise<(GroupApplication & { characterName: string })[]> {
+    if (groupId === 0) return [];
+    
+    const applications = await db
+      .select({
+        id: groupApplications.id,
+        groupId: groupApplications.groupId,
+        characterId: groupApplications.characterId,
+        message: groupApplications.message,
+        status: groupApplications.status,
+        createdAt: groupApplications.createdAt,
+        respondedAt: groupApplications.respondedAt,
+        characterName: characters.name
+      })
+      .from(groupApplications)
+      .leftJoin(characters, eq(groupApplications.characterId, characters.id))
+      .where(and(
+        eq(groupApplications.groupId, groupId),
+        eq(groupApplications.status, "pending")
+      ));
+    
+    return applications.map(app => ({
+      id: app.id,
+      groupId: app.groupId,
+      characterId: app.characterId,
+      message: app.message,
+      status: app.status,
+      createdAt: app.createdAt,
+      respondedAt: app.respondedAt,
+      characterName: app.characterName || 'Unknown'
+    }));
   }
 
   private calculateMaxHp(endurance: number): number {

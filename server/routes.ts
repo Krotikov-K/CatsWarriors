@@ -1616,6 +1616,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Already in a group" });
       }
 
+      // Check if character already has a pending application to this group
+      const existingApplication = await storage.hasExistingApplication(groupId, characterId);
+      if (existingApplication) {
+        return res.status(400).json({ message: "Already applied to this group" });
+      }
+
       const application = await storage.createGroupApplication(groupId, characterId, message);
       res.json(application);
     } catch (error) {
@@ -1628,7 +1634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/groups/:id/applications", async (req, res) => {
     try {
       const groupId = parseInt(req.params.id);
-      const applications = await storage.getGroupApplications(groupId);
+      const applications = await storage.getGroupApplicationsWithCharacterNames(groupId);
       res.json(applications);
     } catch (error) {
       console.error("Get group applications error:", error);

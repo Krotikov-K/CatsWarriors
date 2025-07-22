@@ -343,6 +343,13 @@
   * Changes immediately reflect in game interface through /api/locations endpoint
   * Location updates modify static LOCATIONS_DATA array correctly
   * No issues found with coordinate synchronization system
+- July 18, 2025. Group application system fixes:
+  * Fixed duplicate group applications - players can only submit one application per group
+  * Added character names to group applications display for better identification
+  * Implemented hasExistingApplication() method to prevent duplicate submissions
+  * Added getGroupApplicationsWithCharacterNames() method to show applicant names
+  * Fixed potential duplicate group membership when accepting multiple applications from same player
+  * All group application functionality now working correctly with proper validation
 - July 17, 2025. Map expansion with 6 new dangerous locations:
   * Added new high-level locations: Пугающее ущелье, Солнечный Склон, Гремящая Роща (upper right)
   * Added dangerous locations: Хрустальный Ручей, Озеро Снов, Тропа Теней (lower right)
