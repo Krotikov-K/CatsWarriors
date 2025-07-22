@@ -1972,12 +1972,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if location is neutral (auto-capture)
       if (!ownership) {
-        const captured = await storage.captureTerritoryAutomatically(locationId, character.clan, character.id);
+        // Check influence points before capture
+        const influence = await storage.getClanInfluence(character.clan);
+        if (!influence || influence.influencePoints < 1) {
+          return res.status(400).json({ message: "Need at least 1 influence point to capture territory" });
+        }
         
-        // Award influence points for capturing neutral territory
-        const currentInfluence = await storage.getClanInfluence(character.clan);
-        const newInfluencePoints = (currentInfluence?.influencePoints || 0) + 2; // Award 2 points for territory capture
-        await storage.updateClanInfluence(character.clan, newInfluencePoints);
+        // Spend influence point for capture
+        await storage.updateClanInfluence(character.clan, influence.influencePoints - 1);
+        
+        const captured = await storage.captureTerritoryAutomatically(locationId, character.clan, character.id);
         
         await storage.createGameEvent({
           type: "territory_captured",
