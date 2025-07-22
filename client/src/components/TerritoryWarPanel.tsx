@@ -61,11 +61,10 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   });
 
   const declareBattleMutation = useMutation({
-    mutationFn: (data: { locationId: number; declaredBy: number }) =>
-      apiRequest(`/api/territory/declare-battle`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async (data: { locationId: number; declaredBy: number }) => {
+      const response = await apiRequest('POST', '/api/territory/declare-battle', data);
+      return response.json();
+    },
     onSuccess: (data) => {
       if (data.type === 'auto_capture') {
         toast({
@@ -104,11 +103,10 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   });
 
   const joinBattleMutation = useMutation({
-    mutationFn: (data: { battleId: number; characterId: number }) =>
-      apiRequest(`/api/territory/join-battle`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    mutationFn: async (data: { battleId: number; characterId: number }) => {
+      const response = await apiRequest('POST', '/api/territory/join-battle', data);
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Присоединились к битве!',
