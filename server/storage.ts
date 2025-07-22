@@ -2048,7 +2048,13 @@ export class DatabaseStorage implements IStorage {
       // Award experience to participants
       const experienceReward = 200; // Higher reward for territory battles
       for (const participant of [...attackingParticipants, ...defendingParticipants]) {
-        await this.addExperience(participant.id, experienceReward);
+        const [updatedChar] = await db
+          .update(characters)
+          .set({ 
+            experience: sql`experience + ${experienceReward}` 
+          })
+          .where(eq(characters.id, participant.id))
+          .returning();
       }
 
       // Create game event for battle result

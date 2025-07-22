@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import TerritoryBattleModal from './TerritoryBattleModal';
 
 interface TerritoryBattle {
   id: number;
@@ -42,6 +43,8 @@ interface TerritoryWarPanelProps {
 const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, location }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showBattleModal, setShowBattleModal] = useState(false);
+  const [selectedBattle, setSelectedBattle] = useState<TerritoryBattle | null>(null);
 
   // Fetch clan influence
   const { data: influence } = useQuery<ClanInfluence>({
@@ -185,6 +188,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   }
 
   return (
+    <>
     <Card className="w-full bg-card border-border">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-foreground">
@@ -260,6 +264,18 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
                 ✓ Вы участвуете в битве
               </Badge>
             )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                setSelectedBattle(activeBattle);
+                setShowBattleModal(true);
+              }}
+            >
+              👁️ Посмотреть битву
+            </Button>
           </div>
         )}
 
@@ -296,6 +312,17 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
         )}
       </CardContent>
     </Card>
+
+    <TerritoryBattleModal
+      battle={selectedBattle}
+      isOpen={showBattleModal}
+      onClose={() => {
+        setShowBattleModal(false);
+        setSelectedBattle(null);
+      }}
+      currentCharacter={character}
+    />
+  </>
   );
 };
 

@@ -2135,6 +2135,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/territory/battle-participants/:battleId", async (req: Request, res: Response) => {
+    try {
+      const battleId = parseInt(req.params.battleId);
+      const battle = await storage.getTerritoryBattle(battleId);
+      
+      if (!battle) {
+        return res.status(404).json({ message: "Battle not found" });
+      }
+
+      const attackingParticipants = [];
+      const defendingParticipants = [];
+
+      for (const participantId of battle.participants) {
+        const character = await storage.getCharacter(participantId);
+        if (character) {
+          if (character.clan === battle.attackingClan) {
+            attackingParticipants.push(character);
+          } else if (character.clan === battle.defendingClan) {
+            defendingParticipants.push(character);
+          }
+        }
+      }
+
+      res.json({
+        attacking: attackingParticipants,
+        defending: defendingParticipants,
+        total: battle.participants.length
+      });
+    } catch (error) {
+      console.error("Get battle participants error:", error);
+      res.status(500).json({ message: "Failed to get battle participants" });
+    }
+  });
+
   app.get("/api/territory/ownership", async (req: Request, res: Response) => {
     try {
       // Get all territory ownerships
