@@ -78,16 +78,21 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
           description: `Битва за ${location.name} начнется через час.`,
         });
       }
-      // Force immediate refresh of all territory-related data
+      // Force immediate and comprehensive refresh
       queryClient.invalidateQueries({ queryKey: [`/api/territory/influence/${character.clan}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/territory/battles`] });
       queryClient.invalidateQueries({ queryKey: ['/api/territory/ownership'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
       
-      // Small delay to ensure UI updates properly
+      // Force immediate refetch with multiple attempts
       setTimeout(() => {
         queryClient.refetchQueries({ queryKey: ['/api/territory/ownership'] });
+        queryClient.refetchQueries({ queryKey: [`/api/territory/influence/${character.clan}`] });
       }, 100);
+      
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/territory/ownership'] });
+      }, 500);
     },
     onError: (error: any) => {
       toast({
