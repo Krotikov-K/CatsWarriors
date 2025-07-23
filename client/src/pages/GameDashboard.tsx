@@ -67,12 +67,13 @@ export default function GameDashboard() {
       const currentLevel = gameState.character.level;
       const unspentPoints = gameState.character.unspentStatPoints || 0;
       
-      // Show level up modal if character has unspent stat points
-      if (unspentPoints > 0 && !showLevelUp) {
+      // Show level up modal if character has unspent stat points, but prevent duplicate modals
+      if (unspentPoints > 0 && !showLevelUp && (!levelUpData || levelUpData.newLevel !== currentLevel)) {
         console.log('*** UNSPENT STAT POINTS DETECTED ***', {
           character: gameState.character.name,
           level: currentLevel,
-          unspentPoints: unspentPoints
+          unspentPoints: unspentPoints,
+          previousLevelUpLevel: levelUpData?.newLevel
         });
         
         setLevelUpData({
@@ -89,9 +90,9 @@ export default function GameDashboard() {
         setShowLevelUp(true);
       }
       
-      // Also detect fresh level ups
-      if (previousLevel !== null && currentLevel > previousLevel) {
-        console.log('*** LEVEL UP DETECTED ***', {
+      // Also detect fresh level ups - but only if no unspent points modal is already shown
+      if (previousLevel !== null && currentLevel > previousLevel && unspentPoints === 0 && !showLevelUp) {
+        console.log('*** FRESH LEVEL UP DETECTED (no stat points to distribute) ***', {
           from: previousLevel,
           to: currentLevel,
           character: gameState.character.name
