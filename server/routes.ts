@@ -1326,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/test-level-up", async (req, res) => {
     try {
       const { characterId } = req.body;
-      const GameEngine = (await import("../services/gameEngine")).GameEngine;
+      const GameEngine = (await import("./services/gameEngine")).GameEngine;
       
       console.log("=== TESTING LEVEL UP ===");
       const character = await storage.getCharacter(characterId || 1);
