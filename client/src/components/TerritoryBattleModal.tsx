@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
+import CombatInterface from './CombatInterface';
+import { Eye } from 'lucide-react';
 
 interface TerritoryBattle {
   id: number;
@@ -43,11 +45,20 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
   currentCharacter,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [showCombat, setShowCombat] = useState<boolean>(false);
 
   const { data: battleParticipants } = useQuery({
     queryKey: ['/api/territory/battle-participants', battle?.id],
     queryFn: () => fetch(`/api/territory/battle-participants/${battle?.id}`).then(res => res.json()),
     enabled: !!battle && isOpen,
+  });
+
+  // Check if there's an active territory combat
+  const { data: territoryCombat } = useQuery({
+    queryKey: ['/api/territory/combat', battle?.id],
+    queryFn: () => fetch(`/api/territory/combat/${battle?.id}`).then(res => res.json()),
+    enabled: !!battle && isOpen && battle.status === 'active',
+    refetchInterval: 3000,
   });
 
   useEffect(() => {
@@ -74,6 +85,48 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
   }, [battle]);
 
   if (!battle) return null;
+
+  // Show combat interface if combat is active and user wants to watch
+  if (showCombat && territoryCombat) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg">
+              Территориальная битва: {battle.locationName}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Badge variant="outline" className="bg-red-100 text-red-700">
+                Активная битва
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCombat(false)}
+              >
+                Скрыть бой
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center text-lg font-bold text-red-600">
+                ⚔️ Битва в разгаре! ⚔️
+              </div>
+              <div className="text-sm text-muted-foreground text-center">
+                Территориальная битва проходит в режиме реального времени. Наблюдение за боевыми действиями будет добавлено в следующем обновлении.
+              </div>
+              <div className="text-xs text-center">
+                Бой ID: {territoryCombat.id} | Ходов: {territoryCombat.currentTurn || 0}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const getClanDisplayName = (clan: string) => {
     return clan === 'thunder' ? 'Грозовое племя' : 'Речное племя';
@@ -145,7 +198,20 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
                   </Badge>
                 )}
                 {battle.status === 'active' && (
-                  <Badge variant="destructive">В процессе</Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="destructive">В процессе</Badge>
+                    {territoryCombat && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowCombat(true)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Наблюдать
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {battle.status === 'completed' && battle.winner && (
                   <Badge className={battle.winner === 'thunder' ? 'bg-yellow-500' : 'bg-blue-500'}>

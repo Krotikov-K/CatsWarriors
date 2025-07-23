@@ -2,10 +2,13 @@ import { Combat, Character, NPC, CombatLogEntry } from "@/../../shared/schema";
 import { getClanColor, getHealthColor, formatTime } from "@/lib/gameUtils";
 
 interface CombatInterfaceProps {
-  combat: Combat;
-  character: Character;
-  npcsInLocation: NPC[];
-  playersInLocation: Character[];
+  combat?: Combat;
+  combatId?: number;
+  currentCharacter: Character;
+  character?: Character; // For backwards compatibility
+  npcsInLocation?: NPC[];
+  playersInLocation?: Character[];
+  isSpectator?: boolean;
 }
 
 interface CombatParticipant {
@@ -22,10 +25,15 @@ interface CombatParticipant {
 
 export default function CombatInterface({ 
   combat, 
+  combatId,
+  currentCharacter,
   character, 
   npcsInLocation, 
-  playersInLocation 
+  playersInLocation,
+  isSpectator = false
 }: CombatInterfaceProps) {
+  // Use currentCharacter if provided, fallback to character for backwards compatibility
+  const playerCharacter = currentCharacter || character;
   // Собираем всех участников боя
   const getParticipants = (): CombatParticipant[] => {
     const participants: CombatParticipant[] = [];

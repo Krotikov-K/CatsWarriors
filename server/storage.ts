@@ -1989,6 +1989,17 @@ export class DatabaseStorage implements IStorage {
         .where(eq(territoryBattles.id, battle.id))
         .returning();
       updatedBattles.push(updated);
+      
+      // Create real-time combat for this territory battle
+      const participantIds = JSON.parse(battle.participants);
+      if (participantIds.length >= 2) {
+        const combat = await this.createTerritoryCombat(battle.id, participantIds, battle.locationId);
+        
+        // Start auto-combat
+        console.log(`Starting territory combat ${combat.id} for battle ${battle.id}`);
+        const { GameEngine } = await import("./services/gameEngine");
+        GameEngine.startAutoCombat(combat.id);
+      }
     }
 
     return updatedBattles;
@@ -2003,74 +2014,160 @@ export class DatabaseStorage implements IStorage {
     const completedBattles = [];
     
     for (const battle of activeBattles) {
-      // Get participants for each clan
-      const attackingParticipants = [];
-      const defendingParticipants = [];
+      // Check if this is a real-time combat battle
+      const territoryBattleCombat = await this.getTerritoryCombat(battle.id);
       
-      const participantIds = JSON.parse(battle.participants);
-      for (const participantId of participantIds) {
-        const character = await this.getCharacter(participantId);
-        if (character && character.currentHp > 1) { // Only alive characters count
-          if (character.clan === battle.attackingClan) {
-            attackingParticipants.push(character);
-          } else if (character.clan === battle.defendingClan) {
-            defendingParticipants.push(character);
+      if (territoryBattleCombat && territoryBattleCombat.status === "completed") {
+        // Real-time combat has finished, determine winner from combat results
+        const participantIds = JSON.parse(battle.participants);
+        const thunderSurvivors = [];
+        const riverSurvivors = [];
+        
+        for (const participantId of participantIds) {
+          const character = await this.getCharacter(participantId);
+          if (character && character.currentHp > 1) { // Only survivors count
+            if (character.clan === "thunder") {
+              thunderSurvivors.push(character);
+            } else if (character.clan === "river") {
+              riverSurvivors.push(character);
+            }
           }
         }
-      }
-
-      // Calculate battle power for each side
-      const attackingPower = this.calculateBattlePower(attackingParticipants);
-      const defendingPower = this.calculateBattlePower(defendingParticipants);
-
-      // Add random factor (30% variance)
-      const randomFactor = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
-      const finalAttackingPower = attackingPower * randomFactor;
-      const finalDefendingPower = defendingPower * (2 - randomFactor); // Inverse for balance
-
-      // Determine winner
-      let winner: string;
-      if (finalAttackingPower > finalDefendingPower) {
-        winner = battle.attackingClan;
         
-        // Transfer territory to winner
-        await this.captureTerritoryAutomatically(
-          battle.locationId, 
-          battle.attackingClan,
-          attackingParticipants[0]?.id || battle.declaredBy
-        );
+        // Determine winner
+        let winner: string;
+        if (thunderSurvivors.length > 0 && riverSurvivors.length === 0) {
+          winner = "thunder";
+          // Transfer territory to thunder clan
+          await this.captureTerritoryAutomatically(
+            battle.locationId, 
+            "thunder",
+            thunderSurvivors[0]?.id || battle.declaredBy
+          );
+        } else if (riverSurvivors.length > 0 && thunderSurvivors.length === 0) {
+          winner = "river";
+          // Transfer territory to river clan
+          await this.captureTerritoryAutomatically(
+            battle.locationId, 
+            "river",
+            riverSurvivors[0]?.id || battle.declaredBy
+          );
+        } else {
+          // Defenders win in case of draw or no clear winner
+          winner = battle.defendingClan || "neutral";
+        }
+
+        // Complete the battle
+        const completedBattle = await this.completeTerritoryBattle(battle.id, winner);
+        completedBattles.push(completedBattle);
+
+        // Create game event for battle result
+        const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
+        const winnerName = winner === "thunder" ? "Грозовое племя ⚡" : winner === "river" ? "Речное племя 🌊" : "защитники";
+        await this.createGameEvent({
+          type: "territory_battle_completed",
+          message: `Битва за ${location?.name} завершена! Победил: ${winnerName}`,
+          locationId: battle.locationId,
+          characterId: battle.declaredBy,
+        });
       } else {
-        winner = battle.defendingClan || "neutral";
-        // Defenders keep their territory
+        // Fallback to old simple power calculation if no real-time combat
+        const participantIds = JSON.parse(battle.participants);
+        const attackingParticipants = [];
+        const defendingParticipants = [];
+        
+        for (const participantId of participantIds) {
+          const character = await this.getCharacter(participantId);
+          if (character && character.currentHp > 1) { // Only alive characters count
+            if (character.clan === battle.attackingClan) {
+              attackingParticipants.push(character);
+            } else if (character.clan === battle.defendingClan) {
+              defendingParticipants.push(character);
+            }
+          }
+        }
+
+        // Calculate battle power for each side
+        const attackingPower = this.calculateBattlePower(attackingParticipants);
+        const defendingPower = this.calculateBattlePower(defendingParticipants);
+
+        // Add random factor (30% variance)
+        const randomFactor = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+        const finalAttackingPower = attackingPower * randomFactor;
+        const finalDefendingPower = defendingPower * (2 - randomFactor); // Inverse for balance
+
+        // Determine winner
+        let winner: string;
+        if (finalAttackingPower > finalDefendingPower) {
+          winner = battle.attackingClan;
+          
+          // Transfer territory to winner
+          await this.captureTerritoryAutomatically(
+            battle.locationId, 
+            battle.attackingClan,
+            attackingParticipants[0]?.id || battle.declaredBy
+          );
+        } else {
+          winner = battle.defendingClan || "neutral";
+          // Defenders keep their territory
+        }
+
+        // Complete the battle
+        const completedBattle = await this.completeTerritoryBattle(battle.id, winner);
+        completedBattles.push(completedBattle);
+
+        // Award experience to participants
+        const experienceReward = 200; // Higher reward for territory battles
+        for (const participant of [...attackingParticipants, ...defendingParticipants]) {
+          const [updatedChar] = await db
+            .update(characters)
+            .set({ 
+              experience: sql`experience + ${experienceReward}` 
+            })
+            .where(eq(characters.id, participant.id))
+            .returning();
+        }
+
+        // Create game event for battle result
+        const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
+        await this.createGameEvent({
+          type: "territory_battle_completed",
+          message: `Битва за ${location?.name} завершена! Победил: ${winner === battle.attackingClan ? 'атакующий' : 'защищающийся'} клан ${winner === 'thunder' ? 'Грозовое племя ⚡' : winner === 'river' ? 'Речное племя 🌊' : 'неизвестно'}`,
+          locationId: battle.locationId,
+          characterId: battle.declaredBy,
+        });
       }
-
-      // Complete the battle
-      const completedBattle = await this.completeTerritoryBattle(battle.id, winner);
-      completedBattles.push(completedBattle);
-
-      // Award experience to participants
-      const experienceReward = 200; // Higher reward for territory battles
-      for (const participant of [...attackingParticipants, ...defendingParticipants]) {
-        const [updatedChar] = await db
-          .update(characters)
-          .set({ 
-            experience: sql`experience + ${experienceReward}` 
-          })
-          .where(eq(characters.id, participant.id))
-          .returning();
-      }
-
-      // Create game event for battle result
-      const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
-      await this.createGameEvent({
-        type: "territory_battle_completed",
-        message: `Битва за ${location?.name} завершена! Победил: ${winner === battle.attackingClan ? 'атакующий' : 'защищающийся'} клан ${winner === 'thunder' ? 'Грозовое племя ⚡' : winner === 'river' ? 'Речное племя 🌊' : 'неизвестно'}`,
-        locationId: battle.locationId,
-        characterId: battle.declaredBy,
-      });
     }
 
     return completedBattles;
+  }
+  
+  async getTerritoryCombat(battleId: number): Promise<Combat | undefined> {
+    // Territory combats are stored with a special reference to the battle ID
+    return this.getMemStorage().combats.find(combat => 
+      combat.territoryBattleId === battleId
+    );
+  }
+  
+  async createTerritoryCombat(battleId: number, participants: number[], locationId: number): Promise<Combat> {
+    const combatId = this.getMemStorage().nextCombatId++;
+    const combat: Combat = {
+      id: combatId,
+      participants,
+      npcParticipants: [],
+      status: "active",
+      type: "territory", 
+      locationId,
+      log: [],
+      currentTurn: 0,
+      territoryBattleId: battleId,
+      createdAt: new Date(),
+    };
+    
+    this.getMemStorage().combats.push(combat);
+    console.log(`Created territory combat ${combatId} for battle ${battleId} with participants:`, participants);
+    
+    return combat;
   }
 
   private calculateBattlePower(participants: Character[]): number {

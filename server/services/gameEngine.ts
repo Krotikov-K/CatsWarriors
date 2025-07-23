@@ -84,6 +84,17 @@ export class GameEngine {
         await this.endCombat(combatId);
         return;
       }
+    } else if (combat.type === "territory") {
+      // Territory combat ends when one clan has no survivors
+      const thunderClan = aliveCharacters.filter(char => char.clan === "thunder");
+      const riverClan = aliveCharacters.filter(char => char.clan === "river");
+      
+      if (thunderClan.length === 0 || riverClan.length === 0) {
+        console.log(`Territory combat ${combatId} ending: thunder=${thunderClan.length}, river=${riverClan.length}`);
+        await this.handleTerritoryCombatEnd(combatId, thunderClan, riverClan);
+        await this.endCombat(combatId);
+        return;
+      }
     } else if (allCombatants.length < 2) {
       console.log(`Combat ${combatId} ending: not enough participants (${allCombatants.length})`);
       await this.endCombat(combatId);
@@ -105,8 +116,8 @@ export class GameEngine {
     
     console.log(`Turn ${combat.currentTurn}: ${attacker.name} (${currentTurnIndex}/${sortedCombatants.length})`);
     
-    // Make sure attacker is still alive (check for 1 HP in PvP)
-    const isDefeated = combat.type === "pvp" ? attacker.currentHp <= 1 : attacker.currentHp <= 0;
+    // Make sure attacker is still alive (check for 1 HP in PvP and territory battles)
+    const isDefeated = (combat.type === "pvp" || combat.type === "territory") ? attacker.currentHp <= 1 : attacker.currentHp <= 0;
     if (isDefeated) {
       console.log(`Attacker ${attacker.name} is defeated, skipping turn`);
       await storage.updateCombat(combatId, {
@@ -123,6 +134,15 @@ export class GameEngine {
         possibleTargets = aliveNPCs.filter(npc => npc.currentHp > 0);
       } else { // NPC
         possibleTargets = aliveCharacters.filter(char => char.currentHp > 0);
+      }
+    } else if (combat.type === "territory") {
+      // In territory battles, characters from different clans attack each other
+      if ('userId' in attacker) { // Character
+        possibleTargets = aliveCharacters.filter(char => 
+          char.clan !== attacker.clan && char.currentHp > 1
+        );
+      } else { // This shouldn't happen in territory battles but handle gracefully
+        possibleTargets = [];
       }
     } else {
       // In PVP/mixed, everyone can attack everyone else
@@ -400,6 +420,49 @@ export class GameEngine {
 
   static getRequiredExperienceForLevel(level: number): number {
     return level * 1000;
+  }
+
+  private static async handleTerritoryCombatEnd(combatId: number, thunderClan: Character[], riverClan: Character[]): Promise<void> {
+    const combat = await storage.getCombat(combatId);
+    if (!combat) return;
+
+    // Determine winner based on surviving clan
+    const winner = thunderClan.length > 0 ? "thunder" : "river";
+    const winnerName = winner === "thunder" ? "Грозовое племя ⚡" : "Речное племя 🌊";
+    
+    console.log(`Territory combat ${combatId} won by ${winnerName}`);
+    
+    // Award experience to all participants (200 points for territory battles)
+    const allParticipants = await Promise.all(
+      combat.participants.map(id => storage.getCharacter(id))
+    );
+    
+    for (const participant of allParticipants) {
+      if (participant) {
+        await storage.updateCharacterExperience(participant.id, 200);
+        await this.checkAndProcessLevelUp(participant.id);
+      }
+    }
+    
+    const victoryEntry: CombatLogEntry = {
+      timestamp: new Date().toISOString(),
+      type: "join",
+      actorId: combat.participants[0],
+      message: `🏆 ${winnerName} одерживает победу в территориальной битве! Территория захвачена!`
+    };
+    await storage.addCombatLogEntry(combatId, victoryEntry);
+    
+    // Create game event for territory battle result
+    await storage.createGameEvent({
+      type: "territory_battle_completed",
+      characterId: combat.participants[0],
+      locationId: combat.locationId,
+      data: { 
+        winner,
+        thunderSurvivors: thunderClan.length,
+        riverSurvivors: riverClan.length
+      }
+    });
   }
 
   private static async handlePvPCombatEnd(combatId: number, survivors: Character[]): Promise<void> {

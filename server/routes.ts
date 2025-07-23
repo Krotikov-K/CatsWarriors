@@ -2242,6 +2242,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Territory combat API - get active combat for a territory battle
+  app.get("/api/territory/combat/:battleId", async (req: Request, res: Response) => {
+    try {
+      const battleId = parseInt(req.params.battleId);
+      const combat = await storage.getTerritoryCombat(battleId);
+      
+      if (!combat) {
+        return res.status(404).json({ error: "No active combat found for this battle" });
+      }
+      
+      res.json(combat);
+    } catch (error) {
+      console.error("Error getting territory combat:", error);
+      res.status(500).json({ error: "Failed to get territory combat" });
+    }
+  });
+
   return httpServer;
 }
 

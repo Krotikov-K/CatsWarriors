@@ -75,6 +75,7 @@ export const combats = pgTable("combats", {
   status: text("status").notNull().default("active"), // "active", "finished"
   currentTurn: integer("current_turn").notNull().default(0),
   combatLog: json("combat_log").$type<CombatLogEntry[]>().notNull().default([]),
+  territoryBattleId: integer("territory_battle_id"), // Reference to territory battle
   startedAt: timestamp("started_at").defaultNow(),
   finishedAt: timestamp("finished_at"),
 });
@@ -171,6 +172,8 @@ export const territoryBattles = pgTable("territory_battles", {
   status: text("status").notNull().default("preparing"), // "preparing", "active", "completed"
   winner: text("winner"), // clan name or null if ongoing
   participants: text("participants").notNull(), // JSON string of characterIds array
+  combatLog: text("combat_log").default("[]"), // JSON array of combat log entries
+  currentTurn: integer("current_turn").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
