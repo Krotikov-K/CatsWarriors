@@ -233,7 +233,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
               {activeBattle.defendingClan && (
                 <div>Защитники: {getClanEmoji(activeBattle.defendingClan)} {getClanDisplayName(activeBattle.defendingClan)}</div>
               )}
-              <div>Участников: {activeBattle.participants.length} воинов</div>
+              <div>Участников: {JSON.parse(activeBattle.participants).length} воинов</div>
               {activeBattle.status === 'active' && (
                 <div className="text-red-400 font-semibold">⚔️ Битва идёт!</div>
               )}
@@ -242,7 +242,7 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
               )}
             </div>
 
-            {isInvolvedInBattle && !activeBattle.participants.includes(character.id) && activeBattle.status === 'preparing' && (
+            {isInvolvedInBattle && !JSON.parse(activeBattle.participants).includes(character.id) && activeBattle.status === 'preparing' && (
               <Button
                 size="sm"
                 className="w-full bg-red-600 hover:bg-red-700"
@@ -253,13 +253,13 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
               </Button>
             )}
 
-            {isInvolvedInBattle && !activeBattle.participants.includes(character.id) && activeBattle.status === 'active' && (
+            {isInvolvedInBattle && !JSON.parse(activeBattle.participants).includes(character.id) && activeBattle.status === 'active' && (
               <Badge variant="outline" className="w-full justify-center bg-red-500/10 text-red-400 border-red-500/20">
                 ⚡ Битва уже началась - слишком поздно!
               </Badge>
             )}
 
-            {activeBattle.participants.includes(character.id) && (
+            {JSON.parse(activeBattle.participants).includes(character.id) && (
               <Badge variant="outline" className="w-full justify-center bg-green-500/10 text-green-400 border-green-500/20">
                 ✓ Вы участвуете в битве
               </Badge>

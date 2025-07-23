@@ -397,6 +397,12 @@ Preferred communication style: Simple, everyday language.
   * Battles now properly process participant arrays with JSON.stringify/parse
   * Movement API properly handles characterId parameter requirements
   * System fully functional for battle declarations, joining, and processing
+- July 23, 2025: Territory battle interface improvements:
+  * Fixed participant count display showing string length instead of actual participants
+  * Created detailed battle participants API endpoint with clan-based breakdown
+  * Interface now correctly shows attacking vs defending participants separately  
+  * Resolved discrepancy between overview panel and battle modal participant counts
+  * All territory warfare features working correctly with proper participant tracking
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP
