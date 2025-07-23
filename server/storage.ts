@@ -2007,7 +2007,8 @@ export class DatabaseStorage implements IStorage {
       const attackingParticipants = [];
       const defendingParticipants = [];
       
-      for (const participantId of battle.participants) {
+      const participantIds = JSON.parse(battle.participants);
+      for (const participantId of participantIds) {
         const character = await this.getCharacter(participantId);
         if (character && character.currentHp > 1) { // Only alive characters count
           if (character.clan === battle.attackingClan) {

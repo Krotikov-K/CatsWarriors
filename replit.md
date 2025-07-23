@@ -390,6 +390,13 @@ Preferred communication style: Simple, everyday language.
   * Game events and notifications for battle declarations and completions
   * Fixed PostgreSQL JSON array handling by converting to TEXT field with JSON.stringify
   * Territory battles now successfully create, store participants, and process correctly
+- July 23, 2025: Territory battle system fixes and optimization:
+  * Fixed critical PostgreSQL JSON parsing errors in participant handling
+  * Corrected battle timing to 5 minutes preparation (was incorrectly showing 1 hour)
+  * Fixed automatic territory capture for neutral locations
+  * Battles now properly process participant arrays with JSON.stringify/parse
+  * Movement API properly handles characterId parameter requirements
+  * System fully functional for battle declarations, joining, and processing
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP
