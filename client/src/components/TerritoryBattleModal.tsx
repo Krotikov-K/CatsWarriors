@@ -13,7 +13,7 @@ interface TerritoryBattle {
   defendingClan: string | null;
   status: string;
   winner: string | null;
-  participants: number[];
+  participants: number[] | string;
   battleStartTime: string;
   locationName?: string;
   declaredByName?: string;
@@ -46,6 +46,7 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
 
   const { data: battleParticipants } = useQuery({
     queryKey: ['/api/territory/battle-participants', battle?.id],
+    queryFn: () => fetch(`/api/territory/battle-participants/${battle?.id}`).then(res => res.json()),
     enabled: !!battle && isOpen,
   });
 
@@ -100,10 +101,15 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
     }
   };
 
-  const isParticipating = battle.participants.includes(currentCharacter.id);
+  // Parse participants from string if needed
+  const participantIds = typeof battle.participants === 'string' 
+    ? JSON.parse(battle.participants) 
+    : battle.participants;
+  
+  const isParticipating = participantIds.includes(currentCharacter.id);
   const attackingCount = battleParticipants?.attacking?.length || 0;
   const defendingCount = battleParticipants?.defending?.length || 0;
-  const totalParticipants = battle.participants.length;
+  const totalParticipants = participantIds.length;
 
   const getProgressPercentage = () => {
     if (battle.status === 'completed') return 100;

@@ -2092,6 +2092,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/territory/battle-participants/:battleId", async (req: Request, res: Response) => {
+    try {
+      const battleId = parseInt(req.params.battleId);
+      const battle = await storage.getTerritoryBattle(battleId);
+      
+      if (!battle) {
+        return res.status(404).json({ message: "Battle not found" });
+      }
+      
+      const participantIds = JSON.parse(battle.participants);
+      const participants = [];
+      for (const id of participantIds) {
+        const character = await storage.getCharacter(id);
+        if (character) {
+          participants.push({
+            id: character.id,
+            name: character.name,
+            clan: character.clan,
+            level: character.level,
+            currentHp: character.currentHp,
+            maxHp: character.maxHp,
+            gender: character.gender
+          });
+        }
+      }
+      
+      // Group by clan
+      const attackingParticipants = participants.filter(p => p.clan === battle.attackingClan);
+      const defendingParticipants = participants.filter(p => p.clan === battle.defendingClan);
+      
+      res.json({
+        attacking: attackingParticipants,
+        defending: defendingParticipants,
+        total: participants.length
+      });
+    } catch (error) {
+      console.error("Get battle participants error:", error);
+      res.status(500).json({ message: "Failed to get battle participants" });
+    }
+  });
+
   app.post("/api/territory/join-battle", async (req: Request, res: Response) => {
     try {
       const { joinTerritoryBattleSchema } = await import("@shared/schema");
