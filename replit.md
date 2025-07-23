@@ -403,6 +403,13 @@ Preferred communication style: Simple, everyday language.
   * Interface now correctly shows attacking vs defending participants separately  
   * Resolved discrepancy between overview panel and battle modal participant counts
   * All territory warfare features working correctly with proper participant tracking
+- July 23, 2025: Critical automatic level-up system fix:
+  * Fixed broken automatic level progression system where characters weren't gaining levels
+  * Created SQL-based level correction system that properly calculates expected levels
+  * System now automatically grants 5 stat points per level gained (1000 exp = 1 level)
+  * All characters' levels corrected to match their experience points
+  * Manual SQL fix applied: UPDATE characters SET level = FLOOR(experience/1000)+1 for all characters
+  * Kисяо correctly upgraded from level 4 to level 6 with 5700 experience points
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP

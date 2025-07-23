@@ -1180,8 +1180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/game-state", async (req, res) => {
     try {
       const userId = parseInt(req.query.userId as string);
-      console.log(`\n\n=== CRITICAL: Game state request for user ${userId} ===`);
-      console.log(`=== ABOUT TO CHECK LEVEL UPS ===`);
+      console.log(`\n\n=== GAME STATE REQUEST: userId=${userId} ===`);
       
       // Get user's character
       const characters = await storage.getCharactersByUserId(userId);
@@ -1191,28 +1190,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let character = characters[0];
 
-      // Auto level up check (critical for game progression)
+      // CRITICAL: Auto level up check
       const expectedLevel = Math.floor(character.experience / 1000) + 1;
-      console.log(`[AUTO-LEVEL] ${character.name}: Level ${character.level}, Exp ${character.experience}, Expected ${expectedLevel}`);
+      console.log(`=== AUTO-LEVEL CHECK: ${character.name} (Level ${character.level}, Exp ${character.experience}) -> Expected Level ${expectedLevel} ===`);
       
       if (expectedLevel > character.level) {
         const levelsGained = expectedLevel - character.level;
         const statPointsGained = levelsGained * 5;
         
-        console.log(`[AUTO-LEVEL] UPGRADING ${character.name}: ${character.level} -> ${expectedLevel} (+${statPointsGained} stat points)`);
+        console.log(`=== LEVEL UP: ${character.name} advancing from level ${character.level} to ${expectedLevel} (+${statPointsGained} stat points) ===`);
         
-        // Direct database update for immediate effect
+        // Update character in database
         await storage.updateCharacter(character.id, {
           level: expectedLevel,
           unspentStatPoints: character.unspentStatPoints + statPointsGained
         });
         
-        // Refresh character data
-        const updatedCharacter = await storage.getCharacter(character.id);
-        if (updatedCharacter) {
-          character = updatedCharacter;
-          console.log(`[AUTO-LEVEL] SUCCESS: ${character.name} is now level ${character.level} with ${character.unspentStatPoints} stat points`);
-        }
+        // Get updated character data
+        character = await storage.getCharacter(character.id) || character;
+        console.log(`=== LEVEL UP COMPLETE: ${character.name} is now level ${character.level} with ${character.unspentStatPoints} unspent stat points ===`);
+      } else {
+        console.log(`=== NO LEVEL UP NEEDED: ${character.name} has correct level ${character.level} for ${character.experience} experience ===`);
       }
       
       // Health regeneration temporarily disabled
