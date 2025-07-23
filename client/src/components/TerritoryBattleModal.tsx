@@ -223,6 +223,57 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
             )}
           </div>
 
+          {/* Active Battle Power Display */}
+          {battle.status === 'active' && battleParticipants && (
+            <Card className="border-red-500/30 bg-red-500/5">
+              <CardContent className="p-4">
+                <h3 className="font-medium mb-3 text-center flex items-center justify-center gap-2">
+                  ⚔️ Битва идёт! ⚔️
+                  <Badge variant="destructive" className="animate-pulse text-xs">
+                    LIVE
+                  </Badge>
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span>{getClanEmoji(battle.attackingClan)}</span>
+                      <span className="text-sm font-medium">Атакующие</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-red-400">{attackingCount}</span>
+                      <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, (attackingCount / Math.max(attackingCount + defendingCount, 1)) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span>{battle.defendingClan ? getClanEmoji(battle.defendingClan) : '🏞️'}</span>
+                      <span className="text-sm font-medium">Защитники</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-blue-400">{defendingCount}</span>
+                      <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, (defendingCount / Math.max(attackingCount + defendingCount, 1)) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-yellow-400 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+                    💡 Исход решается автоматически на основе силы участников!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Battle Info */}
           <Card>
             <CardContent className="p-4">
@@ -243,9 +294,20 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
           {isParticipating ? (
             <Card className="border-green-500/30 bg-green-500/5">
               <CardContent className="p-4 text-center">
-                <p className="text-green-400 font-medium">✓ Вы участвуете в битве!</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Получите опыт независимо от исхода битвы
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
+                    ✓ Участвую в битве
+                  </Badge>
+                  {battle.status === 'active' && (
+                    <Badge variant="secondary" className="text-xs animate-pulse">
+                      +200 опыта
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {battle.status === 'preparing' && 'Получите опыт после завершения битвы'}
+                  {battle.status === 'active' && 'Битва идёт! Опыт будет начислен по окончании'}
+                  {battle.status === 'completed' && 'Опыт уже начислен за участие'}
                 </p>
               </CardContent>
             </Card>
@@ -253,6 +315,11 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
             <Card className="border-gray-500/30">
               <CardContent className="p-4 text-center">
                 <p className="text-muted-foreground">Вы не участвуете в битве</p>
+                {battle.status === 'preparing' && (
+                  <p className="text-xs text-yellow-400 mt-1">
+                    Только участники от вражеских кланов могут присоединиться
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}
