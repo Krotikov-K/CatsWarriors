@@ -2030,7 +2030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.createGameEvent({
         type: "territory_battle_declared",
-        message: `${character.name} объявил битву за территорию ${location.name}! Битва начнется через 5 минут.`,
+        message: `${character.name} объявил битву за территорию ${location.name}! Битва начнется через 1 минуту.`,
         locationId,
         characterId: character.id,
       });

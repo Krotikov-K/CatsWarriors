@@ -412,6 +412,10 @@ Preferred communication style: Simple, everyday language.
   * Kисяо correctly upgraded from level 4 to level 7 with 6060 experience points
   * Fixed duplicate level-up modal issue by preventing overlapping notifications
   * Level-up detection now properly distinguishes between stat point distribution and celebration modals
+- July 23, 2025: Territory battle timer optimization:
+  * Reduced territory battle preparation time from 5 minutes to 1 minute per user request
+  * Updated battle declaration message to reflect new 1-minute timer
+  * Battles now start much faster, improving game pacing and player engagement
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP
