@@ -61,6 +61,13 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
     refetchInterval: 3000,
   });
 
+  // Automatically show combat when battle becomes active
+  useEffect(() => {
+    if (battle?.status === 'active' && territoryCombat && !showCombat) {
+      setShowCombat(true);
+    }
+  }, [battle?.status, territoryCombat, showCombat]);
+
   useEffect(() => {
     if (!battle || battle.status !== 'preparing') return;
 
@@ -112,14 +119,73 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
             </div>
             
             <div className="space-y-4">
-              <div className="text-center text-lg font-bold text-red-600">
-                ⚔️ Битва в разгаре! ⚔️
+              <div className="text-center text-lg font-bold text-red-600 animate-pulse">
+                ⚔️ МАССОВАЯ БИТВА В РАЗГАРЕ! ⚔️
               </div>
-              <div className="text-sm text-muted-foreground text-center">
-                Территориальная битва проходит в режиме реального времени. Наблюдение за боевыми действиями будет добавлено в следующем обновлении.
+              
+              {/* Live Battle Animation */}
+              <div className="bg-gradient-to-r from-red-500/10 to-blue-500/10 p-4 rounded-lg border border-red-500/20">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-yellow-400">
+                      {getClanEmoji(battle.attackingClan)} {getClanDisplayName(battle.attackingClan)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Атакующие</div>
+                    <div className="text-2xl font-bold text-red-400">{attackingCount}</div>
+                  </div>
+                  
+                  <div className="text-4xl animate-bounce">⚔️</div>
+                  
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-blue-400">
+                      {battle.defendingClan ? getClanEmoji(battle.defendingClan) : '🏞️'} 
+                      {battle.defendingClan ? getClanDisplayName(battle.defendingClan) : 'Нейтральная территория'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Защитники</div>
+                    <div className="text-2xl font-bold text-blue-400">{defendingCount}</div>
+                  </div>
+                </div>
+                
+                {/* Battle Progress Animation */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-red-400">Сила атакующих</span>
+                    <span className="text-blue-400">Сила защитников</span>
+                  </div>
+                  <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden relative">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-2000 animate-pulse"
+                      style={{ width: `${attackingCount > 0 ? Math.min(100, (attackingCount / Math.max(attackingCount + defendingCount, 1)) * 100) : 0}%` }}
+                    />
+                    <div 
+                      className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-500 to-blue-600 rounded-full transition-all duration-2000 animate-pulse"
+                      style={{ width: `${defendingCount > 0 ? Math.min(100, (defendingCount / Math.max(attackingCount + defendingCount, 1)) * 100) : 0}%` }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Live Battle Messages */}
+                <div className="mt-4 space-y-1">
+                  <div className="text-xs text-center text-yellow-400 animate-pulse">
+                    💥 Воины сражаются за контроль над территорией!
+                  </div>
+                  <div className="text-xs text-center text-orange-400">
+                    🔥 Исход решается на основе силы, уровня и здоровья участников
+                  </div>
+                  <div className="text-xs text-center text-green-400">
+                    ✨ Все участники получат 200 опыта после битвы
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-center">
-                Бой ID: {territoryCombat.id} | Ходов: {territoryCombat.currentTurn || 0}
+              
+              <div className="text-xs text-center border border-yellow-500/20 bg-yellow-500/5 p-2 rounded">
+                <div className="font-medium text-yellow-400">Территориальная битва</div>
+                <div className="text-muted-foreground">
+                  Бой ID: {territoryCombat.id} | Участников: {totalParticipants}
+                </div>
+                <div className="text-orange-400 mt-1">
+                  ⏱️ Битва завершится автоматически через несколько секунд
+                </div>
               </div>
             </div>
           </div>
