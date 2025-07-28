@@ -432,6 +432,13 @@ Preferred communication style: Simple, everyday language.
   * Enhanced battle interface showing preparation/active status and participant counts
   * Experience rewards (200 points) for all territory battle participants
   * Game events and notifications for battle declarations and completions
+- July 28, 2025: Enhanced territory battle interface display:
+  * Fixed issue where territory battles completed too quickly for players to see combat progression
+  * Enhanced TerritoryBattleModal with dynamic combat interface featuring animations and visual effects
+  * Added 3-second initial delay and 5-second turn intervals for territory battles (vs 3 seconds for regular combat)
+  * Created spectacular battle interface with clan strength visualization, progress bars, and live battle messages
+  * Territory battles now automatically display combat interface when active with proper state transitions
+  * Players can now witness epic mass battles with real-time animations and clan warfare visualization
 
 ### Target Audience & Requirements
 - **Platform**: Mobile devices only (Telegram Web App)

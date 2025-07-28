@@ -361,54 +361,64 @@ export class GameEngine {
   static async startAutoCombat(combatId: number): Promise<void> {
     console.log(`Starting auto combat for combat ID: ${combatId}`);
     
+    const combat = await storage.getCombat(combatId);
+    const isTerritory = combat?.type === "territory";
+    
+    // Territory battles get longer display time
+    const turnInterval = isTerritory ? 5000 : 3000; // 5 seconds for territory, 3 for regular
+    const initialDelay = isTerritory ? 3000 : 0; // 3 second delay before starting territory battles
+    
     let turnCount = 0;
     const maxTurns = 100; // Prevent infinite combats
     
-    // Process combat turns every 3 seconds to give client time to see updates
-    const interval = setInterval(async () => {
-      try {
-        const combat = await storage.getCombat(combatId);
-        if (!combat || combat.status !== "active") {
-          console.log(`Combat ${combatId} ended or not found, stopping auto combat`);
-          clearInterval(interval);
-          return;
-        }
-        
-        // Safety check: force end combat after too many turns
-        turnCount++;
-        if (turnCount > maxTurns) {
-          console.log(`Combat ${combatId} exceeded maximum turns (${maxTurns}), force ending`);
-          await this.endCombat(combatId);
-          clearInterval(interval);
-          return;
-        }
-        
-        await this.processCombatTurn(combatId);
-      } catch (error) {
-        console.error(`Error processing combat turn for ${combatId}:`, error);
-        // Stop combat on repeated errors to prevent infinite loops
-        clearInterval(interval);
+    // Add initial delay for territory battles to let players see the interface
+    setTimeout(() => {
+      // Process combat turns every X seconds to give client time to see updates
+      const interval = setInterval(async () => {
         try {
-          await this.endCombat(combatId);
-        } catch (endError) {
-          console.error(`Failed to end combat ${combatId} after error:`, endError);
+          const combat = await storage.getCombat(combatId);
+          if (!combat || combat.status !== "active") {
+            console.log(`Combat ${combatId} ended or not found, stopping auto combat`);
+            clearInterval(interval);
+            return;
+          }
+          
+          // Safety check: force end combat after too many turns
+          turnCount++;
+          if (turnCount > maxTurns) {
+            console.log(`Combat ${combatId} exceeded maximum turns (${maxTurns}), force ending`);
+            await this.endCombat(combatId);
+            clearInterval(interval);
+            return;
+          }
+          
+          await this.processCombatTurn(combatId);
+        } catch (error) {
+          console.error(`Error processing combat turn for ${combatId}:`, error);
+          // Stop combat on repeated errors to prevent infinite loops
+          clearInterval(interval);
+          try {
+            await this.endCombat(combatId);
+          } catch (endError) {
+            console.error(`Failed to end combat ${combatId} after error:`, endError);
+          }
         }
-      }
-    }, 3000);
-    
-    // Safety timeout: force end combat after 10 minutes
-    setTimeout(async () => {
-      try {
-        const combat = await storage.getCombat(combatId);
-        if (combat && combat.status === "active") {
-          console.log(`Combat ${combatId} timeout after 10 minutes, force ending`);
-          await this.endCombat(combatId);
+      }, turnInterval);
+      
+      // Safety timeout: force end combat after 10 minutes
+      setTimeout(async () => {
+        try {
+          const combat = await storage.getCombat(combatId);
+          if (combat && combat.status === "active") {
+            console.log(`Combat ${combatId} timeout after 10 minutes, force ending`);
+            await this.endCombat(combatId);
+          }
+        } catch (error) {
+          console.error(`Error in combat timeout for ${combatId}:`, error);
         }
-      } catch (error) {
-        console.error(`Error in combat timeout for ${combatId}:`, error);
-      }
-      clearInterval(interval);
-    }, 600000); // 10 minutes
+        clearInterval(interval);
+      }, 600000); // 10 minutes
+    }, initialDelay);
   }
 
   static calculateExperienceGain(level: number, enemyLevel: number): number {
