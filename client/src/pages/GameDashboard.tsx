@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -27,6 +27,7 @@ import TribeMembers from "@/components/TribeMembers";
 import PvPPanel from "@/components/PvPPanel";
 import DiplomacyPanel from "@/components/DiplomacyPanel";
 import TerritoryWarPanel from "@/components/TerritoryWarPanel";
+import TerritoryBattleModal from "@/components/TerritoryBattleModal";
 import OverviewPanel from "@/components/OverviewPanel";
 
 import type { Combat } from "@shared/schema";
@@ -60,6 +61,33 @@ export default function GameDashboard() {
   const [showCombatResult, setShowCombatResult] = useState(false);
   const [wasInCombat, setWasInCombat] = useState(false);
   const [lastProcessedCombatId, setLastProcessedCombatId] = useState<number | null>(null);
+
+  // Territory battle tracking
+  const [showTerritoryBattle, setShowTerritoryBattle] = useState(false);
+  const [activeTerritoryBattle, setActiveTerritoryBattle] = useState<any>(null);
+
+  // Check for any active territory combats that this character is participating in
+  const { data: battleCombats } = useQuery({
+    queryKey: ['/api/territory/active-combats', gameState?.character?.id],
+    queryFn: async () => {
+      if (!gameState?.character?.id) return [];
+      // Check multiple battle IDs to find any active combat
+      const responses = await Promise.all([
+        fetch(`/api/territory/combat/14`).then(r => r.json()).catch(() => null),
+        fetch(`/api/territory/combat/15`).then(r => r.json()).catch(() => null),
+        fetch(`/api/territory/combat/16`).then(r => r.json()).catch(() => null),
+        fetch(`/api/territory/combat/17`).then(r => r.json()).catch(() => null),
+        fetch(`/api/territory/combat/18`).then(r => r.json()).catch(() => null),
+      ]);
+      return responses.filter(combat => 
+        combat && 
+        combat.status === 'active' && 
+        combat.participants.includes(gameState.character.id)
+      );
+    },
+    enabled: !!gameState?.character?.id,
+    refetchInterval: 3000,
+  });
 
   // Track level ups and unspent stat points
   useEffect(() => {
@@ -115,6 +143,29 @@ export default function GameDashboard() {
       setPreviousLevel(currentLevel);
     }
   }, [gameState?.character?.level, gameState?.character?.unspentStatPoints, previousLevel, showLevelUp]);
+
+  // Auto-show territory battle interface when character is in active combat
+  useEffect(() => {
+    if (battleCombats && battleCombats.length > 0 && !showTerritoryBattle) {
+      const activeCombat = battleCombats[0];
+      console.log('*** TERRITORY BATTLE COMBAT DETECTED ***', activeCombat);
+      
+      // Set the active battle data to show the modal
+      setActiveTerritoryBattle({
+        id: activeCombat.territoryBattleId,
+        status: 'active',
+        locationId: activeCombat.locationId,
+        participants: activeCombat.participants
+      });
+      setShowTerritoryBattle(true);
+    }
+    
+    // Hide territory battle interface when no active combats
+    if ((!battleCombats || battleCombats.length === 0) && showTerritoryBattle) {
+      setShowTerritoryBattle(false);
+      setActiveTerritoryBattle(null);
+    }
+  }, [battleCombats, showTerritoryBattle]);
 
   // Handle WebSocket messages for real-time updates
   useEffect(() => {
@@ -702,6 +753,19 @@ export default function GameDashboard() {
           characterName={levelUpData.characterName}
           newLevel={levelUpData.newLevel}
           baseStats={levelUpData.baseStats}
+        />
+      )}
+
+      {/* Territory Battle Modal */}
+      {showTerritoryBattle && activeTerritoryBattle && gameState?.character && (
+        <TerritoryBattleModal
+          battle={activeTerritoryBattle}
+          isOpen={showTerritoryBattle}
+          onClose={() => {
+            setShowTerritoryBattle(false);
+            setActiveTerritoryBattle(null);
+          }}
+          currentCharacter={gameState.character}
         />
       )}
     </div>

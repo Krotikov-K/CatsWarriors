@@ -57,16 +57,16 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
   const { data: territoryCombat } = useQuery({
     queryKey: ['/api/territory/combat', battle?.id],
     queryFn: () => fetch(`/api/territory/combat/${battle?.id}`).then(res => res.json()),
-    enabled: !!battle && isOpen && battle.status === 'active',
+    enabled: !!battle && isOpen,
     refetchInterval: 3000,
   });
 
-  // Automatically show combat when battle becomes active
+  // Automatically show combat when there's an active territory combat
   useEffect(() => {
-    if (battle?.status === 'active' && territoryCombat && !showCombat) {
+    if (territoryCombat && territoryCombat.status === 'active' && !showCombat) {
       setShowCombat(true);
     }
-  }, [battle?.status, territoryCombat, showCombat]);
+  }, [territoryCombat, showCombat]);
 
   useEffect(() => {
     if (!battle || battle.status !== 'preparing') return;
