@@ -25,6 +25,7 @@ interface MapLocationProps {
   canMoveTo: boolean;
   playerCount: number;
   ownerClan?: string;
+  hasBattle?: boolean;
   onClick: () => void;
 }
 
@@ -39,6 +40,7 @@ function MapLocation({
   canMoveTo,
   playerCount,
   ownerClan,
+  hasBattle,
   onClick 
 }: MapLocationProps) {
   const getLocationColor = () => {
@@ -92,6 +94,13 @@ function MapLocation({
           </div>
         </div>
       )}
+      {/* Battle indicator */}
+      {hasBattle && (
+        <div className="absolute -top-1 -left-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full z-10 animate-pulse">
+          ⚔️
+        </div>
+      )}
+
       {/* Player count for all locations */}
       {playerCount > 0 && (
         <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs md:text-sm lg:text-base px-1 md:px-2 py-0.5 md:py-1 rounded-full z-10 min-w-[1.25rem] md:min-w-[1.5rem] lg:min-w-[2rem] text-center">
@@ -115,6 +124,11 @@ export default function MapView({
   // Fetch territory ownership data
   const { data: territoryOwnership } = useQuery<{ territories: Array<{ locationId: number; ownerClan: string }> }>({
     queryKey: ['/api/territory/ownership'],
+  });
+
+  // Fetch active territory battles
+  const { data: battlesData } = useQuery<{ battles: Array<{ locationId: number; status: string }> }>({
+    queryKey: ['/api/territory/battles'],
   });
 
   const moveCharacterMutation = useMutation({
@@ -146,6 +160,13 @@ export default function MapView({
 
   const getPlayerCountForLocation = (locationId: number) => {
     return playersInLocation.filter(p => p.currentLocationId === locationId).length;
+  };
+
+  const hasActiveBattle = (locationId: number) => {
+    return battlesData?.battles?.some(battle => 
+      battle.locationId === locationId && 
+      (battle.status === 'preparing' || battle.status === 'active')
+    ) || false;
   };
 
   const getCurrentLocationData = () => {
@@ -295,6 +316,7 @@ export default function MapView({
                   canMoveTo={canMoveToLocation(loc.id)}
                   playerCount={getPlayerCountForLocation(loc.id)}
                   ownerClan={territoryOwnership?.territories?.find(t => t.locationId === loc.id)?.ownerClan}
+                  hasBattle={hasActiveBattle(loc.id)}
                   onClick={() => handleLocationClick(loc.id)}
                 />
               ))}

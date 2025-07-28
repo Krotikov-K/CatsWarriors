@@ -475,7 +475,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Use the first character for now
-      const character = characters[0];
+      let character = characters[0];
+
+      // CRITICAL: Auto level up check - Level = floor(experience/1000) + 1
+      const expectedLevel = Math.floor(character.experience / 1000) + 1;
+      console.log(`AUTO-LEVEL CHECK: ${character.name} Level ${character.level}, Exp ${character.experience} -> Expected Level ${expectedLevel}`);
+      
+      if (expectedLevel > character.level) {
+        const levelsGained = expectedLevel - character.level;
+        const statPointsGained = levelsGained * 5;
+        
+        console.log(`LEVEL UP: ${character.name} advancing ${levelsGained} levels (+${statPointsGained} stat points)`);
+        
+        // Update character in database
+        const updatedCharacter = await storage.updateCharacter(character.id, {
+          level: expectedLevel,
+          unspentStatPoints: (character.unspentStatPoints || 0) + statPointsGained
+        });
+        
+        if (updatedCharacter) {
+          character = updatedCharacter;
+          console.log(`LEVEL UP COMPLETE: ${character.name} is now level ${character.level} with ${character.unspentStatPoints} unspent stat points`);
+        }
+      }
       
       // Update character's activity timestamp and set online
       await storage.setCharacterOnline(character.id, true);
@@ -1190,25 +1212,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let character = characters[0];
 
-      // CRITICAL: Auto level up check
+      // CRITICAL: Auto level up check - Level = floor(experience/1000) + 1
       const expectedLevel = Math.floor(character.experience / 1000) + 1;
-      console.log(`=== AUTO-LEVEL CHECK: ${character.name} (Level ${character.level}, Exp ${character.experience}) -> Expected Level ${expectedLevel} ===`);
+      console.log(`AUTO-LEVEL CHECK: ${character.name} Level ${character.level}, Exp ${character.experience} -> Expected Level ${expectedLevel}`);
       
       if (expectedLevel > character.level) {
         const levelsGained = expectedLevel - character.level;
         const statPointsGained = levelsGained * 5;
         
-        console.log(`=== LEVEL UP: ${character.name} advancing from level ${character.level} to ${expectedLevel} (+${statPointsGained} stat points) ===`);
+        console.log(`LEVEL UP: ${character.name} advancing ${levelsGained} levels (+${statPointsGained} stat points)`);
         
         // Update character in database
-        await storage.updateCharacter(character.id, {
+        const updatedCharacter = await storage.updateCharacter(character.id, {
           level: expectedLevel,
-          unspentStatPoints: character.unspentStatPoints + statPointsGained
+          unspentStatPoints: (character.unspentStatPoints || 0) + statPointsGained
         });
         
-        // Get updated character data
-        character = await storage.getCharacter(character.id) || character;
-        console.log(`=== LEVEL UP COMPLETE: ${character.name} is now level ${character.level} with ${character.unspentStatPoints} unspent stat points ===`);
+        if (updatedCharacter) {
+          character = updatedCharacter;
+          console.log(`LEVEL UP COMPLETE: ${character.name} is now level ${character.level} with ${character.unspentStatPoints} unspent stat points`);
+        }
       } else {
         console.log(`=== NO LEVEL UP NEEDED: ${character.name} has correct level ${character.level} for ${character.experience} experience ===`);
       }
@@ -2231,6 +2254,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get territory ownership error:", error);
       res.status(500).json({ message: "Failed to get territory ownership" });
+    }
+  });
+
+  // Territory battles status endpoint
+  app.get("/api/territory/battles", async (req, res) => {
+    try {
+      const battles = await storage.getActiveTerritoryBattles();
+      res.json({ battles });
+    } catch (error) {
+      console.error("Get territory battles error:", error);
+      res.status(500).json({ message: "Failed to get territory battles" });
     }
   });
 
