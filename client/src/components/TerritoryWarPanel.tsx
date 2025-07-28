@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import TerritoryBattleModal from './TerritoryBattleModal';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface TerritoryBattle {
   id: number;
@@ -45,6 +46,9 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   const queryClient = useQueryClient();
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [selectedBattle, setSelectedBattle] = useState<TerritoryBattle | null>(null);
+  
+  // WebSocket for real-time updates
+  const { lastMessage } = useWebSocket(character?.id);
 
   // Fetch clan influence
   const { data: influence } = useQuery<ClanInfluence>({
@@ -62,6 +66,30 @@ const TerritoryWarPanel: React.FC<TerritoryWarPanelProps> = ({ character, locati
   const { data: ownershipData } = useQuery<{ territories: TerritoryOwnership[] }>({
     queryKey: ['/api/territory/ownership'],
   });
+
+  // Handle WebSocket messages for real-time updates
+  useEffect(() => {
+    if (!lastMessage) return;
+
+    if (lastMessage.type === 'territory_battle_completed') {
+      // Refresh all territory-related data when battle completes
+      queryClient.invalidateQueries({ queryKey: [`/api/territory/battles`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/territory/ownership'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/territory/influence/${character.clan}`] });
+      
+      // Show toast notification if it's related to current location
+      if (lastMessage.data?.locationId === location.id) {
+        toast({
+          title: 'Битва завершена!',
+          description: `Территория ${location.name} захвачена кланом ${lastMessage.data.winner === 'thunder' ? 'Грозовое племя ⚡' : 'Речное племя 🌊'}`,
+        });
+        
+        // Close battle modal if it was open
+        setShowBattleModal(false);
+        setSelectedBattle(null);
+      }
+    }
+  }, [lastMessage, queryClient, character.clan, location.id, location.name, toast]);
 
   const declareBattleMutation = useMutation({
     mutationFn: async (data: { locationId: number; declaredBy: number }) => {

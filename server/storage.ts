@@ -850,6 +850,9 @@ export class MemStorage implements IStorage {
 
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
+  // In-memory storage for real-time combat
+  private memCombats: Combat[] = [];
+  private nextCombatId = 1;
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -2050,6 +2053,16 @@ export class DatabaseStorage implements IStorage {
             await this.setTerritoryOwnership(battle.locationId, character.clan, character.id);
           }
           
+          // Broadcast battle completion to all clients
+          const { broadcastToAll } = await import("./routes");
+          broadcastToAll({
+            type: 'territory_battle_completed',
+            battleId: battle.id,
+            winner: character.clan,
+            locationId: battle.locationId,
+            participantName: character.name
+          });
+          
           completedBattles.push(battle);
         }
         continue;
@@ -2184,14 +2197,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTerritoryCombat(battleId: number): Promise<Combat | undefined> {
-    // Territory combats are stored with a special reference to the battle ID
-    return this.getMemStorage().combats.find(combat => 
+    // Territory combats are stored in memory with reference to battle ID
+    return this.memCombats.find(combat => 
       combat.territoryBattleId === battleId
     );
   }
   
   async createTerritoryCombat(battleId: number, participants: number[], locationId: number): Promise<Combat> {
-    const combatId = this.getMemStorage().nextCombatId++;
+    const combatId = this.nextCombatId++;
     const combat: Combat = {
       id: combatId,
       participants,
@@ -2205,7 +2218,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
     };
     
-    this.getMemStorage().combats.push(combat);
+    this.memCombats.push(combat);
     console.log(`Created territory combat ${combatId} for battle ${battleId} with participants:`, participants);
     
     return combat;
