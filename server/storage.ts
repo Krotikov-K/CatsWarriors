@@ -1999,6 +1999,23 @@ export class DatabaseStorage implements IStorage {
         console.log(`Starting territory combat ${combat.id} for battle ${battle.id}`);
         const { GameEngine } = await import("./services/gameEngine");
         GameEngine.startAutoCombat(combat.id);
+      } else if (participantIds.length === 1) {
+        // Auto-win for single participant
+        console.log(`Auto-completing territory battle ${battle.id} - only one participant`);
+        const character = await this.getCharacter(participantIds[0]);
+        if (character) {
+          await this.completeTerritoryBattle(battle.id, character.clan);
+          
+          // Award experience to single participant
+          await this.updateCharacter(character.id, { 
+            experience: character.experience + 200 
+          });
+          
+          // Capture territory if neutral
+          if (!battle.defendingClan) {
+            await this.setTerritoryOwnership(battle.locationId, character.clan, character.id);
+          }
+        }
       }
     }
 
@@ -2014,6 +2031,30 @@ export class DatabaseStorage implements IStorage {
     const completedBattles = [];
     
     for (const battle of activeBattles) {
+      const participantIds = JSON.parse(battle.participants);
+      
+      // Check for single participant battles and auto-complete them
+      if (participantIds.length === 1) {
+        console.log(`Auto-completing territory battle ${battle.id} - only one participant`);
+        const character = await this.getCharacter(participantIds[0]);
+        if (character) {
+          await this.completeTerritoryBattle(battle.id, character.clan);
+          
+          // Award experience to single participant
+          await this.updateCharacter(character.id, { 
+            experience: character.experience + 200 
+          });
+          
+          // Capture territory if neutral
+          if (!battle.defendingClan) {
+            await this.setTerritoryOwnership(battle.locationId, character.clan, character.id);
+          }
+          
+          completedBattles.push(battle);
+        }
+        continue;
+      }
+      
       // Check if this is a real-time combat battle
       const territoryBattleCombat = await this.getTerritoryCombat(battle.id);
       

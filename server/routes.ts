@@ -2259,6 +2259,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Process territory battles - check for completion and auto-complete single participant battles
+  app.post("/api/territory/process-battles", async (req: Request, res: Response) => {
+    try {
+      console.log("Processing territory battles...");
+      const completedBattles = await storage.processTerritoryBattleResults();
+      console.log(`Processed ${completedBattles.length} territory battles`);
+      
+      res.json({ 
+        message: `Processed ${completedBattles.length} battles`,
+        completedBattles: completedBattles.length
+      });
+    } catch (error) {
+      console.error("Error processing territory battles:", error);
+      res.status(500).json({ error: "Failed to process territory battles" });
+    }
+  });
+
   return httpServer;
 }
 

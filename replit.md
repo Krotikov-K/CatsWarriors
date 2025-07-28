@@ -416,6 +416,13 @@ Preferred communication style: Simple, everyday language.
   * Reduced territory battle preparation time from 5 minutes to 1 minute per user request
   * Updated battle declaration message to reflect new 1-minute timer
   * Battles now start much faster, improving game pacing and player engagement
+- July 28, 2025: Single participant territory battle auto-completion:
+  * Fixed critical bug where territory battles with only one participant would remain active indefinitely
+  * Added automatic completion logic for single-participant battles in processTerritoryBattleResults()
+  * Single participants now automatically win territory battles and receive 200 experience points
+  * Neutral territories are automatically captured by the single participant's clan
+  * Created manual /api/territory/process-battles endpoint for triggering battle processing
+  * Territory warfare system now handles edge cases gracefully
 - July 22, 2025: Complete territory warfare system implementation:
   * Full mass battle system supporting unlimited participants (crowd vs crowd)
   * Automatic battle resolution based on participant stats, level, and HP
