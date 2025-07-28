@@ -46,6 +46,8 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showCombat, setShowCombat] = useState<boolean>(false);
+  const [combatMessages, setCombatMessages] = useState<string[]>([]);
+  const [teamCounts, setTeamCounts] = useState<{thunder: number, river: number}>({thunder: 0, river: 0});
 
   const { data: battleParticipants } = useQuery({
     queryKey: ['/api/territory/battle-participants', battle?.id],
@@ -67,6 +69,40 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
       setShowCombat(true);
     }
   }, [territoryCombat, showCombat]);
+
+  // WebSocket listener for combat messages
+  useEffect(() => {
+    if (!battle || !isOpen) return;
+
+    const handleWebSocketMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'territory_battle_combat' && data.battleId === battle.id) {
+        setCombatMessages(prev => [...prev, ...data.messages]);
+        setTeamCounts({
+          thunder: data.thunderCount,
+          river: data.riverCount
+        });
+        setShowCombat(true);
+      }
+      
+      if (data.type === 'territory_battle_ended' && data.battleId === battle.id) {
+        setShowCombat(false);
+        onClose(); // Close modal when battle ends
+      }
+    };
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+    
+    socket.addEventListener('message', handleWebSocketMessage);
+    
+    return () => {
+      socket.removeEventListener('message', handleWebSocketMessage);
+      socket.close();
+    };
+  }, [battle, isOpen, onClose]);
 
   useEffect(() => {
     if (!battle || battle.status !== 'preparing') return;

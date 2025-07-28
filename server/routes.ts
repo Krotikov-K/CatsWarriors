@@ -2077,7 +2077,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Process battle state transitions
       const startedBattles = await storage.startActiveBattles();
-      const completedBattles = await storage.processTerritoryBattleResults();
+
+      // Start combat for newly active battles
+      for (const battle of startedBattles) {
+        console.log(`Starting territory battle combat for battle ${battle.id}`);
+        // Start the new turn-based combat system
+        setTimeout(() => {
+          GameEngine.processTerritoryBattleCombat(battle.id);
+        }, 3000); // 3 second delay before first turn
+        
+        // Set up interval to process combat turns every 5 seconds
+        const combatInterval = setInterval(async () => {
+          const currentBattle = await storage.getTerritoryBattle(battle.id);
+          if (!currentBattle || currentBattle.status !== 'active') {
+            clearInterval(combatInterval);
+            return;
+          }
+          await GameEngine.processTerritoryBattleCombat(battle.id);
+        }, 5000);
+        
+        // Safety timeout - end battle after 10 minutes
+        setTimeout(() => {
+          clearInterval(combatInterval);
+        }, 600000);
+      }
       
       // Broadcast battle updates if any battles changed state
       for (const battle of startedBattles) {
@@ -2085,14 +2108,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'territory_battle_started',
           battle,
           message: `Битва за территорию началась!`
-        });
-      }
-      
-      for (const battle of completedBattles) {
-        broadcastToAll({
-          type: 'territory_battle_completed',
-          battle,
-          message: `Битва завершена! Победил: ${battle.winner}`
         });
       }
       

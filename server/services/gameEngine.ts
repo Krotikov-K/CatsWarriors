@@ -3,6 +3,239 @@ import { type Character, type NPC, type DerivedStats, type CombatLogEntry } from
 
 export class GameEngine {
   
+  // Process territory battle with turn-based combat between two teams
+  static async processTerritoryBattleCombat(battleId: number): Promise<void> {
+    const battle = await storage.getTerritoryBattle(battleId);
+    if (!battle || battle.status !== 'active') return;
+
+    console.log(`*** PROCESSING TERRITORY BATTLE COMBAT ${battleId} ***`);
+    
+    try {
+      // Parse participants from JSON string
+      const participants = typeof battle.participants === 'string' 
+        ? JSON.parse(battle.participants) 
+        : battle.participants;
+      
+      if (!Array.isArray(participants) || participants.length === 0) {
+        console.log(`No participants found for battle ${battleId}`);
+        return;
+      }
+
+      // Get all character data
+      const allCharacters = await Promise.all(
+        participants.map(id => storage.getCharacter(id))
+      );
+      
+      // Filter valid characters with HP > 1 (territory battles are non-lethal)
+      const aliveCharacters = allCharacters.filter(char => 
+        char && char.currentHp > 1
+      ) as Character[];
+
+      console.log(`Battle ${battleId}: ${aliveCharacters.length} alive participants`);
+      
+      if (aliveCharacters.length === 0) {
+        await this.endTerritoryBattle(battleId, 'no_survivors');
+        return;
+      }
+
+      // Group by clans
+      const thunderTeam = aliveCharacters.filter(char => char.clan === 'thunder');
+      const riverTeam = aliveCharacters.filter(char => char.clan === 'river');
+      
+      console.log(`Teams: Thunder ${thunderTeam.length}, River ${riverTeam.length}`);
+      
+      // Check if only one clan remains
+      if (thunderTeam.length === 0) {
+        await this.endTerritoryBattle(battleId, 'river');
+        return;
+      }
+      if (riverTeam.length === 0) {
+        await this.endTerritoryBattle(battleId, 'thunder');
+        return;
+      }
+
+      // Execute one combat turn for each team
+      await this.executeTeamCombatTurn(battleId, thunderTeam, riverTeam);
+      
+    } catch (error) {
+      console.error(`Error processing territory battle combat ${battleId}:`, error);
+    }
+  }
+
+  // Execute combat turn between two teams
+  static async executeTeamCombatTurn(battleId: number, thunderTeam: Character[], riverTeam: Character[]): Promise<void> {
+    console.log(`*** TEAM COMBAT TURN: Thunder ${thunderTeam.length} vs River ${riverTeam.length} ***`);
+    
+    // Each character attacks a random enemy from the opposing team
+    const combatMessages: string[] = [];
+
+    // Thunder team attacks River team
+    for (const attacker of thunderTeam) {
+      if (riverTeam.length === 0) break;
+      
+      const target = riverTeam[Math.floor(Math.random() * riverTeam.length)];
+      const result = await this.processTeamAttack(attacker, target);
+      combatMessages.push(result.message);
+      
+      // Remove defeated characters (HP <= 1)
+      if (target.currentHp <= 1) {
+        const index = riverTeam.indexOf(target);
+        if (index > -1) riverTeam.splice(index, 1);
+        console.log(`${target.name} defeated and removed from River team`);
+      }
+    }
+
+    // River team attacks Thunder team
+    for (const attacker of riverTeam) {
+      if (thunderTeam.length === 0) break;
+      
+      const target = thunderTeam[Math.floor(Math.random() * thunderTeam.length)];
+      const result = await this.processTeamAttack(attacker, target);
+      combatMessages.push(result.message);
+      
+      // Remove defeated characters (HP <= 1)
+      if (target.currentHp <= 1) {
+        const index = thunderTeam.indexOf(target);
+        if (index > -1) thunderTeam.splice(index, 1);
+        console.log(`${target.name} defeated and removed from Thunder team`);
+      }
+    }
+
+    // Broadcast combat messages to all participants
+    const battle = await storage.getTerritoryBattle(battleId);
+    if (battle) {
+      const participants = typeof battle.participants === 'string' 
+        ? JSON.parse(battle.participants) 
+        : battle.participants;
+      
+      // Send combat updates via WebSocket
+      const broadcastToAll = (global as any).broadcastToAll;
+      if (broadcastToAll) {
+        broadcastToAll({
+          type: 'territory_battle_combat',
+          battleId,
+          messages: combatMessages,
+          thunderCount: thunderTeam.length,
+          riverCount: riverTeam.length
+        });
+      }
+    }
+
+    console.log(`Combat turn complete: Thunder ${thunderTeam.length}, River ${riverTeam.length}`);
+  }
+
+  // Process attack between two characters in team combat
+  static async processTeamAttack(attacker: Character, target: Character): Promise<{ message: string; damage: number }> {
+    const attackerStats = this.calculateDerivedStats(attacker);
+    const targetStats = this.calculateDerivedStats(target);
+    
+    // Calculate damage
+    const baseDamage = Math.floor(
+      Math.random() * (attackerStats.damage.max - attackerStats.damage.min + 1)
+    ) + attackerStats.damage.min;
+    
+    // Check for dodge
+    if (Math.random() * 100 < targetStats.dodgeChance) {
+      const attackerIcon = attacker.clan === 'thunder' ? '⚡' : '🌊';
+      const targetIcon = target.clan === 'thunder' ? '⚡' : '🌊';
+      return {
+        message: `${attacker.name} (${attackerIcon}) атакует ${target.name} (${targetIcon}), но тот уворачивается!`,
+        damage: 0
+      };
+    }
+    
+    // Check for critical hit
+    let finalDamage = baseDamage;
+    let isCritical = false;
+    if (Math.random() * 100 < attackerStats.critChance) {
+      finalDamage = Math.floor(baseDamage * 1.5);
+      isCritical = true;
+    }
+    
+    // Check for block
+    if (Math.random() * 100 < targetStats.blockChance) {
+      finalDamage = Math.floor(finalDamage * 0.5);
+    }
+    
+    // Apply damage
+    const newHp = Math.max(1, target.currentHp - finalDamage); // Minimum 1 HP
+    await storage.updateCharacter(target.id, { currentHp: newHp });
+    target.currentHp = newHp;
+    
+    const clanIcon = attacker.clan === 'thunder' ? '⚡' : '🌊';
+    const targetIcon = target.clan === 'thunder' ? '⚡' : '🌊';
+    const critText = isCritical ? ' КРИТИЧЕСКИЙ УДАР!' : '';
+    
+    return {
+      message: `${attacker.name} (${clanIcon}) наносит ${finalDamage} урона ${target.name} (${targetIcon})${critText} [${target.currentHp} HP]`,
+      damage: finalDamage
+    };
+  }
+
+  // End territory battle and award experience
+  static async endTerritoryBattle(battleId: number, winner: string): Promise<void> {
+    const battle = await storage.getTerritoryBattle(battleId);
+    if (!battle) return;
+
+    console.log(`*** ENDING TERRITORY BATTLE ${battleId}: Winner = ${winner} ***`);
+    
+    try {
+      const participants = typeof battle.participants === 'string' 
+        ? JSON.parse(battle.participants) 
+        : battle.participants;
+      
+      // Award experience to all participants
+      const expReward = 200;
+      for (const participantId of participants) {
+        const character = await storage.getCharacter(participantId);
+        if (character) {
+          const newExp = character.experience + expReward;
+          await storage.updateCharacter(participantId, { experience: newExp });
+          console.log(`${character.name} received ${expReward} experience (total: ${newExp})`);
+        }
+      }
+
+      // Update territory ownership if there's a clear winner
+      if (winner === 'thunder' || winner === 'river') {
+        await storage.captureTerritoryAutomatically(battle.locationId, winner, participants[0]);
+        
+        // Get location data
+        const { LOCATIONS_DATA } = await import("@shared/schema");
+        const location = LOCATIONS_DATA.find(loc => loc.id === battle.locationId);
+        
+        if (location) {
+          // Create game event
+          await storage.createGameEvent({
+            type: "territory_captured",
+            message: `Клан ${winner === 'thunder' ? 'Грозового племени' : 'Речного племени'} захватил ${location.name} после эпической битвы!`,
+            locationId: battle.locationId,
+            characterId: participants[0],
+          });
+        }
+      }
+
+      // Mark battle as completed
+      await storage.updateTerritoryBattle(battleId, { 
+        status: 'completed',
+        endTime: new Date()
+      });
+
+      // Broadcast battle end
+      const broadcastToAll = (global as any).broadcastToAll;
+      if (broadcastToAll) {
+        broadcastToAll({
+          type: 'territory_battle_ended',
+          battleId,
+          winner,
+          expAwarded: expReward
+        });
+      }
+
+    } catch (error) {
+      console.error(`Error ending territory battle ${battleId}:`, error);
+    }
+  }
+  
   static calculateDerivedStats(character: Character | NPC): DerivedStats {
     const { strength, agility, intelligence, endurance } = character;
     
