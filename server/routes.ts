@@ -2308,6 +2308,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get territory battle participants with clan breakdown
+  app.get("/api/territory/battle-participants/:battleId", async (req: Request, res: Response) => {
+    try {
+      const battleId = parseInt(req.params.battleId);
+      const battle = await storage.getTerritoryBattle(battleId);
+      
+      if (!battle) {
+        return res.status(404).json({ error: "Battle not found" });
+      }
+      
+      const participantIds = JSON.parse(battle.participants);
+      const participants = [];
+      
+      for (const id of participantIds) {
+        const character = await storage.getCharacter(id);
+        if (character) {
+          participants.push({
+            id: character.id,
+            name: character.name,
+            clan: character.clan,
+            level: character.level,
+            hp: character.currentHp,
+            maxHp: character.maxHp,
+            gender: character.gender
+          });
+        }
+      }
+      
+      const attacking = participants.filter(p => p.clan === battle.attackingClan);
+      const defending = participants.filter(p => p.clan === battle.defendingClan);
+      
+      res.json({
+        attacking,
+        defending,
+        total: participants.length
+      });
+    } catch (error) {
+      console.error("Error getting battle participants:", error);
+      res.status(500).json({ error: "Failed to get battle participants" });
+    }
+  });
+
   // Process territory battles - check for completion and auto-complete single participant battles
   app.post("/api/territory/process-battles", async (req: Request, res: Response) => {
     try {

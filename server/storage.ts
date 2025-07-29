@@ -145,6 +145,7 @@ export interface IStorage {
   getActiveTerritoryBattles(locationId?: number): Promise<TerritoryBattle[]>;
   joinTerritoryBattle(battleId: number, characterId: number): Promise<TerritoryBattle>;
   completeTerritoryBattle(battleId: number, winner: string): Promise<TerritoryBattle>;
+  updateTerritoryBattle(id: number, updates: Partial<TerritoryBattle>): Promise<TerritoryBattle>;
 }
 
 export class MemStorage implements IStorage {
@@ -840,6 +841,10 @@ export class MemStorage implements IStorage {
   }
 
   async completeTerritoryBattle(battleId: number, winner: string): Promise<TerritoryBattle> {
+    return this.declareTerritoryBattle(1, "thunder", 1);
+  }
+
+  async updateTerritoryBattle(id: number, updates: Partial<TerritoryBattle>): Promise<TerritoryBattle> {
     return this.declareTerritoryBattle(1, "thunder", 1);
   }
 
@@ -1972,6 +1977,25 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return updated;
+  }
+
+  async updateTerritoryBattle(id: number, updates: Partial<TerritoryBattle>): Promise<TerritoryBattle> {
+    const [updated] = await db
+      .update(territoryBattles)
+      .set(updates)
+      .where(eq(territoryBattles.id, id))
+      .returning();
+      
+    return updated;
+  }
+
+  async getTerritoryBattles(): Promise<TerritoryBattle[]> {
+    return await db.select().from(territoryBattles).orderBy(desc(territoryBattles.createdAt));
+  }
+
+  async createTerritoryBattle(battle: InsertTerritoryBattle): Promise<TerritoryBattle> {
+    const [newBattle] = await db.insert(territoryBattles).values(battle).returning();
+    return newBattle;
   }
 
   async startActiveBattles(): Promise<TerritoryBattle[]> {
