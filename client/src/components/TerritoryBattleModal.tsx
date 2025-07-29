@@ -65,8 +65,12 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
 
   // Automatically show combat when there's an active territory combat
   useEffect(() => {
-    if (territoryCombat && territoryCombat.status === 'active' && !showCombat) {
+    if (territoryCombat && !territoryCombat.error && territoryCombat.status === 'active' && !showCombat) {
       setShowCombat(true);
+    }
+    // If no active combat found, ensure combat view is hidden
+    if (territoryCombat && territoryCombat.error && showCombat) {
+      setShowCombat(false);
     }
   }, [territoryCombat, showCombat]);
 
@@ -130,7 +134,7 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
   if (!battle) return null;
 
   // Show combat interface if combat is active and user wants to watch
-  if (showCombat && territoryCombat) {
+  if (showCombat && territoryCombat && !territoryCombat.error) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
