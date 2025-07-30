@@ -164,22 +164,31 @@ export default function GameDashboard() {
     if (territoryBattleCombat && territoryBattleCombat.status === 'active' && !showTerritoryBattle) {
       console.log('*** TERRITORY BATTLE COMBAT DETECTED ***', territoryBattleCombat);
       
-      // Set the active battle data to show the modal
-      setActiveTerritoryBattle({
-        id: territoryBattleCombat.territoryBattleId,
-        status: 'active',
-        locationId: territoryBattleCombat.locationId,
-        participants: territoryBattleCombat.participants
-      });
-      setShowTerritoryBattle(true);
+      // Check if current character is participating in this combat
+      const isParticipating = territoryBattleCombat.participants.includes(gameState?.character?.id);
+      
+      if (isParticipating) {
+        // Set the active battle data to show the modal
+        setActiveTerritoryBattle({
+          id: territoryBattleCombat.territoryBattleId,
+          status: 'active',
+          locationId: territoryBattleCombat.locationId,
+          participants: territoryBattleCombat.participants,
+          combatId: territoryBattleCombat.id
+        });
+        setShowTerritoryBattle(true);
+        
+        // Switch to combat-like display automatically
+        setActiveTab('overview');
+      }
     }
     
-    // Hide territory battle interface when no active combats
-    if (!territoryBattleCombat && showTerritoryBattle) {
+    // Hide territory battle interface when no active combats or character not participating
+    if ((!territoryBattleCombat || !territoryBattleCombat.participants.includes(gameState?.character?.id)) && showTerritoryBattle) {
       setShowTerritoryBattle(false);
       setActiveTerritoryBattle(null);
     }
-  }, [territoryBattleCombat, showTerritoryBattle]);
+  }, [territoryBattleCombat, showTerritoryBattle, gameState?.character?.id]);
 
   // Handle WebSocket messages for real-time updates
   useEffect(() => {
