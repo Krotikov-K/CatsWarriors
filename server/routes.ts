@@ -2075,7 +2075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/territory/battles", async (req: Request, res: Response) => {
     try {
-      // Process battle state transitions
+      // Always check and process battle state transitions on every request
       const startedBattles = await storage.startActiveBattles();
 
       // Start combat for newly active battles
@@ -2269,6 +2269,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get territory ownership error:", error);
       res.status(500).json({ message: "Failed to get territory ownership" });
+    }
+  });
+
+  // Get active territory combat for character's location
+  app.get("/api/territory/combat-for-location/:locationId", async (req: Request, res: Response) => {
+    try {
+      const locationId = parseInt(req.params.locationId);
+      
+      // Find active battle at this location
+      const activeBattles = await storage.getAllActiveBattles();
+      const locationBattle = activeBattles.find(b => 
+        b.locationId === locationId && b.status === 'active'
+      );
+      
+      if (!locationBattle) {
+        return res.status(404).json({ error: "No active combat found for this location" });
+      }
+      
+      // Get the territory combat
+      const combat = await storage.getTerritoryCombat(locationBattle.id);
+      
+      if (!combat) {
+        return res.status(404).json({ error: "No combat found for this battle" });
+      }
+      
+      res.json(combat);
+    } catch (error) {
+      console.error("Get territory combat for location error:", error);
+      res.status(500).json({ message: "Failed to get territory combat" });
     }
   });
 

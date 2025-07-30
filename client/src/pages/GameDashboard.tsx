@@ -66,27 +66,21 @@ export default function GameDashboard() {
   const [showTerritoryBattle, setShowTerritoryBattle] = useState(false);
   const [activeTerritoryBattle, setActiveTerritoryBattle] = useState<any>(null);
 
-  // Check for any active territory combats that this character is participating in
-  const { data: battleCombats } = useQuery({
-    queryKey: ['/api/territory/active-combats', gameState?.character?.id],
+  // Query for active territory battle combat at character's location
+  const { data: territoryBattleCombat } = useQuery({
+    queryKey: ['/api/territory/combat-for-location', gameState?.character?.currentLocationId],
     queryFn: async () => {
-      if (!gameState?.character?.id) return [];
-      // Check multiple battle IDs to find any active combat
-      const responses = await Promise.all([
-        fetch(`/api/territory/combat/14`).then(r => r.json()).catch(() => null),
-        fetch(`/api/territory/combat/15`).then(r => r.json()).catch(() => null),
-        fetch(`/api/territory/combat/16`).then(r => r.json()).catch(() => null),
-        fetch(`/api/territory/combat/17`).then(r => r.json()).catch(() => null),
-        fetch(`/api/territory/combat/18`).then(r => r.json()).catch(() => null),
-      ]);
-      return responses.filter(combat => 
-        combat && 
-        combat.status === 'active' && 
-        combat.participants.includes(gameState.character.id)
-      );
+      if (!gameState?.character?.currentLocationId) return null;
+      try {
+        const response = await fetch(`/api/territory/combat-for-location/${gameState.character.currentLocationId}`);
+        if (!response.ok) return null;
+        return await response.json();
+      } catch {
+        return null;
+      }
     },
-    enabled: !!gameState?.character?.id,
-    refetchInterval: 3000,
+    enabled: !!gameState?.character?.currentLocationId,
+    refetchInterval: 2000,
   });
 
   // Track level ups and unspent stat points - use ref to prevent duplicate triggers
@@ -167,26 +161,25 @@ export default function GameDashboard() {
 
   // Auto-show territory battle interface when character is in active combat
   useEffect(() => {
-    if (battleCombats && battleCombats.length > 0 && !showTerritoryBattle) {
-      const activeCombat = battleCombats[0];
-      console.log('*** TERRITORY BATTLE COMBAT DETECTED ***', activeCombat);
+    if (territoryBattleCombat && territoryBattleCombat.status === 'active' && !showTerritoryBattle) {
+      console.log('*** TERRITORY BATTLE COMBAT DETECTED ***', territoryBattleCombat);
       
       // Set the active battle data to show the modal
       setActiveTerritoryBattle({
-        id: activeCombat.territoryBattleId,
+        id: territoryBattleCombat.territoryBattleId,
         status: 'active',
-        locationId: activeCombat.locationId,
-        participants: activeCombat.participants
+        locationId: territoryBattleCombat.locationId,
+        participants: territoryBattleCombat.participants
       });
       setShowTerritoryBattle(true);
     }
     
     // Hide territory battle interface when no active combats
-    if ((!battleCombats || battleCombats.length === 0) && showTerritoryBattle) {
+    if (!territoryBattleCombat && showTerritoryBattle) {
       setShowTerritoryBattle(false);
       setActiveTerritoryBattle(null);
     }
-  }, [battleCombats, showTerritoryBattle]);
+  }, [territoryBattleCombat, showTerritoryBattle]);
 
   // Handle WebSocket messages for real-time updates
   useEffect(() => {
