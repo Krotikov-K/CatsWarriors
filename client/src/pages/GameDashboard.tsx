@@ -183,8 +183,8 @@ export default function GameDashboard() {
       }
     }
     
-    // Hide territory battle interface when no active combats or character not participating
-    if ((!territoryBattleCombat || !territoryBattleCombat.participants.includes(gameState?.character?.id)) && showTerritoryBattle) {
+    // Hide territory battle interface when no active combats
+    if (!territoryBattleCombat && showTerritoryBattle) {
       setShowTerritoryBattle(false);
       setActiveTerritoryBattle(null);
     }

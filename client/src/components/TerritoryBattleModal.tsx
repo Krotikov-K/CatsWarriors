@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import CombatInterface from './CombatInterface';
-import { Eye } from 'lucide-react';
+import { Sword, Shield } from 'lucide-react';
 
 interface TerritoryBattle {
   id: number;
@@ -45,69 +43,33 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
   currentCharacter,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
-  const [showCombat, setShowCombat] = useState<boolean>(false);
-  const [combatMessages, setCombatMessages] = useState<string[]>([]);
-  const [teamCounts, setTeamCounts] = useState<{thunder: number, river: number}>({thunder: 0, river: 0});
 
+  // Get battle participants
   const { data: battleParticipants } = useQuery({
     queryKey: ['/api/territory/battle-participants', battle?.id],
     queryFn: () => fetch(`/api/territory/battle-participants/${battle?.id}`).then(res => res.json()),
     enabled: !!battle && isOpen,
+    refetchInterval: 2000,
   });
 
-  // Check if there's an active territory combat
+  // Get territory combat data
   const { data: territoryCombat } = useQuery({
     queryKey: ['/api/territory/combat', battle?.id],
-    queryFn: () => fetch(`/api/territory/combat/${battle?.id}`).then(res => res.json()),
-    enabled: !!battle && isOpen,
-    refetchInterval: 3000,
+    queryFn: async () => {
+      if (!battle?.id) return null;
+      try {
+        const response = await fetch(`/api/territory/combat/${battle.id}`);
+        if (!response.ok) return null;
+        return await response.json();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!battle?.id && isOpen,
+    refetchInterval: 1000,
   });
 
-  // Automatically show combat when there's an active territory combat
-  useEffect(() => {
-    if (territoryCombat && !territoryCombat.error && territoryCombat.status === 'active' && !showCombat) {
-      setShowCombat(true);
-    }
-    // If no active combat found, ensure combat view is hidden
-    if (territoryCombat && territoryCombat.error && showCombat) {
-      setShowCombat(false);
-    }
-  }, [territoryCombat, showCombat]);
-
-  // WebSocket listener for combat messages
-  useEffect(() => {
-    if (!battle || !isOpen) return;
-
-    const handleWebSocketMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'territory_battle_combat' && data.battleId === battle.id) {
-        setCombatMessages(prev => [...prev, ...data.messages]);
-        setTeamCounts({
-          thunder: data.thunderCount,
-          river: data.riverCount
-        });
-        setShowCombat(true);
-      }
-      
-      if (data.type === 'territory_battle_ended' && data.battleId === battle.id) {
-        setShowCombat(false);
-        onClose(); // Close modal when battle ends
-      }
-    };
-
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const socket = new WebSocket(wsUrl);
-    
-    socket.addEventListener('message', handleWebSocketMessage);
-    
-    return () => {
-      socket.removeEventListener('message', handleWebSocketMessage);
-      socket.close();
-    };
-  }, [battle, isOpen, onClose]);
-
+  // Timer for preparation phase
   useEffect(() => {
     if (!battle || battle.status !== 'preparing') return;
 
@@ -133,100 +95,97 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
 
   if (!battle) return null;
 
-  // Show combat interface if combat is active and user wants to watch
-  if (showCombat && territoryCombat && !territoryCombat.error) {
+  const getClanName = (clan: string) => clan === 'thunder' ? 'Грозовое племя ⚡' : 'Речное племя 🌊';
+  
+  // Parse participants if it's a string
+  const participantIds = typeof battle.participants === 'string' 
+    ? JSON.parse(battle.participants) 
+    : battle.participants;
+  
+  const isParticipating = participantIds.includes(currentCharacter.id);
+
+  // Show active combat interface
+  if (battle.status === 'active' || territoryCombat) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg">
-              Территориальная битва: {battle.locationName}
+              ⚔️ Территориальная битва: {battle.locationName}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Badge variant="outline" className="bg-red-100 text-red-700">
-                Активная битва
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCombat(false)}
-              >
-                Скрыть бой
-              </Button>
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-red-600 animate-pulse mb-2">
+                🔥 БИТВА В РАЗГАРЕ! 🔥
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Массовое сражение за контроль территории
+              </p>
             </div>
-            
-            <div className="space-y-4">
-              <div className="text-center text-lg font-bold text-red-600 animate-pulse">
-                ⚔️ МАССОВАЯ БИТВА В РАЗГАРЕ! ⚔️
-              </div>
-              
-              {/* Live Battle Animation */}
-              <div className="bg-gradient-to-r from-red-500/10 to-blue-500/10 p-4 rounded-lg border border-red-500/20">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-yellow-400">
-                      {getClanEmoji(battle.attackingClan)} {getClanDisplayName(battle.attackingClan)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Атакующие</div>
-                    <div className="text-2xl font-bold text-red-400">{attackingCount}</div>
+
+            <div className="bg-gradient-to-r from-red-500/10 to-blue-500/10 p-6 rounded-lg border border-red-500/20">
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Sword className="w-6 h-6 text-red-500 mr-2" />
+                    <span className="text-xl font-bold text-red-600">Атака</span>
                   </div>
-                  
+                  <div className="text-lg font-semibold">
+                    {getClanName(battle.attackingClan)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Участников: {battleParticipants?.attacking?.length || 0}
+                  </div>
+                </div>
+
+                <div className="text-center">
                   <div className="text-4xl animate-bounce">⚔️</div>
-                  
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-blue-400">
-                      {battle.defendingClan ? getClanEmoji(battle.defendingClan) : '🏞️'} 
-                      {battle.defendingClan ? getClanDisplayName(battle.defendingClan) : 'Нейтральная территория'}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Защитники</div>
-                    <div className="text-2xl font-bold text-blue-400">{defendingCount}</div>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    {territoryCombat ? 'Пошаговый бой' : 'Подготовка...'}
                   </div>
                 </div>
-                
-                {/* Battle Progress Animation */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-red-400">Сила атакующих</span>
-                    <span className="text-blue-400">Сила защитников</span>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Shield className="w-6 h-6 text-blue-500 mr-2" />
+                    <span className="text-xl font-bold text-blue-600">Оборона</span>
                   </div>
-                  <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden relative">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-2000 animate-pulse"
-                      style={{ width: `${attackingCount > 0 ? Math.min(100, (attackingCount / Math.max(attackingCount + defendingCount, 1)) * 100) : 0}%` }}
-                    />
-                    <div 
-                      className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-500 to-blue-600 rounded-full transition-all duration-2000 animate-pulse"
-                      style={{ width: `${defendingCount > 0 ? Math.min(100, (defendingCount / Math.max(attackingCount + defendingCount, 1)) * 100) : 0}%` }}
-                    />
+                  <div className="text-lg font-semibold">
+                    {getClanName(battle.defendingClan)}
                   </div>
-                </div>
-                
-                {/* Live Battle Messages */}
-                <div className="mt-4 space-y-1">
-                  <div className="text-xs text-center text-yellow-400 animate-pulse">
-                    💥 Воины сражаются за контроль над территорией!
-                  </div>
-                  <div className="text-xs text-center text-orange-400">
-                    🔥 Исход решается на основе силы, уровня и здоровья участников
-                  </div>
-                  <div className="text-xs text-center text-green-400">
-                    ✨ Все участники получат 200 опыта после битвы
+                  <div className="text-sm text-muted-foreground">
+                    Участников: {battleParticipants?.defending?.length || 0}
                   </div>
                 </div>
               </div>
-              
-              <div className="text-xs text-center border border-yellow-500/20 bg-yellow-500/5 p-2 rounded">
-                <div className="font-medium text-yellow-400">Территориальная битва</div>
-                <div className="text-muted-foreground">
-                  Бой ID: {territoryCombat.id} | Участников: {totalParticipants}
+            </div>
+
+            {territoryCombat && (
+              <div className="bg-orange-500/10 p-4 rounded-lg border border-orange-500/20">
+                <div className="text-center text-lg font-semibold mb-2 text-orange-600">
+                  🎯 Автоматический комбат активен
                 </div>
-                <div className="text-orange-400 mt-1">
-                  ⏱️ Битва завершится автоматически через несколько секунд
+                <div className="text-sm text-muted-foreground text-center">
+                  Ход {territoryCombat.currentTurn + 1} • Комбат ID: {territoryCombat.id}
+                </div>
+                <div className="text-xs text-center text-orange-400 mt-2">
+                  Битва завершится автоматически через несколько секунд
                 </div>
               </div>
+            )}
+
+            <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+              <div className="text-sm text-center text-green-600 font-medium">
+                ✨ Все участники получат 200 опыта по завершении битвы
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={onClose}>
+                Закрыть
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -234,291 +193,57 @@ const TerritoryBattleModal: React.FC<TerritoryBattleModalProps> = ({
     );
   }
 
-  const getClanDisplayName = (clan: string) => {
-    return clan === 'thunder' ? 'Грозовое племя' : 'Речное племя';
-  };
-
-  const getClanEmoji = (clan: string) => {
-    return clan === 'thunder' ? '⚡' : '🌊';
-  };
-
-  const getStatusIcon = () => {
-    switch (battle.status) {
-      case 'preparing': return '🕒';
-      case 'active': return '⚔️';
-      case 'completed': return '🏆';
-      default: return '❓';
-    }
-  };
-
-  const getStatusText = () => {
-    switch (battle.status) {
-      case 'preparing': return 'Подготовка к битве';
-      case 'active': return 'Битва идёт!';
-      case 'completed': return 'Битва завершена';
-      default: return 'Неизвестно';
-    }
-  };
-
-  // Parse participants from string if needed
-  const participantIds = typeof battle.participants === 'string' 
-    ? JSON.parse(battle.participants) 
-    : battle.participants;
-  
-  const isParticipating = participantIds.includes(currentCharacter.id);
-  const attackingCount = battleParticipants?.attacking?.length || 0;
-  const defendingCount = battleParticipants?.defending?.length || 0;
-  const totalParticipants = participantIds.length;
-
-  const getProgressPercentage = () => {
-    if (battle.status === 'completed') return 100;
-    if (battle.status === 'active') return 75;
-    if (battle.status === 'preparing') {
-      const battleTime = new Date(battle.battleStartTime).getTime();
-      const now = Date.now();
-      const total = 5 * 60 * 1000; // 5 minutes
-      const elapsed = total - (battleTime - now);
-      return Math.max(0, Math.min(100, (elapsed / total) * 100));
-    }
-    return 0;
-  };
-
+  // Show preparation interface
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-card border-border">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
-            {getStatusIcon()} Битва за {battle.locationName}
+          <DialogTitle className="text-lg">
+            🕒 Подготовка к битве: {battle.locationName}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Battle Status */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">{getStatusText()}</span>
-                {battle.status === 'preparing' && (
-                  <Badge variant="outline" className="text-yellow-400 border-yellow-500/20">
-                    {timeRemaining}
-                  </Badge>
-                )}
-                {battle.status === 'active' && (
-                  <div className="flex gap-2">
-                    <Badge variant="destructive">В процессе</Badge>
-                    {territoryCombat && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowCombat(true)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Наблюдать
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {battle.status === 'completed' && battle.winner && (
-                  <Badge className={battle.winner === 'thunder' ? 'bg-yellow-500' : 'bg-blue-500'}>
-                    Победил {getClanEmoji(battle.winner)}
-                  </Badge>
-                )}
+              <div className="text-center space-y-2">
+                <div className="text-2xl">⏰</div>
+                <div className="text-lg font-semibold">
+                  Битва начнется через:
+                </div>
+                <Badge variant="outline" className="text-yellow-600 border-yellow-500/20 text-lg">
+                  {timeRemaining}
+                </Badge>
               </div>
-              
-              <Progress value={getProgressPercentage()} className="h-2" />
             </CardContent>
           </Card>
 
-          {/* Opposing Forces */}
-          <div className="grid grid-cols-1 gap-3">
-            {/* Attacking Clan */}
-            <Card className={`border-2 ${battle.attackingClan === 'thunder' ? 'border-yellow-500/30' : 'border-blue-500/30'}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getClanEmoji(battle.attackingClan)}</span>
-                    <div>
-                      <p className="font-medium">{getClanDisplayName(battle.attackingClan)}</p>
-                      <p className="text-xs text-muted-foreground">Атакующие</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">
-                    {attackingCount} воинов
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* VS Divider */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                ⚔️ VS ⚔️
-              </Badge>
+              <div className="text-lg font-semibold text-red-600">Атакующие</div>
+              <div className="text-sm">{getClanName(battle.attackingClan)}</div>
+              <div className="text-lg font-bold">{battleParticipants?.attacking?.length || 0}</div>
             </div>
-
-            {/* Defending Clan */}
-            {battle.defendingClan ? (
-              <Card className={`border-2 ${battle.defendingClan === 'thunder' ? 'border-yellow-500/30' : 'border-blue-500/30'}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{getClanEmoji(battle.defendingClan)}</span>
-                      <div>
-                        <p className="font-medium">{getClanDisplayName(battle.defendingClan)}</p>
-                        <p className="text-xs text-muted-foreground">Защитники</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline">
-                      {defendingCount} воинов
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-2 border-gray-500/30">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">🏞️</span>
-                      <div>
-                        <p className="font-medium">Нейтральная территория</p>
-                        <p className="text-xs text-muted-foreground">Без защитников</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">
-                      Захват
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <div className="text-center">
+              <div className="text-lg font-semibold text-blue-600">Защищающиеся</div>
+              <div className="text-sm">{getClanName(battle.defendingClan)}</div>
+              <div className="text-lg font-bold">{battleParticipants?.defending?.length || 0}</div>
+            </div>
           </div>
 
-          {/* Active Battle Power Display */}
-          {battle.status === 'active' && battleParticipants && (
-            <Card className="border-red-500/30 bg-red-500/5">
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-3 text-center flex items-center justify-center gap-2">
-                  ⚔️ Битва идёт! ⚔️
-                  <Badge variant="destructive" className="animate-pulse text-xs">
-                    LIVE
-                  </Badge>
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span>{getClanEmoji(battle.attackingClan)}</span>
-                      <span className="text-sm font-medium">Атакующие</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-red-400">{attackingCount}</span>
-                      <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-1000"
-                          style={{ width: `${Math.min(100, (attackingCount / Math.max(attackingCount + defendingCount, 1)) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span>{battle.defendingClan ? getClanEmoji(battle.defendingClan) : '🏞️'}</span>
-                      <span className="text-sm font-medium">Защитники</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-blue-400">{defendingCount}</span>
-                      <div className="w-24 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-1000"
-                          style={{ width: `${Math.min(100, (defendingCount / Math.max(attackingCount + defendingCount, 1)) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-yellow-400 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
-                    💡 Исход решается автоматически на основе силы участников!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Battle Info */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Всего участников:</p>
-                  <p className="font-bold text-lg">{totalParticipants} воинов</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Объявил битву:</p>
-                  <p className="font-medium">{battle.declaredByName}</p>
-                </div>
+          {isParticipating && (
+            <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+              <div className="text-sm text-center text-green-600 font-medium">
+                ✅ Вы участвуете в этой битве
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Participation Status */}
-          {isParticipating ? (
-            <Card className="border-green-500/30 bg-green-500/5">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
-                    ✓ Участвую в битве
-                  </Badge>
-                  {battle.status === 'active' && (
-                    <Badge variant="secondary" className="text-xs animate-pulse">
-                      +200 опыта
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {battle.status === 'preparing' && 'Получите опыт после завершения битвы'}
-                  {battle.status === 'active' && 'Битва идёт! Опыт будет начислен по окончании'}
-                  {battle.status === 'completed' && 'Опыт уже начислен за участие'}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-gray-500/30">
-              <CardContent className="p-4 text-center">
-                <p className="text-muted-foreground">Вы не участвуете в битве</p>
-                {battle.status === 'preparing' && (
-                  <p className="text-xs text-yellow-400 mt-1">
-                    Только участники от вражеских кланов могут присоединиться
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            </div>
           )}
 
-          {/* Battle Results */}
-          {battle.status === 'completed' && battle.winner && (
-            <Card className={`border-2 ${battle.winner === 'thunder' ? 'border-yellow-500' : 'border-blue-500'} bg-gradient-to-r ${battle.winner === 'thunder' ? 'from-yellow-500/10 to-yellow-600/5' : 'from-blue-500/10 to-blue-600/5'}`}>
-              <CardContent className="p-4 text-center">
-                <p className="text-xl font-bold mb-2">
-                  🏆 Победил {getClanEmoji(battle.winner)} {getClanDisplayName(battle.winner)}!
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Территория теперь принадлежит победившему племени
-                </p>
-                {isParticipating && (
-                  <p className="text-sm text-green-400 mt-2">
-                    +200 опыта за участие в битве!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Close Button */}
-          <Button onClick={onClose} className="w-full">
-            Закрыть
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={onClose}>
+              Закрыть
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
