@@ -159,7 +159,7 @@ export default function GameDashboard() {
     }
   }, [gameState?.character?.level, gameState?.character?.unspentStatPoints, previousLevel, showLevelUp]);
 
-  // Auto-show territory battle interface when character is in active combat
+  // Auto-show territory battle interface when territory combat is detected
   useEffect(() => {
     if (territoryBattleCombat && territoryBattleCombat.status === 'active' && !showTerritoryBattle) {
       console.log('*** TERRITORY BATTLE COMBAT DETECTED ***', territoryBattleCombat);
@@ -177,8 +177,6 @@ export default function GameDashboard() {
           combatId: territoryBattleCombat.id
         });
         setShowTerritoryBattle(true);
-        
-        // Switch to combat-like display automatically
         setActiveTab('overview');
       }
     }
@@ -547,6 +545,7 @@ export default function GameDashboard() {
               <CombatInterface
                 combat={gameState.currentCombat}
                 character={character}
+                currentCharacter={character}
                 npcsInLocation={npcsInLocation}
                 playersInLocation={playersInLocation}
               />
@@ -743,8 +742,6 @@ export default function GameDashboard() {
         <CombatModal
           combat={selectedCombat}
           character={character}
-          npcsInLocation={npcsInLocation}
-          playersInLocation={playersInLocation}
           onClose={() => setShowCombatModal(false)}
           onJoin={handleJoinCombat}
         />
@@ -790,7 +787,10 @@ export default function GameDashboard() {
             setShowTerritoryBattle(false);
             setActiveTerritoryBattle(null);
           }}
-          currentCharacter={gameState.character}
+          currentCharacter={{
+            ...gameState.character,
+            hp: gameState.character.currentHp
+          }}
         />
       )}
     </div>
