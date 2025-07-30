@@ -439,6 +439,14 @@ Preferred communication style: Simple, everyday language.
   * Created spectacular battle interface with clan strength visualization, progress bars, and live battle messages
   * Territory battles now automatically display combat interface when active with proper state transitions
   * Players can now witness epic mass battles with real-time animations and clan warfare visualization
+- July 30, 2025: Fixed React component crashes and territory battle interface:
+  * Resolved all TypeScript errors causing GameDashboard black screen crashes
+  * Fixed missing currentCharacter prop in CombatInterface components
+  * Fixed territoryBattles undefined variable errors in useEffect hooks
+  * Removed incompatible props from CombatModal component
+  * Added proper hp property mapping for character objects
+  * React application now loads correctly without error boundary crashes
+  * Added 15 influence points to River clan for territory battle testing
 
 ### Target Audience & Requirements
 - **Platform**: Mobile devices only (Telegram Web App)
