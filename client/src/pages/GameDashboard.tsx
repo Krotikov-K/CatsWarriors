@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useGameState } from "@/hooks/useGameState";
 import { useUser } from "@/hooks/useUser";
@@ -89,18 +89,34 @@ export default function GameDashboard() {
     refetchInterval: 3000,
   });
 
-  // Track level ups and unspent stat points
+  // Track level ups and unspent stat points - use ref to prevent duplicate triggers
+  const levelUpTriggeredRef = useRef<{level: number, points: number} | null>(null);
+  
   useEffect(() => {
     if (gameState?.character && !showLevelUp) {
       const currentLevel = gameState.character.level;
       const unspentPoints = gameState.character.unspentStatPoints || 0;
+      
+      // Create unique key for this character state
+      const currentState = { level: currentLevel, points: unspentPoints };
+      const lastTriggered = levelUpTriggeredRef.current;
+      
+      // Check if we already triggered for this exact state
+      const alreadyTriggered = lastTriggered && 
+        lastTriggered.level === currentLevel && 
+        lastTriggered.points === unspentPoints;
+      
+      if (alreadyTriggered) {
+        return; // Skip if already processed this state
+      }
       
       // Show level up modal only once per character state change if character has unspent stat points
       if (unspentPoints > 0) {
         console.log('*** UNSPENT STAT POINTS DETECTED ***', {
           character: gameState.character.name,
           level: currentLevel,
-          unspentPoints: unspentPoints
+          unspentPoints: unspentPoints,
+          alreadyTriggered
         });
         
         setLevelUpData({
@@ -115,14 +131,16 @@ export default function GameDashboard() {
           }
         });
         setShowLevelUp(true);
-        setPreviousLevel(currentLevel); // Update immediately to prevent retriggering
+        levelUpTriggeredRef.current = currentState; // Mark this state as triggered
+        setPreviousLevel(currentLevel);
       }
       // Detect fresh level ups only when level actually increases and no unspent points
       else if (previousLevel !== null && currentLevel > previousLevel && unspentPoints === 0) {
         console.log('*** FRESH LEVEL UP DETECTED (no stat points to distribute) ***', {
           from: previousLevel,
           to: currentLevel,
-          character: gameState.character.name
+          character: gameState.character.name,
+          alreadyTriggered
         });
         
         setLevelUpData({
@@ -137,7 +155,8 @@ export default function GameDashboard() {
           }
         });
         setShowLevelUp(true);
-        setPreviousLevel(currentLevel); // Update immediately to prevent retriggering
+        levelUpTriggeredRef.current = currentState; // Mark this state as triggered
+        setPreviousLevel(currentLevel);
       }
       // Update previous level when no level up is needed
       else if (previousLevel === null || (previousLevel === currentLevel && unspentPoints === 0)) {
@@ -425,6 +444,8 @@ export default function GameDashboard() {
     // Always close the modal and reset data to prevent duplicate showings
     setShowLevelUp(false);
     setLevelUpData(null);
+    // Clear the triggered ref to allow future level ups
+    levelUpTriggeredRef.current = null;
   };
 
   if (userLoading || gameLoading) {
